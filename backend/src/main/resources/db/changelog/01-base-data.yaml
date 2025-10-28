@@ -1,0 +1,51 @@
+# 01-base-data.yaml
+databaseChangeLog:
+
+  # 1) základní role
+  - changeSet:
+      id: 30-seed-roles
+      author: seed
+      changes:
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: name, value: "admin" }
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: name, value: "user" }
+
+  # 2) výchozí admin účet (heslo = "admin" → BCrypt $2a$10$GRLdNijSQMUvl/au9ofL.eDDiQEVVdHCr8oA/6c5z6e/Xjl0cJl9u)
+  - changeSet:
+      id: 40-seed-admin-user
+      author: seed
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column: { name: public_name, value: "Root Admin" }
+              - column: { name: first_name, value: "Admin" }
+              - column: { name: last_name, value: "System" }
+              - column: { name: email, value: "admin@example.com" }
+              - column: { name: email_verified_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: password, value: "$2a$10\$GRLdNijSQMUvl/au9ofL.eDDiQEVVdHCr8oA/6c5z6e/Xjl0cJl9u" }
+        - sql:
+            dbms: mysql, postgresql
+            sql: INSERT INTO user_roles (user_id, role_id) VALUES ((SELECT id FROM users WHERE email='admin@example.com' LIMIT 1), (SELECT id FROM roles WHERE name='admin' LIMIT 1));
+
+  # 3) běžní uživatelé z CSV (rychlejší, lze editovat bez rebuildu)
+  - changeSet:
+      id: 50-seed-demo-users
+      author: seed
+      changes:
+        - loadData:
+            tableName: users
+            file: db/changelog/02-base-data-users.csv
+            separator: ','
+            quotChar: '"'
+            columns:
+              - column: { header: public_name, name: public_name }
+              - column: { header: first_name, name: first_name }
+              - column: { header: last_name, name: last_name }
+              - column: { header: email, name: email }
+              - column: { header: password, name: password }
