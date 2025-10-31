@@ -16,11 +16,9 @@ java {
 }
 
 repositories {
-    mavenCentral()  // KLÍČOVÉ: Přidej tohle!
+    mavenCentral()
 }
 
-// Nahrazení configurations bloku – extendsFrom je zastaralé
-// Místo toho použijeme přímé přiřazení přes dependencies
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
@@ -36,7 +34,13 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.liquibase:liquibase-core'
-	implementation 'org.springframework.session:spring-session-jdbc'
+    //	implementation 'org.springframework.session:spring-session-jdbc'
+
+    implementation 'com.graphql-java:graphql-java-extended-scalars:21.0'
+
+    implementation("com.github.javafaker:javafaker:1.0.2") {
+        exclude group: "org.yaml"
+    }
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
