@@ -9,6 +9,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import com.github.javafaker.Faker;
 
 import java.time.Instant;
 import java.util.Locale;
@@ -27,8 +28,8 @@ public class DataSeed {
     public void onAppReady(ApplicationReadyEvent ev) {
         if (users.count() != 0) return;          // už seedováno
 
-        Role adminRole = roles.save(new Role("admin"));
-        Role userRole  = roles.save(new Role("user"));
+        Role adminRole = roles.save(new Role(0L, "admin", Set.of()));
+        Role userRole  = roles.save(new Role(0L, "user", Set.of()));
 
         User root = User.builder()
                 .publicName("Root Admin")

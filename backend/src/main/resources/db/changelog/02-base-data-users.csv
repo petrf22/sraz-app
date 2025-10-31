@@ -1,4 +1,3 @@
-# 02-base-data-users.csv
-public_name,first_name,last_name,email,password
+"public_name","first_name","last_name","email","password"
 "John Doe","John","Doe","john@example.com","$2a$10$GRLdNijSQMUvl/au9ofL.eDDiQEVVdHCr8oA/6c5z6e/Xjl0cJl9u"
 "Jane Smith","Jane","Smith","jane@example.com","$2a$10$GRLdNijSQMUvl/au9ofL.eDDiQEVVdHCr8oA/6c5z6e/Xjl0cJl9u"

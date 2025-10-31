@@ -2,3 +2,5 @@
 databaseChangeLog:
   - include: { file: 00-base-schema.yaml, relativeToChangelogFile: true }
   - include: { file: 01-base-data.yaml,   relativeToChangelogFile: true }
+  - include: { file: 03-owner_users.yaml, relativeToChangelogFile: true }
+  - include: { file: 04-owner_users.yaml, relativeToChangelogFile: true }

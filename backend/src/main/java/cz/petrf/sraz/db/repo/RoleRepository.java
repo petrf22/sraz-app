@@ -1,7 +1,7 @@
 // RoleRepository.java
 package cz.petrf.sraz.db.repo;
 
-import com.example.demo.domain.Role;
+import cz.petrf.sraz.db.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

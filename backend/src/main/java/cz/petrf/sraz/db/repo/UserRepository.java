@@ -1,7 +1,7 @@
 // UserRepository.java
 package cz.petrf.sraz.db.repo;
 
-import com.example.demo.domain.User;
+import cz.petrf.sraz.db.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
