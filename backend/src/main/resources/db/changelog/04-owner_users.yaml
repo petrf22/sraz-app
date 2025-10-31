@@ -1,0 +1,390 @@
+# db/changelog/02-remaining-tables.yaml
+databaseChangeLog:
+
+  ##############################################################################
+  # 2. reminders
+  ##############################################################################
+  - changeSet:
+      id: 70-create-reminders
+      author: base
+      changes:
+        - createTable:
+            tableName: reminders
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: owner_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: hours, type: INT, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+        - addForeignKeyConstraint:
+            constraintName: fk_reminders_owner_id
+            baseTableName: reminders
+            baseColumnNames: owner_id
+            referencedTableName: owners
+            referencedColumnNames: id
+        - addUniqueConstraint:
+            tableName: reminders
+            columnNames: owner_id, name
+            constraintName: uk_reminders_owner_name
+
+  ##############################################################################
+  # 3. labels
+  ##############################################################################
+  - changeSet:
+      id: 80-create-labels
+      author: base
+      changes:
+        - createTable:
+            tableName: labels
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: owner_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: type, type: VARCHAR(1), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: global, type: BOOLEAN, defaultValue: "false", constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+        - addForeignKeyConstraint:
+            constraintName: fk_labels_owner_id
+            baseTableName: labels
+            baseColumnNames: owner_id
+            referencedTableName: owners
+            referencedColumnNames: id
+        - addUniqueConstraint:
+            tableName: labels
+            columnNames: owner_id, name
+            constraintName: uk_labels_owner_name
+
+  ##############################################################################
+  # 4. reminder_labels (pivot)
+  ##############################################################################
+  - changeSet:
+      id: 90-create-reminder-labels
+      author: base
+      changes:
+        - createTable:
+            tableName: reminder_labels
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: owner_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: reminder_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: label_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: limit_to_send, type: INT }
+              - column: { name: hours_before, type: INT }
+              - column: { name: created_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+        - addForeignKeyConstraint:
+            constraintName: fk_rml_owner_id
+            baseTableName: reminder_labels
+            baseColumnNames: owner_id
+            referencedTableName: owners
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_rml_reminder_id
+            baseTableName: reminder_labels
+            baseColumnNames: reminder_id
+            referencedTableName: reminders
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_rml_label_id
+            baseTableName: reminder_labels
+            baseColumnNames: label_id
+            referencedTableName: labels
+            referencedColumnNames: id
+
+  ##############################################################################
+  # 5. event_templates
+  ##############################################################################
+  - changeSet:
+      id: 100-create-event-templates
+      author: base
+      changes:
+        - createTable:
+            tableName: event_templates
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: owner_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: active, type: BOOLEAN, defaultValue: "true", constraints: { nullable: false } }
+              - column: { name: public, type: BOOLEAN, defaultValue: "false", constraints: { nullable: false } }
+              - column: { name: period_type_id, type: INT, constraints: { nullable: false } }
+              - column: { name: period_day_of_week, type: BOOLEAN, constraints: { nullable: false } }
+              - column: { name: period_repeat, type: BOOLEAN, constraints: { nullable: false } }
+              - column: { name: period_times, type: BOOLEAN, constraints: { nullable: false } }
+              - column: { name: start_date, type: DATE }
+              - column: { name: start_time, type: TIME WITH TIME ZONE, constraints: { nullable: false } }
+              - column: { name: place_name, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: place_location, type: VARCHAR(200) }
+              - column:
+                - name: default_price
+                - type: DECIMAL(10, 2)
+                - constraints:
+                  - nullable: false
+              - column: { name: created_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+        - addForeignKeyConstraint:
+            constraintName: fk_et_owner_id
+            baseTableName: event_templates
+            baseColumnNames: owner_id
+            referencedTableName: owners
+            referencedColumnNames: id
+        - addUniqueConstraint:
+            tableName: event_templates
+            columnNames: owner_id, name
+            constraintName: uk_et_owner_name
+
+  ##############################################################################
+  # 6. events
+  ##############################################################################
+  - changeSet:
+      id: 110-create-events
+      author: base
+      changes:
+        - createTable:
+            tableName: events
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: owner_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: event_template_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: active, type: BOOLEAN, defaultValue: "true", constraints: { nullable: false } }
+              - column: { name: public, type: BOOLEAN, defaultValue: "false", constraints: { nullable: false } }
+              - column: { name: event_date, type: DATE }
+              - column: { name: event_time, type: TIME WITH TIME ZONE, constraints: { nullable: false } }
+              - column: { name: deleted_at, type: TIMESTAMP }
+              - column: { name: created_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+        - addForeignKeyConstraint:
+            constraintName: fk_ev_owner_id
+            baseTableName: events
+            baseColumnNames: owner_id
+            referencedTableName: owners
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_ev_template_id
+            baseTableName: events
+            baseColumnNames: event_template_id
+            referencedTableName: event_templates
+            referencedColumnNames: id
+        - addUniqueConstraint:
+            tableName: events
+            columnNames: owner_id, name
+            constraintName: uk_ev_owner_name
+
+  ##############################################################################
+  # 7. reminder_events (pivot)
+  ##############################################################################
+  - changeSet:
+      id: 120-create-reminder-events
+      author: base
+      changes:
+        - createTable:
+            tableName: reminder_events
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: owner_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: reminder_label_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: event_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+        - addForeignKeyConstraint:
+            constraintName: fk_rme_owner_id
+            baseTableName: reminder_events
+            baseColumnNames: owner_id
+            referencedTableName: owners
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_rme_reminder_label_id
+            baseTableName: reminder_events
+            baseColumnNames: reminder_label_id
+            referencedTableName: reminder_labels
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_rme_event_id
+            baseTableName: reminder_events
+            baseColumnNames: event_id
+            referencedTableName: events
+            referencedColumnNames: id
+
+  ##############################################################################
+  # 8. members
+  ##############################################################################
+  - changeSet:
+      id: 130-create-members
+      author: base
+      changes:
+        - createTable:
+            tableName: members
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: owner_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: user_id, type: BIGINT }
+              - column: { name: public_name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: deleted_at, type: TIMESTAMP }
+              - column: { name: created_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+        - addForeignKeyConstraint:
+            constraintName: fk_members_owner_id
+            baseTableName: members
+            baseColumnNames: owner_id
+            referencedTableName: owners
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_members_user_id
+            baseTableName: members
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+        - addUniqueConstraint:
+            tableName: members
+            columnNames: owner_id, user_id
+            constraintName: uk_members_owner_user
+        - addUniqueConstraint:
+            tableName: members
+            columnNames: owner_id, public_name
+            constraintName: uk_members_owner_public
+
+  ##############################################################################
+  # 9. member_labels (pivot)
+  ##############################################################################
+  - changeSet:
+      id: 140-create-member-labels
+      author: base
+      changes:
+        - createTable:
+            tableName: member_labels
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: owner_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: member_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: label_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+        - addForeignKeyConstraint:
+            constraintName: fk_ml_owner_id
+            baseTableName: member_labels
+            baseColumnNames: owner_id
+            referencedTableName: owners
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_ml_member_id
+            baseTableName: member_labels
+            baseColumnNames: member_id
+            referencedTableName: members
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_ml_label_id
+            baseTableName: member_labels
+            baseColumnNames: label_id
+            referencedTableName: labels
+            referencedColumnNames: id
+        - addUniqueConstraint:
+            tableName: member_labels
+            columnNames: owner_id, member_id, label_id
+            constraintName: uk_ml_owner_member_label
+
+  ##############################################################################
+  # 10. reminder_rules
+  ##############################################################################
+  - changeSet:
+      id: 150-create-reminder-rules
+      author: base
+      changes:
+        - createTable:
+            tableName: reminder_rules
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: owner_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: reminder_label_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: order, type: INT, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+        - addForeignKeyConstraint:
+            constraintName: fk_rr_owner_id
+            baseTableName: reminder_rules
+            baseColumnNames: owner_id
+            referencedTableName: owners
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_rr_reminder_label_id
+            baseTableName: reminder_rules
+            baseColumnNames: reminder_label_id
+            referencedTableName: reminder_labels
+            referencedColumnNames: id
+        - addUniqueConstraint:
+            tableName: reminder_rules
+            columnNames: owner_id, name
+            constraintName: uk_rr_owner_name
+
+  ##############################################################################
+  # 11. event_members
+  ##############################################################################
+  - changeSet:
+      id: 160-create-event-members
+      author: base
+      changes:
+        - createTable:
+            tableName: event_members
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: owner_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: event_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: member_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: guid, type: VARCHAR(40), constraints: { nullable: false, unique: true } }
+              - column: { name: guid_valid_from, type: TIMESTAMP WITH TIME ZONE, constraints: { nullable: false } }
+              - column: { name: guid_valid_to, type: TIMESTAMP WITH TIME ZONE, constraints: { nullable: false } }
+              - column: { name: accepted_at, type: TIMESTAMP }
+              - column: { name: declined_at, type: TIMESTAMP }
+              - column: { name: attended, type: BOOLEAN, defaultValue: "false", constraints: { nullable: false } }
+              - column:
+                - name: paid
+                - type: DECIMAL(8, 2)
+                - constraints:
+                  - nullable: false
+              - column: { name: paid_at, type: TIMESTAMP }
+              - column: { name: created_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+        - addForeignKeyConstraint:
+            constraintName: fk_em_owner_id
+            baseTableName: event_members
+            baseColumnNames: owner_id
+            referencedTableName: owners
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_em_event_id
+            baseTableName: event_members
+            baseColumnNames: event_id
+            referencedTableName: events
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_em_member_id
+            baseTableName: event_members
+            baseColumnNames: member_id
+            referencedTableName: members
+            referencedColumnNames: id
+
+  ##############################################################################
+  # 12. banks
+  ##############################################################################
+  - changeSet:
+      id: 120-create-banks
+      author: base
+      changes:
+        - createTable:
+            tableName: banks
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: owner_id, type: BIGINT, constraints: { nullable: false } }
+              - column:
+                - name: many
+                - type: DECIMAL(10, 2)
+              - column: { name: created_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+        - addForeignKeyConstraint:
+            constraintName: fk_banks_owner_id
+            baseTableName: banks
+            baseColumnNames: owner_id
+            referencedTableName: owners
+            referencedColumnNames: id

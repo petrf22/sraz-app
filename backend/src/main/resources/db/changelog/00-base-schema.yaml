@@ -1,36 +1,116 @@
 # 00-base-schema.yaml
 databaseChangeLog:
 
+  # 1) USERS
   - changeSet:
-      id: 10-create-roles
-      author: seed
+      id: 10-create-users
+      author: base
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: public_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_name
+                  type: VARCHAR(255)
+              - column:
+                  name: last_name
+                  type: VARCHAR(255)
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: email_verified_at
+                  type: TIMESTAMP
+              - column:
+                  name: password
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: remember_token
+                  type: VARCHAR(100)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+
+  # 2) ROLES
+  - changeSet:
+      id: 15-create-roles
+      author: base
       changes:
         - createTable:
             tableName: roles
             columns:
-              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
-              - column: { name: name, type: VARCHAR(50), constraints: { nullable: false, unique: true } }
-              - column: { name: created_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
 
+  # 3) USER_ROLES (spojovací tabulka)
   - changeSet:
       id: 20-create-user-roles
-      author: seed
+      author: base
       changes:
         - createTable:
             tableName: user_roles
             columns:
-              - column: { name: user_id, type: BIGINT, constraints: { nullable: false } }
-              - column: { name: role_id, type: BIGINT, constraints: { nullable: false } }
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
         - addPrimaryKey:
             tableName: user_roles
             columnNames: user_id, role_id
         - addForeignKeyConstraint:
+            constraintName: fk_user_roles_user_id
             baseTableName: user_roles
             baseColumnNames: user_id
             referencedTableName: users
             referencedColumnNames: id
+            onDelete: CASCADE
         - addForeignKeyConstraint:
+            constraintName: fk_user_roles_role_id
             baseTableName: user_roles
             baseColumnNames: role_id
             referencedTableName: roles
             referencedColumnNames: id
+            onDelete: CASCADE

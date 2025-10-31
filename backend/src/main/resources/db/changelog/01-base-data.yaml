@@ -9,11 +9,11 @@ databaseChangeLog:
         - insert:
             tableName: roles
             columns:
-              - column: { name: name, value: "admin" }
+              - column: { name: name, value: 'admin' }
         - insert:
             tableName: roles
             columns:
-              - column: { name: name, value: "user" }
+              - column: { name: name, value: 'user' }
 
   # 2) výchozí admin účet (heslo = "admin" → BCrypt $2a$10$GRLdNijSQMUvl/au9ofL.eDDiQEVVdHCr8oA/6c5z6e/Xjl0cJl9u)
   - changeSet:
@@ -23,12 +23,12 @@ databaseChangeLog:
         - insert:
             tableName: users
             columns:
-              - column: { name: public_name, value: "Root Admin" }
-              - column: { name: first_name, value: "Admin" }
-              - column: { name: last_name, value: "System" }
-              - column: { name: email, value: "admin@example.com" }
+              - column: { name: public_name, value: 'Root Admin' }
+              - column: { name: first_name, value: 'Admin' }
+              - column: { name: last_name, value: 'System' }
+              - column: { name: email, value: 'admin@example.com' }
               - column: { name: email_verified_at, valueComputed: CURRENT_TIMESTAMP }
-              - column: { name: password, value: "$2a$10\$GRLdNijSQMUvl/au9ofL.eDDiQEVVdHCr8oA/6c5z6e/Xjl0cJl9u" }
+              - column: { name: password, value: '$2a$10\$GRLdNijSQMUvl/au9ofL.eDDiQEVVdHCr8oA/6c5z6e/Xjl0cJl9u' }
         - sql:
             dbms: mysql, postgresql
             sql: INSERT INTO user_roles (user_id, role_id) VALUES ((SELECT id FROM users WHERE email='admin@example.com' LIMIT 1), (SELECT id FROM roles WHERE name='admin' LIMIT 1));
