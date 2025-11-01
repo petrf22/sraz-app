@@ -41,8 +41,8 @@ public class Member {
     @Column(nullable = false)
     private Instant updatedAt = Instant.now();
 
-    @PreUpdatevoid
-    onUpdate() {
+    @PreUpdate
+    public void onUpdate() {
         updatedAt = Instant.now();
     }
 }
