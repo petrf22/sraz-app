@@ -44,7 +44,7 @@ public class OwnerUser {
 
     /* automatická aktualizace updatedAt */
     @PreUpdate
-    void onUpdate() {
+    public void onUpdate() {
         updatedAt = Instant.now();
     }
 }

@@ -34,7 +34,7 @@ public class Reminder {
     private java.time.Instant updatedAt = java.time.Instant.now();
 
     @PreUpdate
-    void onUpdate() {
+    public void onUpdate() {
         updatedAt = java.time.Instant.now();
     }
 }

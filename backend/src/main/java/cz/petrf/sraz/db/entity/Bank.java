@@ -33,7 +33,7 @@ public class Bank {
     private Instant updatedAt = Instant.now();
 
     @PreUpdate
-    void onUpdate() {
+    public void onUpdate() {
         updatedAt = Instant.now();
     }
 }

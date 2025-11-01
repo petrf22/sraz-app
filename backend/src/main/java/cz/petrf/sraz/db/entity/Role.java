@@ -16,14 +16,29 @@ import java.util.Set;
 @Builder
 public class Role {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(nullable = false, unique = true, length = 50)
-    private String name;
+  @Column(nullable = false, unique = true, length = 50)
+  private String name;
 
-    @ManyToMany(mappedBy = "roles")
-    @Builder.Default
-    private Set<User> users = new HashSet<>();
+
+  @Builder.Default
+  @Column(nullable = false, updatable = false)
+  private java.time.Instant createdAt = java.time.Instant.now();
+
+  @Builder.Default
+  @Column(nullable = false)
+  private java.time.Instant updatedAt = java.time.Instant.now();
+
+
+  @ManyToMany(mappedBy = "roles")
+  @Builder.Default
+  private Set<User> users = new HashSet<>();
+
+  @PreUpdate
+  public void onUpdate() {
+    updatedAt = java.time.Instant.now();
+  }
 }

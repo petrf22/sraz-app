@@ -26,7 +26,7 @@ public class Owner {
     private Instant updatedAt = Instant.now();
 
     @PreUpdate
-    void onUpdate() {
+    public void onUpdate() {
         updatedAt = Instant.now();
     }
 }
