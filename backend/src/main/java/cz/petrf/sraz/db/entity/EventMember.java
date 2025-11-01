@@ -2,15 +2,22 @@ package cz.petrf.sraz.db.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "event_members")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class EventMember {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
@@ -27,8 +34,10 @@ public class EventMember {
     @Column(nullable = false, length = 40, unique = true)
     private String guid;
 
-    @Column(nullable = false) private OffsetDateTime guidValidFrom;
-    @Column(nullable = false) private OffsetDateTime guidValidTo;
+    @Column(nullable = false)
+    private OffsetDateTime guidValidFrom;
+    @Column(nullable = false)
+    private OffsetDateTime guidValidTo;
 
     private Instant acceptedAt;
     private Instant declinedAt;
@@ -47,7 +56,11 @@ public class EventMember {
     private Instant createdAt = Instant.now();
 
     @Builder.Default
-    @Column(nullable = false) private Instant updatedAt = Instant.now();
+    @Column(nullable = false)
+    private Instant updatedAt = Instant.now();
 
-    @PreUpdate void onUpdate(){ updatedAt = Instant.now(); }
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = Instant.now();
+    }
 }
