@@ -26,14 +26,16 @@ public class DataSeed {
 
     @EventListener
     public void onAppReady(ApplicationReadyEvent ev) {
-        if (users.count() != 0) return;          // už seedováno
+        if (users.count() > 50) return;          // už seedováno
 
-        Role adminRole = roles.save(new Role(0L, "admin", Set.of()));
-        Role userRole  = roles.save(new Role(0L, "user", Set.of()));
+        Role adminRole = roles.findByName("admin").orElseGet(() -> roles.save(new Role(0L, "admin", Set.of())));
+        Role userRole = roles.findByName("user").orElseGet(() -> roles.save(new Role(0L, "user", Set.of())));
 
         User root = User.builder()
-                .publicName("Root Admin")
-                .email("admin@example.com")
+                .publicName("Root Admin Seed")
+                .firstName("Root")
+                .lastName("Admin Seed")
+                .email("admin-seed@example.com")
                 .password(encoder.encode("admin"))
                 .emailVerifiedAt(Instant.now())
                 .roles(Set.of(adminRole))
@@ -41,7 +43,7 @@ public class DataSeed {
         users.save(root);
 
         // 50 náhodných uživatelů
-        Faker faker = new Faker(new Locale("cs"));
+        Faker faker = new Faker(Locale.of("cs"));
         IntStream.rangeClosed(1, 50).forEach(i -> {
             User u = User.builder()
                     .publicName(faker.name().fullName())
