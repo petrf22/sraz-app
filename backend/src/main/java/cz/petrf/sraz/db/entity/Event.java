@@ -2,14 +2,21 @@ package cz.petrf.sraz.db.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDate;
 import java.time.OffsetTime;
 
 @Entity
 @Table(name = "events", uniqueConstraints = @UniqueConstraint(columnNames = {"owner_id", "name"}))
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Event {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
@@ -23,13 +30,16 @@ public class Event {
     private String name;
 
     @Builder.Default
-    @Column(nullable = false) private Boolean active = true;
+    @Column(nullable = false)
+    private Boolean active = true;
 
     @Builder.Default
-    @Column(nullable = false) private Boolean isPublic = false;
+    @Column(nullable = false)
+    private Boolean isPublic = false;
 
     private LocalDate eventDate;
-    @Column(nullable = false) private OffsetTime eventTime;
+    @Column(nullable = false)
+    private OffsetTime eventTime;
 
     private java.time.Instant deletedAt;
 
@@ -38,7 +48,11 @@ public class Event {
     private java.time.Instant createdAt = java.time.Instant.now();
 
     @Builder.Default
-    @Column(nullable = false) private java.time.Instant updatedAt = java.time.Instant.now();
+    @Column(nullable = false)
+    private java.time.Instant updatedAt = java.time.Instant.now();
 
-    @PreUpdate void onUpdate(){ updatedAt = java.time.Instant.now(); }
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = java.time.Instant.now();
+    }
 }

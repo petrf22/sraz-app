@@ -7,7 +7,11 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "owners")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Owner {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,5 +26,7 @@ public class Owner {
     private Instant updatedAt = Instant.now();
 
     @PreUpdate
-    void onUpdate(){ updatedAt = Instant.now(); }
+    void onUpdate() {
+        updatedAt = Instant.now();
+    }
 }

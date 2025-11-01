@@ -2,6 +2,7 @@ package cz.petrf.sraz.db.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.Instant;
 
 @Entity
@@ -9,9 +10,15 @@ import java.time.Instant;
         @UniqueConstraint(columnNames = {"owner_id", "user_id"}),
         @UniqueConstraint(columnNames = {"owner_id", "public_name"})
 })
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Member {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
@@ -31,7 +38,11 @@ public class Member {
     private Instant createdAt = Instant.now();
 
     @Builder.Default
-    @Column(nullable = false) private Instant updatedAt = Instant.now();
+    @Column(nullable = false)
+    private Instant updatedAt = Instant.now();
 
-    @PreUpdate void onUpdate(){ updatedAt = Instant.now(); }
+    @PreUpdatevoid
+    onUpdate() {
+        updatedAt = Instant.now();
+    }
 }

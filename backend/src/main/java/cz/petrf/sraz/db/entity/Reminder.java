@@ -5,9 +5,15 @@ import lombok.*;
 
 @Entity
 @Table(name = "reminders", uniqueConstraints = @UniqueConstraint(columnNames = {"owner_id", "name"}))
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Reminder {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
@@ -24,7 +30,11 @@ public class Reminder {
     private java.time.Instant createdAt = java.time.Instant.now();
 
     @Builder.Default
-    @Column(nullable = false) private java.time.Instant updatedAt = java.time.Instant.now();
+    @Column(nullable = false)
+    private java.time.Instant updatedAt = java.time.Instant.now();
 
-    @PreUpdate void onUpdate(){ updatedAt = java.time.Instant.now(); }
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = java.time.Instant.now();
+    }
 }
