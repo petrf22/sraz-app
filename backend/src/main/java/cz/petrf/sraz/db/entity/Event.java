@@ -14,45 +14,45 @@ import java.time.OffsetTime;
 @AllArgsConstructor
 @Builder
 public class Event {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "owner_id", nullable = false)
-    private Owner owner;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "owner_id", nullable = false)
+  private Owner owner;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "event_template_id", nullable = false)
-    private EventTemplate eventTemplate;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "event_template_id", nullable = false)
+  private EventTemplate eventTemplate;
 
-    @Column(nullable = false, length = 255)
-    private String name;
+  @Column(nullable = false, length = 255)
+  private String name;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean active = true;
+  @Builder.Default
+  @Column(nullable = false)
+  private Boolean active = true;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean isPublic = false;
+  @Builder.Default
+  @Column(nullable = false)
+  private Boolean isPublic = false;
 
-    private LocalDate eventDate;
-    @Column(nullable = false)
-    private OffsetTime eventTime;
+  private LocalDate eventDate;
+  @Column(nullable = false)
+  private OffsetTime eventTime;
 
-    private java.time.Instant deletedAt;
+  private java.time.Instant deletedAt;
 
-    @Builder.Default
-    @Column(nullable = false, updatable = false)
-    private java.time.Instant createdAt = java.time.Instant.now();
+  @Builder.Default
+  @Column(nullable = false, updatable = false)
+  private java.time.Instant createdAt = java.time.Instant.now();
 
-    @Builder.Default
-    @Column(nullable = false)
-    private java.time.Instant updatedAt = java.time.Instant.now();
+  @Builder.Default
+  @Column(nullable = false)
+  private java.time.Instant updatedAt = java.time.Instant.now();
 
-    @PreUpdate
-    public void onUpdate() {
-        updatedAt = java.time.Instant.now();
-    }
+  @PreUpdate
+  public void onUpdate() {
+    updatedAt = java.time.Instant.now();
+  }
 }
