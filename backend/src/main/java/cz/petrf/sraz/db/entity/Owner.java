@@ -13,20 +13,20 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 public class Owner {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Builder.Default
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
+  @Builder.Default
+  @Column(nullable = false, updatable = false)
+  private Instant createdAt = Instant.now();
 
-    @Builder.Default
-    @Column(nullable = false)
-    private Instant updatedAt = Instant.now();
+  @Builder.Default
+  @Column(nullable = false)
+  private Instant updatedAt = Instant.now();
 
-    @PreUpdate
-    public void onUpdate() {
-        updatedAt = Instant.now();
-    }
+  @PreUpdate
+  public void onUpdate() {
+    updatedAt = Instant.now();
+  }
 }
