@@ -9,13 +9,13 @@ databaseChangeLog:
         - insert:
             tableName: roles
             columns:
-              - column: { name: name, value: 'admin' }
+              - column: { name: name, value: 'ROLE_ADMIN' }
         - insert:
             tableName: roles
             columns:
-              - column: { name: name, value: 'user' }
+              - column: { name: name, value: 'ROLE_USER' }
 
-  # 2) výchozí admin účet (heslo = "admin" → BCrypt $2a$10$GRLdNijSQMUvl/au9ofL.eDDiQEVVdHCr8oA/6c5z6e/Xjl0cJl9u)
+  # 2) výchozí admin účet (heslo = "admin" → BCrypt $2a$10$jR2qt2BCu32Gm5MRCW2ywOsw.fMQhcYC0ksWHBi11ZHYCH77Ou/H2)
   - changeSet:
       id: 40-seed-admin-user
       author: seed
@@ -28,10 +28,10 @@ databaseChangeLog:
               - column: { name: last_name, value: 'System' }
               - column: { name: email, value: 'admin@example.com' }
               - column: { name: email_verified_at, valueComputed: CURRENT_TIMESTAMP }
-              - column: { name: password, value: '$2a$10\$GRLdNijSQMUvl/au9ofL.eDDiQEVVdHCr8oA/6c5z6e/Xjl0cJl9u' }
+              - column: { name: password, value: '$2a$10$jR2qt2BCu32Gm5MRCW2ywOsw.fMQhcYC0ksWHBi11ZHYCH77Ou/H2' }
         - sql:
             dbms: mysql, postgresql
-            sql: INSERT INTO user_roles (user_id, role_id) VALUES ((SELECT id FROM users WHERE email='admin@example.com' LIMIT 1), (SELECT id FROM roles WHERE name='admin' LIMIT 1));
+            sql: INSERT INTO user_roles (user_id, role_id) VALUES ((SELECT id FROM users WHERE email='admin@example.com' LIMIT 1), (SELECT id FROM roles WHERE name='ROLE_ADMIN' LIMIT 1));
 
   # 3) běžní uživatelé z CSV (rychlejší, lze editovat bez rebuildu)
   - changeSet:

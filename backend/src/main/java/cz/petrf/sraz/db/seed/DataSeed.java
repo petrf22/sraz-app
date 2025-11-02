@@ -28,8 +28,10 @@ public class DataSeed {
   public void onAppReady(ApplicationReadyEvent ev) {
     if (users.count() > 50) return;          // už seedováno
 
-    Role adminRole = roles.findByName("admin").orElseGet(() -> roles.save(new Role(0L, "admin", Set.of())));
-    Role userRole = roles.findByName("user").orElseGet(() -> roles.save(new Role(0L, "user", Set.of())));
+    Role adminRole = roles.findByName("ROLE_ADMIN")
+        .orElseGet(() -> roles.save(Role.builder().name("ROLE_ADMIN").build()));
+    Role userRole = roles.findByName("ROLE_USER")
+        .orElseGet(() -> roles.save(Role.builder().name("ROLE_USER").build()));
 
     User root = User.builder()
         .publicName("Root Admin Seed")

@@ -1,0 +1,3 @@
+# GraphQL – už s tokenem
+POST /graphql
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
