@@ -1,0 +1,12 @@
+extend type Query {
+    userProfile: UserProfile!
+}
+
+extend type Mutation {
+    createUser(username: String!, password: String!): User
+}
+
+type UserProfile {
+    username: String!
+    roles: [String!]!
+}

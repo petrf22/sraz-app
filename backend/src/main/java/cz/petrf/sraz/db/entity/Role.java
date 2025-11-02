@@ -23,7 +23,6 @@ public class Role {
   @Column(nullable = false, unique = true, length = 50)
   private String name;
 
-
   @Builder.Default
   @Column(nullable = false, updatable = false)
   private java.time.Instant createdAt = java.time.Instant.now();
@@ -31,7 +30,6 @@ public class Role {
   @Builder.Default
   @Column(nullable = false)
   private java.time.Instant updatedAt = java.time.Instant.now();
-
 
   @ManyToMany(mappedBy = "roles")
   @Builder.Default

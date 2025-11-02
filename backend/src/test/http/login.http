@@ -1,0 +1,13 @@
+# login – zůstává REST
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "password": "secret"
+}
+
+200 OK
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9..."
+}

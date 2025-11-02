@@ -2,6 +2,10 @@ type Query {
     roles: [Role!]!
 }
 
+type Mutation {
+    userSave(username: String!, password: String!): User
+}
+
 type User {
     id: ID
     publicName: String!
