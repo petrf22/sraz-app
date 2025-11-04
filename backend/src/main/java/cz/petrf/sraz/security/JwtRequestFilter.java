@@ -1,6 +1,5 @@
 package cz.petrf.sraz.security;
 
-import cz.petrf.sraz.service.JwtService;
 import cz.petrf.sraz.service.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,6 +18,7 @@ import java.io.IOException;
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
 
+  public static final String BEARER = "Bearer ";
   @Autowired
   private UserDetailsServiceImpl userDetailsService;
 
@@ -29,15 +29,18 @@ public class JwtRequestFilter extends OncePerRequestFilter {
   protected void doFilterInternal(HttpServletRequest request,
                                   HttpServletResponse response,
                                   FilterChain chain) throws ServletException, IOException {
+    String path = request.getServletPath();
+
+    //return path.equals("/api/login") || path.startsWith("/api/public/");
 
     final String authorizationHeader = request.getHeader("Authorization");
 
     String username = null;
     String jwt = null;
 
-    if (authorizationHeader!=null && authorizationHeader.startsWith("Bearer ")) {
-      jwt = authorizationHeader.substring(7);
+    if (authorizationHeader!=null && authorizationHeader.startsWith(BEARER)) {
       try {
+        jwt = authorizationHeader.substring(BEARER.length());
         username = jwtService.extractUsername(jwt);
       } catch (Exception e) {
         logger.error("JWT Token extraction failed", e);

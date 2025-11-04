@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS refresh_token_blacklist;
 DROP TABLE IF EXISTS banks;
 DROP TABLE IF EXISTS event_members;
 DROP TABLE IF EXISTS reminder_rules;

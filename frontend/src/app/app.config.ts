@@ -2,24 +2,28 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChang
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
-import { icons } from './icons-provider';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
-import { en_US, provideNzI18n } from 'ng-zorro-antd/i18n';
+import { cs_CZ, provideNzI18n } from 'ng-zorro-antd/i18n';
 import { registerLocaleData } from '@angular/common';
-import en from '@angular/common/locales/en';
+import cs from '@angular/common/locales/en';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideHttpClient } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideApollo } from 'apollo-angular';
 import { HttpLink } from 'apollo-angular/http';
 import { InMemoryCache } from '@apollo/client';
+import { JwtInterceptor } from './login/jwt-interceptor';
+import { AccountBookFill, AlertFill, AlertOutline } from '@ant-design/icons-angular/icons';
+import { IconDefinition } from '@ant-design/icons-angular';
 
-registerLocaleData(en);
+const icons: IconDefinition[] = [AccountBookFill, AlertOutline, AlertFill];
+
+registerLocaleData(cs);
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes), provideNzIcons(icons), provideNzI18n(en_US), provideAnimationsAsync(), provideHttpClient(), provideHttpClient(), provideApollo(() => {
+    provideRouter(routes), provideNzIcons(icons), provideNzI18n(cs_CZ), provideAnimationsAsync(), provideHttpClient(), provideHttpClient(), provideApollo(() => {
       const httpLink = inject(HttpLink);
 
       return {
@@ -28,6 +32,9 @@ export const appConfig: ApplicationConfig = {
         }),
         cache: new InMemoryCache(),
       };
-    })
+    }),
+    provideHttpClient(withInterceptorsFromDi()),
+    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
+    provideNzIcons(icons)
   ]
 };

@@ -4,7 +4,7 @@ databaseChangeLog:
   # 1) USERS
   - changeSet:
       id: 10-create-users
-      author: base
+      author: Petr F.
       changes:
         - createTable:
             tableName: users
@@ -56,7 +56,7 @@ databaseChangeLog:
   # 2) ROLES
   - changeSet:
       id: 15-create-roles
-      author: base
+      author: Petr F.
       changes:
         - createTable:
             tableName: roles
@@ -86,7 +86,7 @@ databaseChangeLog:
   # 3) USER_ROLES (spojovací tabulka)
   - changeSet:
       id: 20-create-user-roles
-      author: base
+      author: Petr F.
       changes:
         - createTable:
             tableName: user_roles

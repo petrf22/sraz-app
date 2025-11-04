@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2025-06-02-01
+      author: your.name
+      changes:
+        - createTable:
+            tableName: user_refresh_token
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_refresh_user
+                    references: users(id)
+                    onDelete: CASCADE
+              - column:
+                  name: jti
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: device
+                  type: varchar(100)
+              - column:
+                  name: issued_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: exp
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: revoked
+                  type: boolean
+                  defaultValue: false
+                  constraints:
+                    nullable: false
+
+        - createIndex:
+            indexName: idx_refresh_user_revoked
+            tableName: user_refresh_token
+            columns:
+              - column:
+                  name: user_id
+              - column:
+                  name: revoked
