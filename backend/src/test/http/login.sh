@@ -8,7 +8,7 @@ PASS=${2:-secret}
 RESPONSE=$(curl -s -w "\n%{http_code}" \
   -X POST "$HOST/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d "{\"email\":\"$USER\",\"password\":\"$PASS\"}")
+  -d "{\"username\":\"$USER\",\"password\":\"$PASS\"}")
 
 echo "$RESPONSE"
 

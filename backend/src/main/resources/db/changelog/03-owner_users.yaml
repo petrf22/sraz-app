@@ -5,7 +5,7 @@ databaseChangeLog:
 
   - changeSet:
       id: 60-create-owners
-      author: base
+      author: Petr F.
       changes:
         - createTable:
             tableName: owners

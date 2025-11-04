@@ -16,6 +16,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -42,6 +45,14 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http.csrf(csrf -> csrf.disable())
+        .cors(c -> c.configurationSource(request -> {
+          var cors = new CorsConfiguration();
+          cors.setAllowedOrigins(List.of("http://localhost:4200"));
+          cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+          cors.setAllowedHeaders(List.of("*"));
+          cors.setAllowCredentials(true);
+          return cors;
+        }))
         .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -52,34 +63,9 @@ public class SecurityConfig {
         )
         .sessionManagement(sess -> sess
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        );
-
-    http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+        )
+        .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }
-
-//  @Bean
-//  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//    http
-//        .csrf(csrf -> csrf.disable())
-//        .authorizeHttpRequests(auth -> auth
-//            .requestMatchers("/graphql", "/graphiql", "/vendor/graphiql/**").permitAll()
-//            .anyRequest().permitAll()
-//        );
-//    return http.build();
-//  }
-
-//  @Bean
-//  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//    http
-//        .csrf(csrf -> csrf.disable())                 // GraphQL = POST → CSRF off
-//        .authorizeHttpRequests(auth -> auth
-//            .requestMatchers(antMatcher("/graphql")).permitAll() // povolíme, řešíme v @PreAuthorize
-//            .anyRequest().permitAll()
-//        )
-//        .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//        .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
-//    return http.build();
-//  }
 }

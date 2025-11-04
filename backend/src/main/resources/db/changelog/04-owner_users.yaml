@@ -6,7 +6,7 @@ databaseChangeLog:
   ##############################################################################
   - changeSet:
       id: 70-create-reminders
-      author: base
+      author: Petr F.
       changes:
         - createTable:
             tableName: reminders
@@ -33,7 +33,7 @@ databaseChangeLog:
   ##############################################################################
   - changeSet:
       id: 80-create-labels
-      author: base
+      author: Petr F.
       changes:
         - createTable:
             tableName: labels
@@ -61,7 +61,7 @@ databaseChangeLog:
   ##############################################################################
   - changeSet:
       id: 90-create-reminder-labels
-      author: base
+      author: Petr F.
       changes:
         - createTable:
             tableName: reminder_labels
@@ -98,7 +98,7 @@ databaseChangeLog:
   ##############################################################################
   - changeSet:
       id: 100-create-event-templates
-      author: base
+      author: Petr F.
       changes:
         - createTable:
             tableName: event_templates
@@ -139,7 +139,7 @@ databaseChangeLog:
   ##############################################################################
   - changeSet:
       id: 110-create-events
-      author: base
+      author: Petr F.
       changes:
         - createTable:
             tableName: events
@@ -177,7 +177,7 @@ databaseChangeLog:
   ##############################################################################
   - changeSet:
       id: 120-create-reminder-events
-      author: base
+      author: Petr F.
       changes:
         - createTable:
             tableName: reminder_events
@@ -212,7 +212,7 @@ databaseChangeLog:
   ##############################################################################
   - changeSet:
       id: 130-create-members
-      author: base
+      author: Petr F.
       changes:
         - createTable:
             tableName: members
@@ -250,7 +250,7 @@ databaseChangeLog:
   ##############################################################################
   - changeSet:
       id: 140-create-member-labels
-      author: base
+      author: Petr F.
       changes:
         - createTable:
             tableName: member_labels
@@ -289,7 +289,7 @@ databaseChangeLog:
   ##############################################################################
   - changeSet:
       id: 150-create-reminder-rules
-      author: base
+      author: Petr F.
       changes:
         - createTable:
             tableName: reminder_rules
@@ -323,7 +323,7 @@ databaseChangeLog:
   ##############################################################################
   - changeSet:
       id: 160-create-event-members
-      author: base
+      author: Petr F.
       changes:
         - createTable:
             tableName: event_members
@@ -370,7 +370,7 @@ databaseChangeLog:
   ##############################################################################
   - changeSet:
       id: 120-create-banks
-      author: base
+      author: Petr F.
       changes:
         - createTable:
             tableName: banks

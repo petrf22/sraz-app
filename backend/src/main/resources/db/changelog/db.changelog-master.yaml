@@ -4,3 +4,4 @@ databaseChangeLog:
   - include: { file: 01-base-data.yaml,   relativeToChangelogFile: true }
   - include: { file: 03-owner_users.yaml, relativeToChangelogFile: true }
   - include: { file: 04-owner_users.yaml, relativeToChangelogFile: true }
+  - include: { file: 05-user_refresh_token.yaml, relativeToChangelogFile: true }
