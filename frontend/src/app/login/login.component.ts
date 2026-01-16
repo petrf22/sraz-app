@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 
@@ -8,6 +8,7 @@ import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { AuthService } from '../service/auth.service';
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { UserService } from '../service/user.service';
 
 @Component({
   selector: 'app-login',
@@ -15,7 +16,8 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
+  private userService = inject(UserService);
   private fb = inject(NonNullableFormBuilder);
   private auth = inject(AuthService);
   private router = inject(Router);
@@ -53,4 +55,14 @@ export class LoginComponent {
       });
     }
   }
+
+
+
+  ngOnInit(): void {
+    console.log('Welcome :: ngOnInit ...');
+    this.userService.profile().subscribe(profile => {
+      console.log('Welcome :: ngOnInit :: User profile:', profile);
+    });
+  }
+
 }

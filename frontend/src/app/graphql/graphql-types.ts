@@ -1,4 +1,3 @@
-import { gql } from 'apollo-angular';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -13,36 +12,43 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
-  /** An RFC-3339 compliant Full Date Scalar */
   Date: { input: any; output: any; }
-  /** A slightly refined version of RFC-3339 compliant DateTime Scalar */
   DateTime: { input: any; output: any; }
-  /** An RFC-3339 compliant Full Time Scalar */
   Time: { input: any; output: any; }
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
-  createUser?: Maybe<User>;
-  userSave?: Maybe<User>;
+  roleSave?: Maybe<Role>;
+  userCreate: User;
+  userDelete?: Maybe<User>;
+  userUpdate: User;
 };
 
 
-export type MutationCreateUserArgs = {
-  password: Scalars['String']['input'];
-  username: Scalars['String']['input'];
+export type MutationRoleSaveArgs = {
+  name: Scalars['String']['input'];
 };
 
 
-export type MutationUserSaveArgs = {
-  password: Scalars['String']['input'];
-  username: Scalars['String']['input'];
+export type MutationUserCreateArgs = {
+  userInput: UserInput;
+};
+
+
+export type MutationUserDeleteArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type MutationUserUpdateArgs = {
+  userInput: UserInput;
 };
 
 export type Query = {
   __typename?: 'Query';
   roles: Array<Role>;
-  userProfile: UserProfile;
+  userProfile: User;
 };
 
 export type Role = {
@@ -58,13 +64,15 @@ export type User = {
   firstName?: Maybe<Scalars['String']['output']>;
   id?: Maybe<Scalars['ID']['output']>;
   lastName?: Maybe<Scalars['String']['output']>;
-  password?: Maybe<Scalars['String']['output']>;
   publicName: Scalars['String']['output'];
   roles: Array<Role>;
 };
 
-export type UserProfile = {
-  __typename?: 'UserProfile';
-  roles: Array<Scalars['String']['output']>;
-  username: Scalars['String']['output'];
+export type UserInput = {
+  email: Scalars['String']['input'];
+  firstName?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  lastName?: InputMaybe<Scalars['String']['input']>;
+  password?: InputMaybe<Scalars['String']['input']>;
+  publicName: Scalars['String']['input'];
 };

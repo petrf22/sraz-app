@@ -1,12 +1,28 @@
 extend type Query {
-    userProfile: UserProfile!
+    userProfile: User!
 }
 
 extend type Mutation {
-    createUser(username: String!, password: String!): User
+    userCreate(userInput: UserInput!): User!
+    userUpdate(userInput: UserInput!): User!
+    userDelete(id: ID): User
 }
 
-type UserProfile {
-    username: String!
-    roles: [String!]!
+type User {
+    id: ID
+    publicName: String!
+    firstName: String
+    lastName: String
+    email: String!
+    emailVerifiedAt: DateTime
+    roles: [Role!]!
+}
+
+input UserInput {
+    id: ID
+    publicName: String!
+    firstName: String
+    lastName: String
+    email: String!
+    password: String
 }

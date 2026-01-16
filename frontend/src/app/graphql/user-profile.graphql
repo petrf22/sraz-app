@@ -1,0 +1,13 @@
+query UserProfile {
+  userProfile {
+    id
+    publicName
+    firstName
+    lastName
+    email
+    emailVerifiedAt
+    roles {
+      name
+    }
+  }
+}

@@ -1,23 +1,15 @@
 type Query {
     roles: [Role!]!
+
 }
 
 type Mutation {
-    userSave(username: String!, password: String!): User
+    roleSave(name: String!): Role
 }
 
-type User {
-    id: ID
-    publicName: String!
-    firstName: String
-    lastName: String
-    email: String!
-    emailVerifiedAt: DateTime
-    password: String
-    roles: [Role!]!
-}
-#
+
 type Role {
     id: ID
     name: String!
 }
+
