@@ -2,9 +2,11 @@ package cz.petrf.sraz.db.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.domain.Persistable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 
 @Entity
@@ -14,7 +16,7 @@ import java.time.OffsetTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EventTemplate {
+public class EventTemplate implements Persistable<Long> {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -32,7 +34,7 @@ public class EventTemplate {
 
   @Builder.Default
   @Column(nullable = false)
-  private Boolean isPublic = false;
+  private Boolean publicVisible = false;
 
   @Column(nullable = false)
   private Integer periodTypeId;
@@ -57,15 +59,20 @@ public class EventTemplate {
   private BigDecimal defaultPrice;
 
   @Builder.Default
-  @Column(nullable = false, updatable = false)
-  private java.time.Instant createdAt = java.time.Instant.now();
+  @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime createdAt = OffsetDateTime.now();
 
   @Builder.Default
-  @Column(nullable = false)
-  private java.time.Instant updatedAt = java.time.Instant.now();
+  @Column(nullable = false, columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime updatedAt = OffsetDateTime.now();
 
   @PreUpdate
   public void onUpdate() {
-    updatedAt = java.time.Instant.now();
+    updatedAt = OffsetDateTime.now();
+  }
+
+  @Override
+  public boolean isNew() {
+    return id==null;
   }
 }

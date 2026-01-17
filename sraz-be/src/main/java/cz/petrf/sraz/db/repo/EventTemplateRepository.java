@@ -10,5 +10,5 @@ public interface EventTemplateRepository extends JpaRepository<EventTemplate, Lo
 
   List<EventTemplate> findByOwnerIdAndActiveTrue(Long ownerId);
 
-  List<EventTemplate> findByOwnerIdAndIsPublicTrue(Long ownerId);
+  List<EventTemplate> findByOwnerIdAndPublicVisibleTrue(Long ownerId);
 }

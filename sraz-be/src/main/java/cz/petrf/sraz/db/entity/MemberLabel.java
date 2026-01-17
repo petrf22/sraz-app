@@ -2,6 +2,9 @@ package cz.petrf.sraz.db.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.domain.Persistable;
+
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "member_labels", uniqueConstraints = @UniqueConstraint(columnNames = {"owner_id", "member_id", "label_id"}))
@@ -10,7 +13,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MemberLabel {
+public class MemberLabel implements Persistable<Long> {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -28,15 +31,20 @@ public class MemberLabel {
   private Label label;
 
   @Builder.Default
-  @Column(nullable = false, updatable = false)
-  private java.time.Instant createdAt = java.time.Instant.now();
+  @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime createdAt = OffsetDateTime.now();
 
   @Builder.Default
-  @Column(nullable = false)
-  private java.time.Instant updatedAt = java.time.Instant.now();
+  @Column(nullable = false, columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime updatedAt = OffsetDateTime.now();
 
   @PreUpdate
   public void onUpdate() {
-    updatedAt = java.time.Instant.now();
+    updatedAt = OffsetDateTime.now();
+  }
+
+  @Override
+  public boolean isNew() {
+    return id==null;
   }
 }

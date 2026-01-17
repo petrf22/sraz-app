@@ -2,10 +2,11 @@ package cz.petrf.sraz.db.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.domain.Persistable;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.OffsetDateTime;
+
 
 @Entity
 @Table(name = "event_members")
@@ -14,7 +15,7 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EventMember {
+public class EventMember implements Persistable<Long> {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -34,13 +35,15 @@ public class EventMember {
   @Column(nullable = false, length = 40, unique = true)
   private String guid;
 
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "TIMESTAMPTZ")
   private OffsetDateTime guidValidFrom;
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "TIMESTAMPTZ")
   private OffsetDateTime guidValidTo;
 
-  private Instant acceptedAt;
-  private Instant declinedAt;
+  @Column(columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime acceptedAt;
+  @Column(columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime declinedAt;
 
   @Builder.Default
   @Column(nullable = false)
@@ -49,18 +52,24 @@ public class EventMember {
   @Column(nullable = false, precision = 8, scale = 2)
   private BigDecimal paid;
 
-  private Instant paidAt;
+  @Column(columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime paidAt;
 
   @Builder.Default
-  @Column(nullable = false, updatable = false)
-  private Instant createdAt = Instant.now();
+  @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime createdAt = OffsetDateTime.now();
 
   @Builder.Default
-  @Column(nullable = false)
-  private Instant updatedAt = Instant.now();
+  @Column(nullable = false, columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime updatedAt = OffsetDateTime.now();
 
   @PreUpdate
   public void onUpdate() {
-    updatedAt = Instant.now();
+    updatedAt = OffsetDateTime.now();
+  }
+
+  @Override
+  public boolean isNew() {
+    return id==null;
   }
 }

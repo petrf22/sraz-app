@@ -2,8 +2,9 @@ package cz.petrf.sraz.db.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.domain.Persistable;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "owner_users")
@@ -12,7 +13,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OwnerUser {
+public class OwnerUser implements Persistable<Long> {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,17 +35,22 @@ public class OwnerUser {
   @Column(nullable = false)
   private Boolean active = true;
 
-  @Column(nullable = false, updatable = false)
+  @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMPTZ")
   @Builder.Default
-  private Instant createdAt = Instant.now();
+  private OffsetDateTime createdAt = OffsetDateTime.now();
 
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "TIMESTAMPTZ")
   @Builder.Default
-  private Instant updatedAt = Instant.now();
+  private OffsetDateTime updatedAt = OffsetDateTime.now();
 
   /* automatická aktualizace updatedAt */
   @PreUpdate
   public void onUpdate() {
-    updatedAt = Instant.now();
+    updatedAt = OffsetDateTime.now();
+  }
+
+  @Override
+  public boolean isNew() {
+    return id==null;
   }
 }

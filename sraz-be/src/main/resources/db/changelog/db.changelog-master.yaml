@@ -1,8 +1,8 @@
 # db.changelog-master.yaml
 databaseChangeLog:
-  - include: { file: 2025-12-17/00-base-schema.yaml, relativeToChangelogFile: true }
-  - include: { file: 2025-12-17/01-base-data.yaml,   relativeToChangelogFile: true }
-  - include: { file: 2025-12-17/03-user_refresh_token.yaml,   relativeToChangelogFile: true }
-  - include: { file: 2025-12-18/001-create-photos-table.yaml, relativeToChangelogFile: true }
-  - include: { file: 2025-12-18/002-create-text-contents-table.yaml, relativeToChangelogFile: true }
-  - include: { file: 2025-12-18/003-create-magic-link-token-table.yaml, relativeToChangelogFile: true }
+  - include: { file: 2025-12-17/01-base-schema.yaml, relativeToChangelogFile: true }
+  - include: { file: 2025-12-17/02-base-data.yaml, relativeToChangelogFile: true }
+  - include: { file: 2025-12-17/03-create-magic-link-token-table.yaml, relativeToChangelogFile: true }
+  - include: { file: 2025-12-17/04-user_refresh_token.yaml, relativeToChangelogFile: true }
+  - include: { file: 2025-12-18/01-owner_users.yaml, relativeToChangelogFile: true }
+  - include: { file: 2025-12-18/02-owner_tables.yaml, relativeToChangelogFile: true }

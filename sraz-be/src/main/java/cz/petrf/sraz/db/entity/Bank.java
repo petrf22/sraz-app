@@ -2,9 +2,10 @@ package cz.petrf.sraz.db.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.domain.Persistable;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "banks")
@@ -13,7 +14,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Bank {
+public class Bank implements Persistable<Long> {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -25,15 +26,20 @@ public class Bank {
   private BigDecimal many;   // pozor, název sloupce je "many"
 
   @Builder.Default
-  @Column(nullable = false, updatable = false)
-  private Instant createdAt = Instant.now();
+  @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime createdAt = OffsetDateTime.now();
 
   @Builder.Default
-  @Column(nullable = false)
-  private Instant updatedAt = Instant.now();
+  @Column(nullable = false, columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime updatedAt = OffsetDateTime.now();
 
   @PreUpdate
   public void onUpdate() {
-    updatedAt = Instant.now();
+    updatedAt = OffsetDateTime.now();
+  }
+
+  @Override
+  public boolean isNew() {
+    return id==null;
   }
 }

@@ -1,0 +1,42 @@
+databaseChangeLog:
+  ##############################################################################
+  # 1. owners (základ už máš, jen ukázka pro kontext – můžeš vynechat)
+  ##############################################################################
+
+  - changeSet:
+      id: 01-create-owners
+      author: Petr F.
+      changes:
+        - createTable:
+            tableName: owners
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: created_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+
+  - changeSet:
+      id: 65-owner_users
+      author: you
+      changes:
+        - createTable:
+            tableName: owner_users
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: owner_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: user_id,  type: BIGINT, constraints: { nullable: false } }
+              - column: { name: admin,    type: BOOLEAN, constraints: { nullable: false }, defaultValue: "false" }
+              - column: { name: active,   type: BOOLEAN, constraints: { nullable: false }, defaultValue: "true" }
+              - column: { name: created_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+        - addForeignKeyConstraint:
+            constraintName: fk_owner_users_owner_id
+            baseTableName: owner_users
+            baseColumnNames: owner_id
+            referencedTableName: owners
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            constraintName: fk_owner_users_user_id
+            baseTableName: owner_users
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id

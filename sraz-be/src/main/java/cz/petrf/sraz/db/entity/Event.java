@@ -2,8 +2,10 @@ package cz.petrf.sraz.db.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.domain.Persistable;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 
 @Entity
@@ -13,7 +15,7 @@ import java.time.OffsetTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Event {
+public class Event implements Persistable<Long> {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -35,24 +37,30 @@ public class Event {
 
   @Builder.Default
   @Column(nullable = false)
-  private Boolean isPublic = false;
+  private Boolean publicVisible = false;
 
   private LocalDate eventDate;
   @Column(nullable = false)
   private OffsetTime eventTime;
 
-  private java.time.Instant deletedAt;
+  @Column(columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime deletedAt;
 
   @Builder.Default
-  @Column(nullable = false, updatable = false)
-  private java.time.Instant createdAt = java.time.Instant.now();
+  @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime createdAt = OffsetDateTime.now();
 
   @Builder.Default
-  @Column(nullable = false)
-  private java.time.Instant updatedAt = java.time.Instant.now();
+  @Column(nullable = false, columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime updatedAt = OffsetDateTime.now();
 
   @PreUpdate
   public void onUpdate() {
-    updatedAt = java.time.Instant.now();
+    updatedAt = OffsetDateTime.now();
+  }
+
+  @Override
+  public boolean isNew() {
+    return id==null;
   }
 }
