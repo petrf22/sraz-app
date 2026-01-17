@@ -1,24 +1,28 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, inject } from '@angular/core';
-import { provideRouter, Router } from '@angular/router';
+import { ApplicationConfig, LOCALE_ID, provideAppInitializer, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
+import { icons } from './icons-provider';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
 import { cs_CZ, provideNzI18n } from 'ng-zorro-antd/i18n';
 import { registerLocaleData } from '@angular/common';
-import cs from '@angular/common/locales/en';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { tokenInterceptor } from './func/token-func';
+import { authInitializer } from './func/auth-initializer';
+
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+
 import { provideApollo } from 'apollo-angular';
 import { HttpLink } from 'apollo-angular/http';
 import { ApolloClient, ApolloLink, CombinedGraphQLErrors, CombinedProtocolErrors, InMemoryCache } from '@apollo/client';
 import { AccountBookFill, AlertFill, AlertOutline } from '@ant-design/icons-angular/icons';
 import { IconDefinition } from '@ant-design/icons-angular';
-import { JwtInterceptor } from './service/jwt-interceptor';
-import { environment } from '../environments/environment';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { ErrorLink, onError } from '@apollo/client/link/error';
 
-const icons: IconDefinition[] = [AccountBookFill, AlertOutline, AlertFill];
+import cs from '@angular/common/locales/en';
 
 registerLocaleData(cs);
 
@@ -59,7 +63,7 @@ export function apolloOptionsFactory(
     }
   });
   return {
-    link: ApolloLink.from([errorLink, httpLink.create({ uri: environment.apiBaseUrl + '/graphql' })]),
+    link: ApolloLink.from([errorLink, httpLink.create({ uri: '/graphql' })]),
     cache: new InMemoryCache(),
   };
 }
@@ -68,15 +72,18 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes), provideNzIcons(icons), provideNzI18n(cs_CZ), provideAnimationsAsync(), provideHttpClient(), provideHttpClient(), provideApollo(() => {
+    provideRouter(routes), provideNzIcons(icons),
+    provideAnimations(),
+    { provide: LOCALE_ID, useValue: 'cs-CZ' }, provideNzI18n(cs_CZ),
+    provideHttpClient(withInterceptors([tokenInterceptor])),
+    provideAppInitializer(authInitializer()),
+    provideApollo(() => {
       const httpLink = inject(HttpLink);
       const router = inject(Router);
       const msg = inject(NzMessageService);
 
       return apolloOptionsFactory(httpLink, router, msg);
     }),
-    provideHttpClient(withInterceptorsFromDi()),
-    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
-    provideNzIcons(icons)
+
   ]
 };

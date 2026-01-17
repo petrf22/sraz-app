@@ -1,0 +1,25 @@
+<form nz-form (ngSubmit)="submitForm()" #form="ngForm">
+  <div nz-row>
+    <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+      <h2>Odhlásit se z aplikace</h2>
+    </div>
+    <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+      <label nz-checkbox [(ngModel)]="smazatUcet" name="smazatUcet">
+        <span>Smazat účet</span>
+      </label>
+    </div>
+    <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+      <nz-alert nzType="warning" [nzMessage]="smazatUcetInfo"></nz-alert>
+    </div>
+  </div>
+  <div nz-row>
+    <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+      <nz-divider></nz-divider>
+    </div>
+  </div>
+  <div nz-row>
+    <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+      <button nz-button nzType="primary">Odhlásit se</button>
+    </div>
+  </div>
+</form>

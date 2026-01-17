@@ -1,0 +1,82 @@
+<div nz-row>
+  <div nz-col nzXs="24" [nzSm]="{ span: 14, offset: 6 }">
+    <h2>Napište své přání</h2>
+  </div>
+  <div nz-col nzXs="24" [nzSm]="{ span: 14, offset: 6 }">
+    <em>Ve fotoknize bude uvedena vaše fotografie a zadaný text přání. Pokud nebude fotografie přiložena, tak se
+      použije pouze text přání.</em>
+  </div>
+</div>
+
+@if (textContent()) {
+<div nz-row class="v-space">
+  <div nz-col nzXs="24" [nzSm]="{ span: 14, offset: 6 }" class="gutter-row">
+    <nz-alert nzType="success" nzMessage="Vaše přání jsme úspěšně zaznamenali"
+      nzDescription="Velmi si vážíme toho, že jste se k nám připojili." nzShowIcon></nz-alert>
+  </div>
+</div>
+}
+
+<form nz-form (ngSubmit)="submitForm()" #form="ngForm" class="v-space">
+  <nz-form-item>
+    <nz-form-label [nzSm]="6" [nzXs]="24">Fotografie</nz-form-label>
+    <nz-form-control [nzSm]="14" [nzXs]="24"
+      nzExtra="Soubor musí být typu JPG nebo PNG, a současně jeho velikost nesmí přesáhnout 10MB.">
+      <div>
+        <div nz-row [nzGutter]="16">
+          <div nz-col>
+            <img nz-image [nzSrc]="previewUrl() || fallback" [nzFallback]="fallback" alt=""
+              style="max-width: 300px; max-height: 300px; width: auto; height: auto;" />
+          </div>
+        </div>
+        <div nz-row [nzGutter]="16">
+          <div nz-col>
+            <nz-upload nzAction="/api/photo" (nzChange)="handleChange($event)" [nzBeforeUpload]="beforeUpload"
+              [nzFileList]="fileList()" [nzRemove]="removeFoto"
+              [nzShowUploadList]="{ showPreviewIcon: false, showRemoveIcon: true, showDownloadIcon: false }">
+              <button nz-button>
+                <nz-icon nzType="upload" />
+                Nahrát fotografii
+              </button>
+            </nz-upload>
+          </div>
+        </div>
+      </div>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired>Text přání</nz-form-label>
+    <nz-form-control [nzSm]="14" [nzXs]="24" nzHasFeedback [nzErrorTip]="textPraniErrorTpl"
+      [nzExtra]="`Nezapomeňte na podpis, aby paní doktorka věděla, od koho je zadaný text přání. Text může obsahovat maximálně ${maxTextLength} znaků.`">
+      <nz-textarea-count [nzMaxCharacterCount]="maxTextLength">
+        <textarea [(ngModel)]="textPrani" name="textPrani" nz-input rows="5" placeholder="Text přání" required
+          [maxlength]="maxTextLength"></textarea>
+      </nz-textarea-count>
+    </nz-form-control>
+  </nz-form-item>
+  <ng-template #textPraniErrorTpl let-control>
+    @if (control.hasError('maxlength')) {
+    <ng-container>
+      Text přání nesmí přesáhnout {{ maxTextLength }} znaků. Aktuální počet znaků je {{ control.value?.length || 0 }}.
+    </ng-container>
+    } @else if (control.hasError('required')) {
+    <ng-container>
+      Napište vaše přání.
+    </ng-container>
+    }
+  </ng-template>
+  <nz-form-item nz-row class="bottons-area">
+    <nz-form-control nzXs="24" [nzSm]="{ span: 14, offset: 6 }">
+      <button nz-button nzType="primary" [disabled]="!form.valid || !form.dirty">Odeslat</button>
+    </nz-form-control>
+  </nz-form-item>
+</form>
+
+@if (aktualizace()) {
+<div nz-row class="v-space">
+  <div nz-col nzXs="24" [nzSm]="{ span: 14, offset: 6 }" class="gutter-row">
+    <div><em>Poslední změna byla provedena: {{ aktualizace() | date:'medium' }}</em></div>
+  </div>
+</div>
+}

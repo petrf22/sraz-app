@@ -1,0 +1,54 @@
+<div nz-row [nzGutter]="[16, 16]">
+  <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+    <h2>Kulaté narozeniny naší úžasné paní doktorky Starkové</h2>
+  </div>
+  <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+    Na začátku léta oslaví <strong>paní doktorka Starková</strong>, která <strong>přes padesát let pečovala o děti v
+      našem městě Hrádek</strong> jako oddaná pediatrička, své významné výročí.
+  </div>
+  <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+    Tyto stránky jsou věnovány právě paní doktorce Starkové – místo, kde můžete vyjádřit svou vděčnost a podělit se o
+    vzpomínky.
+  </div>
+  <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+    <h3>Jak to funguje?</h3>
+  </div>
+  <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+    @if (userService.tokenSig()) {
+    <!-- Verze pro přihlášené uživatele -->
+    <ul>
+      <li>Na stránce <a routerLink="/prani">přání</a> napište své přání k jejím narozeninám. Nezapomeňte se podepsat.
+      </li>
+      <li>Přidejte fotku (volitelně). Pokud chcete, nahrajte fotografii osoby nebo osob, které měla paní doktorka v své péči (vaše dítě, vy, společně, ...).</li>
+      <li>Fotky budou součástí společné sbírky vzpomínek, které se zvěční ve fotoknize, kterou bych předal paní doktorce k příležitosti jejího jubilea.</li>
+    </ul>
+    } @else {
+    <!-- Verze pro anonymní uživatele -->
+    <ul>
+      <li>Zadáte svůj e-mail</li>
+      <li>Na zadaný e-mail vám přijde adresa (URL) pro přihlášení do aplikace.</li>
+      <li>Klikněte na odkaz ve vašem e-mailu, abyste mohli pokračovat. Tento odkaz má platnost 15 minut. Přihlášení je možné opakovat.</li>
+      <li>Detailní informace získáte po zobrazení odkazu z vašeho e-mailu.</li>
+      <li>Proč je potřeba se ověřit e-mailem? Protože aplikace nepoužívá hesla.</li>
+    </ul>
+    }
+  </div>
+  @if (userService.tokenSig()) {
+  <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+    Všechna přání a fotky budou shromážděna a předána paní doktorce jako krásný dárek k narozeninám.<br>
+  </div>
+  <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+    Přidejte se a pomozte nám vytvořit vzpomínky pro paní doktorku Starkovou, aby věděla, že jsme na ní nezapomněli.<br>
+  </div>
+  <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+    Děkujeme za vaši účast!
+  </div>
+  } @else {
+  <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+    <app-mail></app-mail>
+  </div>
+  }
+  <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+    <em>Aplikaci bude možné používat do 30.&nbsp;4.&nbsp;2026 včetně.</em>
+  </div>
+</div>

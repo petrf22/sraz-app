@@ -1,0 +1,9 @@
+@if (errorVerify) {
+  <nz-alert nzType="error" nzMessage="Ověření e-mailové adresy"
+    nzDescription="Nepodařilo se ověřit vaši e-mailovou adresu. Platnost tokenu mohla vypršet (15 minut) nebo je token neplatný."
+    nzShowIcon></nz-alert>
+
+  <a routerLink="/" class="ant-btn ant-btn-primary" style="margin-top: 16px;">
+    Znovu odeslat ověřovací e-mail
+  </a>
+}

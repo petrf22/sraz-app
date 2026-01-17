@@ -1,17 +1,14 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { tap } from "rxjs";
-import { environment } from "../../environments/environment";
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly TOKEN_KEY = 'jwt';
   private api = inject(HttpClient);
 
-  private readonly apiUrl = environment.apiBaseUrl;
-
   login(credentials: { username: string; password: string }) {
-    return this.api.post<{ token: string }>(`${this.apiUrl}/api/auth/login`, credentials)
+    return this.api.post<{ token: string }>(`/api/auth/login`, credentials)
       .pipe(tap(res => this.setToken(res.token)));
   }
 
