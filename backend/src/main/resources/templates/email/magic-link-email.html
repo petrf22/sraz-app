@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #4CAF50; color: white; padding: 10px; text-align: center; }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .footer { margin-top: 30px; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <hgroup class="header">
+        <h1>Přání paní doktorce</h1>
+        <p>Přihlášení do aplikace pro zadání přání k narozeninám</p>
+    </hgroup>
+
+    <p>Dobrý den, <strong th:text="${userEmail}">Uživateli</strong>,</p>
+
+    <p>Děkujeme za použití naší aplikace. Pro dokončení přihlášení klikněte na tlačítko níže:</p>
+
+    <p style="text-align: center;">
+        <a class="button" th:href="${magicLink}">Přihlášení</a>
+    </p>
+
+    <p>Odkaz je platný <strong th:text="${expirationMinutes}"></strong> minut.</p>
+
+    <div class="footer">
+        <p>Tento email byl odeslán automaticky, neodpovídejte na něj.
+            Pokud jste o tento email nežádali, kontaktujte mě na adrese: petr.franta@gmail.com.</p>
+        <p>© 2026 Petr Franta.</p>
+    </div>
+</div>
+</body>
+</html>

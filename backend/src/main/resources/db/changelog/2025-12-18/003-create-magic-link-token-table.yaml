@@ -1,0 +1,61 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-magic-link-token-table-1.0
+      author: your-name
+      comment: Create magic_link_token table
+      changes:
+        - createTable:
+            tableName: magic_link_token
+            columns:
+              - column:
+                  name: token
+                  type: VARCHAR(255)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+              - column:
+                  name: used_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: true
+              - column:
+                  name: revoked
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+
+        - addDefaultValue:
+            tableName: magic_link_token
+            columnName: revoked
+            defaultValueBoolean: false
+
+        - createIndex:
+            tableName: magic_link_token
+            columns:
+              - column:
+                  name: email
+            indexName: idx_magic_link_token_email
+
+        - createIndex:
+            tableName: magic_link_token
+            columns:
+              - column:
+                  name: expires_at
+            indexName: idx_magic_link_token_expires_at
+
+        - sql:
+            comment: Add check constraint for token format (optional)
+            sql: |
+              ALTER TABLE magic_link_token 
+              ADD CONSTRAINT chk_token_not_empty CHECK (token != '')

@@ -1,56 +1,52 @@
-// User.java
 package cz.petrf.sraz.db.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.domain.Persistable;
 
+import java.sql.Blob;
 import java.time.OffsetDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
-@Table(name = "users")
+@Table(name = "photos")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User implements Persistable<Long> {
+public class Photo implements Persistable<Long> {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false)
-  private String publicName;
-
-  private String firstName;
-  private String lastName;
-
-  @Column(nullable = false, unique = true)
-  private String email;
-
-  @Column(columnDefinition = "TIMESTAMPTZ")
-  private OffsetDateTime emailVerifiedAt;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "user_id", nullable = false,
+      foreignKey = @ForeignKey(name = "fk_photo_user"))
+  private User user;
 
   @Column(nullable = false)
-  private String password;
+  private String fileName;
+
+  @Column(nullable = false)
+  private String contentType;
+
+  @Lob
+  @Basic(fetch = FetchType.LAZY)
+  @Column(nullable = false, columnDefinition = "bytea")
+  @JdbcTypeCode(SqlTypes.BINARY)
+  private Blob data;
+
+  @Column(nullable = false)
+  private Long fileSize;
 
   @Column(columnDefinition = "TIMESTAMPTZ")
   private OffsetDateTime createdAt;
 
   @Column(columnDefinition = "TIMESTAMPTZ")
   private OffsetDateTime updatedAt;
-
-  @ManyToMany(fetch = FetchType.EAGER)
-  @JoinTable(
-      name = "user_roles",
-      joinColumns = @JoinColumn(name = "user_id"),
-      inverseJoinColumns = @JoinColumn(name = "role_id")
-  )
-  @Builder.Default
-  private Set<Role> roles = new HashSet<>();
 
   @PrePersist
   protected void onCreate() {

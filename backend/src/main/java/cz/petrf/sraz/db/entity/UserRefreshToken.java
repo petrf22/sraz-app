@@ -2,8 +2,9 @@ package cz.petrf.sraz.db.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.domain.Persistable;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
@@ -13,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserRefreshToken {
+public class UserRefreshToken implements Persistable<Long> {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,19 +25,29 @@ public class UserRefreshToken {
       foreignKey = @ForeignKey(name = "fk_refresh_user"))
   private User user;
 
-  @Column(name = "jti", nullable = false, unique = true)
+  @Column(name = "jti", nullable = false, unique = true, columnDefinition = "UUID")
   private UUID jti;
 
   @Column(name = "device", length = 100)
   private String device;
 
-  @Column(name = "issued_at", nullable = false)
-  private Instant issuedAt;
+  @Column(name = "issued_at", nullable = false, columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime issuedAt;
 
-  @Column(name = "exp", nullable = false)
-  private Instant exp;
+  @Column(name = "exp", nullable = false, columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime exp;
 
   @Builder.Default
   @Column(name = "revoked", nullable = false)
   private boolean revoked = false;
+
+  @PrePersist
+  protected void onCreate() {
+    issuedAt = OffsetDateTime.now();
+  }
+
+  @Override
+  public boolean isNew() {
+    return id==null;
+  }
 }

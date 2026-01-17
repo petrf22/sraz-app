@@ -1,4 +1,3 @@
-// RoleRepository.java
 package cz.petrf.sraz.db.repo;
 
 import cz.petrf.sraz.db.entity.Role;

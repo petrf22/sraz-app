@@ -2,36 +2,36 @@ package cz.petrf.sraz.db.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.domain.Persistable;
 
 import java.time.OffsetDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
-@Table(name = "roles")
+@Table(name = "text_contents")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Role {
+public class TextContent implements Persistable<Long> {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false, unique = true, length = 50)
-  private String name;
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "user_id", nullable = false,
+      foreignKey = @ForeignKey(name = "fk_text_content_user"))
+  private User user;
+
+  @Column(nullable = false, columnDefinition = "TEXT")
+  private String content;
 
   @Column(columnDefinition = "TIMESTAMPTZ")
   private OffsetDateTime createdAt;
 
   @Column(columnDefinition = "TIMESTAMPTZ")
   private OffsetDateTime updatedAt;
-
-  @ManyToMany(mappedBy = "roles")
-  @Builder.Default
-  private Set<User> users = new HashSet<>();
 
   @PrePersist
   protected void onCreate() {
@@ -42,5 +42,10 @@ public class Role {
   @PreUpdate
   protected void onUpdate() {
     updatedAt = OffsetDateTime.now();
+  }
+
+  @Override
+  public boolean isNew() {
+    return id==null;
   }
 }

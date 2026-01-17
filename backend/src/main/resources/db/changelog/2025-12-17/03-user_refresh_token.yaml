@@ -32,12 +32,12 @@ databaseChangeLog:
                   type: varchar(100)
               - column:
                   name: issued_at
-                  type: timestamp
+                  type: TIMESTAMPTZ
                   constraints:
                     nullable: false
               - column:
                   name: exp
-                  type: timestamp
+                  type: TIMESTAMPTZ
                   constraints:
                     nullable: false
               - column:

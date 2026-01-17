@@ -1,12 +1,13 @@
 package cz.petrf.sraz.db.repo;
 
+import cz.petrf.sraz.db.entity.User;
 import cz.petrf.sraz.db.entity.UserRefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -14,7 +15,7 @@ import java.util.UUID;
 public interface UserRefreshTokenRepository extends JpaRepository<UserRefreshToken, Long> {
 
   /* hledání podle JWT-ID */
-  Optional<UserRefreshToken> findByJti(UUID jti);
+  Optional<UserRefreshToken> findByJti(@Param("jti") UUID jti);
 
   /* všechny aktivní tokeny uživatele */
   List<UserRefreshToken> findByUserIdAndRevokedIsFalse(Long userId);
@@ -28,15 +29,15 @@ public interface UserRefreshTokenRepository extends JpaRepository<UserRefreshTok
   int revokeAllByUserId(@Param("userId") Long userId);
 
   @Modifying
-  @Query("""
+  @Query(value = """
       UPDATE UserRefreshToken urt
         SET urt.revoked = true
-      WHERE urt.user.id = (select urt2.id
-                    from UserRefreshToken urt2
-                    where urt2.jti = :jti)
+      WHERE urt.jti = :jti
       """)
-  int revokeAllByJit(@Param("jit") UUID jti);
+  int revokeAllByJit(@Param("jti") UUID jti);
 
   /* smazání už expirovaných tokenů (pro scheduled úklid) */
-  void deleteAllByExpBefore(Instant now);
+  void deleteAllByExpBefore(OffsetDateTime now);
+
+  void deleteByUser(User user);
 }

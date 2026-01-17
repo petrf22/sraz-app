@@ -35,7 +35,7 @@ databaseChangeLog:
                     unique: true
               - column:
                   name: email_verified_at
-                  type: TIMESTAMP
+                  type: TIMESTAMPTZ
               - column:
                   name: password
                   type: VARCHAR(255)
@@ -46,11 +46,11 @@ databaseChangeLog:
                   type: VARCHAR(100)
               - column:
                   name: created_at
-                  type: TIMESTAMP
+                  type: TIMESTAMPTZ
                   defaultValueComputed: CURRENT_TIMESTAMP
               - column:
                   name: updated_at
-                  type: TIMESTAMP
+                  type: TIMESTAMPTZ
                   defaultValueComputed: CURRENT_TIMESTAMP
 
   # 2) ROLES
@@ -76,11 +76,11 @@ databaseChangeLog:
                     unique: true
               - column:
                   name: created_at
-                  type: TIMESTAMP
+                  type: TIMESTAMPTZ
                   defaultValueComputed: CURRENT_TIMESTAMP
               - column:
                   name: updated_at
-                  type: TIMESTAMP
+                  type: TIMESTAMPTZ
                   defaultValueComputed: CURRENT_TIMESTAMP
 
   # 3) USER_ROLES (spojovací tabulka)
