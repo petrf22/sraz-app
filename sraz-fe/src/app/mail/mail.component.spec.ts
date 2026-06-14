@@ -7,7 +7,7 @@ describe('MailComponent', () => {
 
   beforeEach(fakeAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ MailComponent ]
+      imports: [ MailComponent ]
     })
     .compileComponents();
     ;

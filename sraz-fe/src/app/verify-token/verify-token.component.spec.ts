@@ -7,7 +7,7 @@ describe('VerifyTokenComponent', () => {
 
   beforeEach(fakeAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ VerifyTokenComponent ]
+      imports: [ VerifyTokenComponent ]
     })
     .compileComponents();
     ;

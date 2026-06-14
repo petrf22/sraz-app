@@ -7,7 +7,7 @@ describe('PraniFormComponent', () => {
 
   beforeEach(fakeAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ PraniComponent ]
+      imports: [ PraniComponent ]
     })
     .compileComponents();
     ;
