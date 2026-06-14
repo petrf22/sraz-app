@@ -38,3 +38,5 @@ out/
 
 ### DEV ###
 /src/main/resources/application-dev.properties
+.env
+.env.local
