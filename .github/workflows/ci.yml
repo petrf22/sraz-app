@@ -13,7 +13,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: prani-be
+        working-directory: sraz-be
 
     steps:
       - name: Checkout repository
@@ -37,7 +37,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: prani-fe
+        working-directory: sraz-fe
 
     steps:
       - name: Checkout repository
@@ -48,7 +48,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: prani-fe/package-lock.json
+          cache-dependency-path: sraz-fe/package-lock.json
 
       - name: Install dependencies
         run: npm ci
