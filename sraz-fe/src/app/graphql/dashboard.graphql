@@ -1,0 +1,33 @@
+query MyDashboard {
+  myUpcomingEvents {
+    ...EventListFields
+  }
+  myGroupInvites {
+    id
+    memberType
+    position
+    group {
+      id
+      name
+    }
+  }
+  myGroups {
+    id
+    name
+    amOrganizer
+  }
+}
+
+mutation GroupInviteRespond($memberId: ID!, $accept: Boolean!) {
+  groupInviteRespond(memberId: $memberId, accept: $accept) {
+    id
+    status
+  }
+}
+
+mutation GroupCreate($input: GroupInput!) {
+  groupCreate(input: $input) {
+    id
+    name
+  }
+}

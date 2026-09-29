@@ -1,30 +1,24 @@
-<div nz-row [nzGutter]="[16, 16]">
-  <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
-    <h2>Sraz – přihlašování na sportovní akce</h2>
+@if (auth.isLoggedIn()) {
+  <app-prehled></app-prehled>
+} @else {
+  <div nz-row [nzGutter]="[16, 16]">
+    <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+      <h2>Sraz – přihlašování na sportovní akce</h2>
+    </div>
+    <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+      Aplikace pro pravidelné sportovní akce (např. večerní hokej): pozvánky e-mailem, přihlášení do týmu,
+      kapacita a fronta náhradníků, evidence účasti, plateb a statistik.
+    </div>
+    <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+      <h3>Jak to funguje?</h3>
+      <ul>
+        <li>Zadáte svůj e-mail a přijde vám šestimístný kód – žádné heslo.</li>
+        <li>Aplikace si přihlášení zapamatuje, příště už kód nepotřebujete.</li>
+        <li>Na akce se můžete přihlásit i přímo odkazem z pozvánky v e-mailu, bez přihlášení do aplikace.</li>
+      </ul>
+    </div>
+    <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+      <a nz-button nzType="primary" routerLink="/login">Přihlásit se</a>
+    </div>
   </div>
-  <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
-    Aplikace pro pravidelné sportovní akce (např. večerní hokej): pozvánky e-mailem, přihlášení do týmu,
-    kapacita a fronta náhradníků, evidence účasti, plateb a statistik.
-  </div>
-  <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
-    <h3>Jak to funguje?</h3>
-  </div>
-  <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
-    @if (auth.isLoggedIn()) {
-    <!-- Verze pro přihlášené uživatele -->
-    <p>Jste přihlášen(a). Přehled akcí a skupin bude brzy k dispozici.</p>
-    } @else {
-    <!-- Verze pro anonymní uživatele -->
-    <ul>
-      <li>Zadáte svůj e-mail a přijde vám šestimístný kód – žádné heslo.</li>
-      <li>Aplikace si přihlášení zapamatuje, příště už kód nepotřebujete.</li>
-      <li>Na akce se můžete přihlásit i přímo odkazem z pozvánky v e-mailu, bez přihlášení do aplikace.</li>
-    </ul>
-    }
-  </div>
-  @if (!auth.isLoggedIn()) {
-  <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
-    <a nz-button nzType="primary" routerLink="/login">Přihlásit se</a>
-  </div>
-  }
-</div>
+}

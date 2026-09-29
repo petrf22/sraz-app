@@ -1,0 +1,104 @@
+query EventDetail($id: ID!) {
+  event(id: $id) {
+    id
+    name
+    startsAt
+    durationMinutes
+    maxPlayersPerTeam
+    maxGoalies
+    signupDeadline
+    inviteRegularsHoursBefore
+    inviteSubstitutesHoursBefore
+    regularsInvitedAt
+    substitutesInvitedAt
+    status
+    note
+    signupOpen
+    venue {
+      ...VenueFields
+    }
+    summary {
+      ...SummaryFields
+    }
+    myRegistration {
+      id
+      status
+      team {
+        id
+      }
+    }
+    registrations {
+      id
+      status
+      position
+      source
+      queuedAt
+      updatedAt
+      user {
+        id
+        publicName
+      }
+      team {
+        id
+      }
+    }
+    group {
+      id
+      name
+      amOrganizer
+      teams {
+        ...TeamFields
+      }
+      venues {
+        ...VenueFields
+      }
+      members {
+        id
+        status
+        position
+        memberType
+        user {
+          id
+          publicName
+        }
+      }
+    }
+  }
+}
+
+mutation EventCreate($groupId: ID!, $input: EventInput!) {
+  eventCreate(groupId: $groupId, input: $input) {
+    id
+  }
+}
+
+mutation EventUpdate($id: ID!, $input: EventInput!) {
+  eventUpdate(id: $id, input: $input) {
+    id
+  }
+}
+
+mutation EventCancel($id: ID!, $reason: String) {
+  eventCancel(id: $id, reason: $reason) {
+    id
+    status
+  }
+}
+
+mutation EventSendInvitations($id: ID!, $memberType: MemberType!) {
+  eventSendInvitations(id: $id, memberType: $memberType)
+}
+
+mutation RegistrationRespond($eventId: ID!, $status: RegistrationStatus!, $teamId: ID) {
+  registrationRespond(eventId: $eventId, status: $status, teamId: $teamId) {
+    id
+    status
+  }
+}
+
+mutation RegistrationSet($eventId: ID!, $userId: ID!, $status: RegistrationStatus!, $teamId: ID, $position: Position) {
+  registrationSet(eventId: $eventId, userId: $userId, status: $status, teamId: $teamId, position: $position) {
+    id
+    status
+  }
+}

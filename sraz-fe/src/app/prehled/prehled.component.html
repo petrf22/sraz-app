@@ -1,0 +1,67 @@
+@if (data(); as d) {
+  @if (d.myGroupInvites.length > 0) {
+    <nz-card nzTitle="Pozvánky do skupin" class="space">
+      @for (inv of d.myGroupInvites; track inv.id) {
+        <p>
+          Skupina <strong>{{ inv.group.name }}</strong> vás zve jako {{ memberType[inv.memberType] }}.
+          <button nz-button nzType="primary" nzSize="small" (click)="respondInvite(inv.id, true)">Přijmout</button>
+          <button nz-button nzSize="small" (click)="respondInvite(inv.id, false)">Odmítnout</button>
+        </p>
+      }
+    </nz-card>
+  }
+
+  <nz-card nzTitle="Moje nadcházející akce" class="space">
+    @if (d.myUpcomingEvents.length === 0) {
+      <nz-empty nzNotFoundContent="Žádné naplánované akce"></nz-empty>
+    }
+    <nz-list>
+      @for (e of d.myUpcomingEvents; track e.id) {
+        <nz-list-item>
+          <nz-list-item-meta [nzTitle]="titleTpl" [nzDescription]="descTpl"></nz-list-item-meta>
+          <ng-template #titleTpl>
+            <a [routerLink]="['/akce', e.id]">{{ e.name }}</a> – {{ e.startsAt | date: 'EEEE d. M. H:mm' }}
+            @if (e.status === 'CANCELLED') { <nz-tag nzColor="error">zrušeno</nz-tag> }
+          </ng-template>
+          <ng-template #descTpl>
+            {{ e.group.name }}@if (e.venue) {, {{ e.venue.name }}} ·
+            {{ e.summary.players }}/{{ e.summary.maxPlayers }} hráčů,
+            {{ e.summary.goalies }}/{{ e.summary.maxGoalies }} brankářů
+          </ng-template>
+          <ul nz-list-item-actions>
+            <nz-list-item-action>
+              @if (e.myRegistration; as r) {
+                <nz-tag [nzColor]="regColor[r.status]">{{ regStatus[r.status] }}{{ r.team ? ' – ' + r.team.name : '' }}</nz-tag>
+              } @else {
+                <a nz-button nzType="primary" nzSize="small" [routerLink]="['/akce', e.id]">Odpovědět</a>
+              }
+            </nz-list-item-action>
+          </ul>
+        </nz-list-item>
+      }
+    </nz-list>
+  </nz-card>
+
+  <nz-card nzTitle="Moje skupiny" class="space" [nzExtra]="newGroupBtn">
+    @if (d.myGroups.length === 0) {
+      <nz-empty nzNotFoundContent="Zatím nejste v žádné skupině"></nz-empty>
+    }
+    @for (g of d.myGroups; track g.id) {
+      <p>
+        <a [routerLink]="['/skupiny', g.id]">{{ g.name }}</a>
+        @if (g.amOrganizer) { <nz-tag nzColor="blue">organizátor</nz-tag> }
+      </p>
+    }
+  </nz-card>
+  <ng-template #newGroupBtn>
+    <button nz-button nzSize="small" (click)="newGroupVisible.set(true)">Založit skupinu</button>
+  </ng-template>
+
+  <nz-modal [nzVisible]="newGroupVisible()" nzTitle="Nová skupina" nzOkText="Založit" nzCancelText="Zrušit"
+    (nzOnOk)="createGroup()" (nzOnCancel)="newGroupVisible.set(false)">
+    <ng-container *nzModalContent>
+      <p>Založením se stanete organizátorem. Skupina dostane týmy Modří a Červení (lze změnit).</p>
+      <input nz-input placeholder="např. Večerní hokej" [ngModel]="newGroupName()" (ngModelChange)="newGroupName.set($event)" />
+    </ng-container>
+  </nz-modal>
+}

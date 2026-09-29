@@ -1,0 +1,65 @@
+fragment TeamFields on Team {
+  id
+  name
+  color
+  sortOrder
+}
+
+fragment VenueFields on Venue {
+  id
+  name
+  address
+  mapUrl
+  latitude
+  longitude
+}
+
+fragment SummaryFields on EventSummary {
+  players
+  maxPlayers
+  goalies
+  maxGoalies
+  waitlist
+}
+
+fragment EventListFields on Event {
+  id
+  name
+  startsAt
+  status
+  signupOpen
+  signupDeadline
+  group {
+    id
+    name
+  }
+  venue {
+    id
+    name
+  }
+  summary {
+    ...SummaryFields
+  }
+  myRegistration {
+    id
+    status
+    team {
+      id
+      name
+    }
+  }
+}
+
+fragment MemberFields on GroupMember {
+  id
+  email
+  memberType
+  position
+  organizer
+  status
+  respondedAt
+  user {
+    id
+    publicName
+  }
+}

@@ -1,0 +1,69 @@
+query GroupDetail($id: ID!, $from: DateTime) {
+  group(id: $id) {
+    id
+    name
+    description
+    amOrganizer
+    myMembership {
+      id
+    }
+    teams {
+      ...TeamFields
+    }
+    venues {
+      ...VenueFields
+    }
+    members {
+      ...MemberFields
+    }
+    events(from: $from) {
+      ...EventListFields
+    }
+  }
+}
+
+mutation GroupUpdate($id: ID!, $input: GroupInput!) {
+  groupUpdate(id: $id, input: $input) {
+    id
+    name
+    description
+  }
+}
+
+mutation TeamSave($groupId: ID!, $input: TeamInput!) {
+  teamSave(groupId: $groupId, input: $input) {
+    ...TeamFields
+  }
+}
+
+mutation TeamDelete($id: ID!) {
+  teamDelete(id: $id)
+}
+
+mutation VenueSave($groupId: ID!, $input: VenueInput!) {
+  venueSave(groupId: $groupId, input: $input) {
+    ...VenueFields
+  }
+}
+
+mutation VenueDelete($id: ID!) {
+  venueDelete(id: $id)
+}
+
+mutation MemberInvite($groupId: ID!, $input: MemberInviteInput!) {
+  memberInvite(groupId: $groupId, input: $input) {
+    ...MemberFields
+  }
+}
+
+mutation MemberUpdate($id: ID!, $input: MemberUpdateInput!) {
+  memberUpdate(id: $id, input: $input) {
+    ...MemberFields
+  }
+}
+
+mutation MemberRemove($id: ID!) {
+  memberRemove(id: $id) {
+    ...MemberFields
+  }
+}
