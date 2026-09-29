@@ -37,7 +37,7 @@ public class MagicLinkService {
   private String tokenUrl;
   @Value("${app.magic-link.mail.from:petr.franta@gmail.com}")
   private String fromEmail;
-  @Value("${app.magic-link.mail.subject:Přání paní doktorce - přihlášení do aplikace}")
+  @Value("${app.magic-link.mail.subject:Sraz - přihlášení do aplikace}")
   private String mailSubject;
 
   @Transactional

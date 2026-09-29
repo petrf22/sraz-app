@@ -30,7 +30,7 @@ export class App {
         while (route.firstChild) {
           route = route.firstChild;
         }
-        return route.snapshot.data?.['title'] || 'Přání paní doktorce';
+        return route.snapshot.data?.['title'] || 'Sraz';
       })
     );
   }

@@ -3,7 +3,7 @@
     <div class="header-container">
       <div class="logo"></div>
 
-      <h1 class="app-title">Přání paní doktorce</h1>
+      <h1 class="app-title">Sraz</h1>
 
       <button nz-button nzType="text" class="mobile-menu-trigger" (click)="openDrawer()">
         <span nz-icon nzType="menu" nzTheme="outline"></span>
@@ -12,9 +12,7 @@
       <ul nz-menu nzTheme="dark" nzMode="horizontal" class="desktop-menu">
         <li nz-menu-item routerLink="/">Úvod</li>
         @if(isAuthenticated()) {
-        <li nz-menu-item routerLink="/prani">Přání</li>
         <li nz-menu-item routerLink="/logout">Odhlásit se</li>
-        <li nz-menu-item routerLink="/onas">O nás</li>
         }
       </ul>
     </div>
@@ -31,9 +29,7 @@
       <ul nz-menu nzMode="inline">
         <li nz-menu-item routerLink="/" (click)="closeDrawer()">Úvod</li>
         @if(isAuthenticated()) {
-        <li nz-menu-item routerLink="/prani" (click)="closeDrawer()">Přání</li>
         <li nz-menu-item routerLink="/logout" (click)="closeDrawer()">Odhlásit se</li>
-        <li nz-menu-item routerLink="/onas" (click)="closeDrawer()">O nás</li>
         }
       </ul>
     </ng-container>

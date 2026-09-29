@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-A monorepo for the "Přání paní doktorce Starkové" application, split into two independently-built projects:
+A monorepo for the "Sraz" application (signup for recurring sports events, e.g. weekly hockey), split into two independently-built projects:
 
 - `sraz-be/` — Spring Boot 4 backend (Java 25, Gradle), serving a GraphQL API for domain data and a REST API for authentication.
 - `sraz-fe/` — Angular 21 frontend (standalone components, ng-zorro-antd UI, Apollo GraphQL client).

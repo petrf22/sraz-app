@@ -14,7 +14,7 @@ export function authInitializer(): () => void | Observable<unknown> | Promise<un
         tap(token => {
           console.log('Auth Initializer :: Token refreshed successfully');
           if (token) {
-            router.navigate(['/prani'], { replaceUrl: true });
+            router.navigate(['/'], { replaceUrl: true });
           } else {
             router.navigate(['/'], { replaceUrl: true });
           }
