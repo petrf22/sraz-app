@@ -1,0 +1,142 @@
+@if (event(); as e) {
+  <p><a [routerLink]="['/skupiny', e.group.id]">← {{ e.group.name }}</a></p>
+  <h2>
+    {{ e.name }} – {{ e.startsAt | date: 'EEEE d. M. y, H:mm' }}
+    <nz-tag [nzColor]="cancelled() ? 'error' : 'default'">{{ eventStatus[e.status] }}</nz-tag>
+  </h2>
+
+  <div nz-row [nzGutter]="[16, 16]">
+    <div nz-col nzXs="24" nzLg="10">
+      <nz-card nzTitle="Informace">
+        <p>Délka {{ e.durationMinutes }} min, uzávěrka přihlášek {{ e.signupDeadline | date: 'EEEE d. M. H:mm' }}</p>
+        @if (e.venue; as v) {
+          <p>
+            {{ v.name }}@if (v.address) {, {{ v.address }}}
+            @if (v.mapUrl) { – <a [href]="v.mapUrl" target="_blank" rel="noopener">mapa</a> }
+          </p>
+        }
+        @if (e.note) { <p>{{ e.note }}</p> }
+        <p>
+          Hráči {{ e.summary.players }}/{{ e.summary.maxPlayers }}, brankáři {{ e.summary.goalies }}/{{ e.summary.maxGoalies }}
+          @if (e.summary.waitlist) {, fronta {{ e.summary.waitlist }}}
+        </p>
+      </nz-card>
+
+      <nz-card nzTitle="Moje účast" class="space-top">
+        @if (e.myRegistration; as r) {
+          <p>
+            <nz-tag [nzColor]="regColor[r.status]">{{ regStatus[r.status] }}</nz-tag>
+            @for (t of e.group.teams; track t.id) { @if (t.id === r.team?.id) { {{ t.name }} } }
+          </p>
+        }
+        @if (cancelled()) {
+          <nz-alert nzType="warning" nzMessage="Akce je zrušená."></nz-alert>
+        } @else if (!e.signupOpen) {
+          <nz-alert nzType="info" nzMessage="Přihlašování skončilo. Změnu domluvte s organizátorem."></nz-alert>
+        } @else {
+          <div class="actions">
+            @for (t of e.group.teams; track t.id) {
+              <button nz-button nzType="primary" [style.background]="t.color" [style.border-color]="t.color"
+                [nzLoading]="saving()" (click)="respond('IN', t)">Přijdu – {{ t.name }}</button>
+            }
+            @if (e.group.teams.length === 0) {
+              <button nz-button nzType="primary" [nzLoading]="saving()" (click)="respond('IN')">Přijdu</button>
+            }
+            <button nz-button nzDanger [nzLoading]="saving()" (click)="respond('OUT')">Nepřijdu</button>
+          </div>
+          <p class="hint">Brankáři se přihlašují bez ohledu na tým – stačí zvolit kterékoliv „Přijdu“.</p>
+        }
+      </nz-card>
+    </div>
+
+    <div nz-col nzXs="24" nzLg="14">
+      <nz-card nzTitle="Kdo přijde">
+        <div nz-row [nzGutter]="[16, 16]">
+          @for (col of columns(); track col.title) {
+            <div nz-col nzXs="24" nzSm="8">
+              <h4 [style.color]="col.color">{{ col.title }} ({{ col.names.length }}/{{ col.max }})</h4>
+              <ol>
+                @for (name of col.names; track $index) { <li>{{ name }}</li> }
+              </ol>
+            </div>
+          }
+        </div>
+        @if (waitlist().length) {
+          <h4>Fronta</h4>
+          <ol>
+            @for (r of waitlist(); track r.id) {
+              <li>{{ r.user.publicName }}
+                @for (t of e.group.teams; track t.id) { @if (t.id === r.team?.id) { ({{ t.name }}) } }
+              </li>
+            }
+          </ol>
+        }
+        @if (notComing().length) {
+          <p class="hint">Nepřijdou: @for (r of notComing(); track r.id) {{{ r.user.publicName }}{{ $last ? '' : ', ' }}}</p>
+        }
+      </nz-card>
+    </div>
+  </div>
+
+  @if (organizer() && !cancelled()) {
+    <nz-card nzTitle="Organizátor" class="space-top">
+      <p>
+        Pozvánky stálým ({{ e.inviteRegularsHoursBefore }} h předem):
+        @if (e.regularsInvitedAt) { odeslány {{ e.regularsInvitedAt | date: 'd. M. H:mm' }} } @else { zatím ne }
+        <button nz-button nzSize="small" [nzLoading]="saving()" (click)="sendInvitations('REGULAR')">Poslat teď</button>
+      </p>
+      <p>
+        Pozvánky náhradníkům ({{ e.inviteSubstitutesHoursBefore }} h předem):
+        @if (e.substitutesInvitedAt) { odeslány {{ e.substitutesInvitedAt | date: 'd. M. H:mm' }} } @else { zatím ne }
+        <button nz-button nzSize="small" [nzLoading]="saving()" (click)="sendInvitations('SUBSTITUTE')">Poslat teď</button>
+      </p>
+      <p class="hint">Pozvánku dostane jen ten, kdo ji ještě nedostal a zatím neodpověděl.</p>
+      <button nz-button (click)="editVisible.set(true)">Upravit akci</button>
+      <button nz-button nzDanger (click)="cancelVisible.set(true)">Zrušit akci</button>
+
+      <h4 class="space-top">Přihlášky členů</h4>
+      <p class="hint">Organizátor může měnit přihlášky i po uzávěrce a nad kapacitu – fronta se pak neposouvá automaticky.</p>
+      <nz-table #rosterTable [nzData]="roster()" [nzShowPagination]="false" nzSize="small">
+        <thead><tr><th>Člen</th><th>Typ</th><th>Stav</th><th>Tým</th></tr></thead>
+        <tbody>
+          @for (row of rosterTable.data; track row.member.id) {
+            <tr>
+              <td>{{ row.member.user!.publicName }} <span class="hint">{{ position[row.member.position] }}</span></td>
+              <td>{{ memberType[row.member.memberType] }}</td>
+              <td>
+                <nz-select [ngModel]="row.reg?.status ?? null" nzPlaceHolder="bez odpovědi" style="width: 130px"
+                  (ngModelChange)="setRegistration(row.member.user!.id, $event, row.reg?.team?.id ?? null)">
+                  <nz-option nzValue="IN" nzLabel="přijde"></nz-option>
+                  <nz-option nzValue="WAITLIST" nzLabel="ve frontě"></nz-option>
+                  <nz-option nzValue="OUT" nzLabel="nepřijde"></nz-option>
+                </nz-select>
+              </td>
+              <td>
+                @if (e.group.teams.length) {
+                  <nz-select [ngModel]="row.reg?.team?.id ?? null" nzPlaceHolder="—" style="width: 130px" [nzDisabled]="!row.reg"
+                    (ngModelChange)="setRegistration(row.member.user!.id, row.reg!.status, $event)">
+                    @for (t of e.group.teams; track t.id) { <nz-option [nzValue]="t.id" [nzLabel]="t.name"></nz-option> }
+                  </nz-select>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </nz-table>
+    </nz-card>
+
+    <nz-modal [nzVisible]="editVisible()" nzTitle="Upravit akci" [nzFooter]="null" (nzOnCancel)="editVisible.set(false)">
+      <ng-container *nzModalContent>
+        <app-akce-formular [venues]="e.group.venues" [initial]="formValue()!" [saving]="saving()" (submitted)="update($event)"></app-akce-formular>
+      </ng-container>
+    </nz-modal>
+
+    <nz-modal [nzVisible]="cancelVisible()" nzTitle="Zrušit akci" nzOkText="Zrušit akci" nzOkDanger nzCancelText="Zpět"
+      (nzOnOk)="cancel()" (nzOnCancel)="cancelVisible.set(false)">
+      <ng-container *nzModalContent>
+        <p>Všem přihlášeným a čekajícím odejde e-mail o zrušení.</p>
+        <textarea nz-input rows="2" placeholder="Důvod (volitelně)" [(ngModel)]="cancelReason"></textarea>
+      </ng-container>
+    </nz-modal>
+  }
+}

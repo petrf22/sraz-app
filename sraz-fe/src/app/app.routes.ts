@@ -8,5 +8,7 @@ export const routes: Routes = [
   { path: 'prihlaska/:token', title: 'Přihláška na akci', loadComponent: () => import('./prihlaska/prihlaska.component').then(c => c.PrihlaskaComponent) },
   { path: 'pozvanka/:token', title: 'Pozvánka do skupiny', loadComponent: () => import('./pozvanka/pozvanka.component').then(c => c.PozvankaComponent) },
   { path: 'login', title: 'Přihlášení', loadComponent: () => import('./login/login.component').then(c => c.LoginComponent) },
+  { path: 'skupiny/:id', title: 'Skupina', loadComponent: () => import('./skupina/skupina.component').then(c => c.SkupinaComponent), canActivate: [authGuard] },
+  { path: 'akce/:id', title: 'Akce', loadComponent: () => import('./akce/akce.component').then(c => c.AkceComponent), canActivate: [authGuard] },
   { path: 'logout', title: 'Odhlásit se', loadComponent: () => import('./logout/logout.component').then(c => c.LogoutComponent), canActivate: [authGuard] }
 ];
