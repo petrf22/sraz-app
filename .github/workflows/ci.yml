@@ -2,60 +2,45 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
   pull_request:
-    branches: [ "main" ]
+
+permissions:
+  contents: read
 
 jobs:
   backend:
-    name: Backend – Spring Boot
+    name: Backend (Spring Boot)
     runs-on: ubuntu-latest
-
     defaults:
       run:
         working-directory: sraz-be
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up JDK
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6.0.1
         with:
           distribution: temurin
-          java-version: 25
-
-      - name: Cache Gradle
-        uses: gradle/actions/setup-gradle@v3
-
-      - name: Build & test backend
-        run: ./gradlew clean test
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v6
+      # build = kompilace + testy (Testcontainers Postgres, Docker na runneru je)
+      - run: ./gradlew build
 
   frontend:
-    name: Frontend – Angular
+    name: Frontend (Angular)
     runs-on: ubuntu-latest
-
     defaults:
       run:
         working-directory: sraz-fe
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version: '24'
           cache: npm
           cache-dependency-path: sraz-fe/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm test -- --watch=false --browsers=ChromeHeadless
-        # pokud zatím nemáš testy, můžeš tento krok zakomentovat
-
-      - name: Build frontend
-        run: npm run build
+      - run: npm ci
+      # Vygenerované GraphQL typy se commitují – musí odpovídat schématu backendu
+      - run: npm run codegen
+      - run: git diff --exit-code src/app/graphql
+      - run: npm test -- --watch=false --browsers=ChromeHeadless
+      - run: npm run build
