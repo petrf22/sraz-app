@@ -9,7 +9,7 @@ A monorepo for the "Sraz" application (signup for recurring sports events, e.g. 
 - `sraz-be/` — Spring Boot 4 backend (Java 25, Gradle), serving a GraphQL API for domain data and a REST API for authentication.
 - `sraz-fe/` — Angular 21 frontend (standalone components, ng-zorro-antd UI, Apollo GraphQL client).
 
-The two communicate over GraphQL (`/graphql`) and REST (`/api/**`). The Angular dev server proxies `/api` to the backend on port 8080 (`sraz-fe/proxy.conf.json`).
+The two communicate over GraphQL (`/graphql`) and REST (`/api/**`). The Angular dev server proxies `/api` and `/graphql` to the backend on port 8080 (`sraz-fe/proxy.conf.json`).
 
 ## Commands
 
