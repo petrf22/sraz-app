@@ -23,9 +23,9 @@ Open-source aplikace pro přihlašování na pravidelné sportovní akce (např.
 Potřeba: JDK 25, Node.js 24, Docker.
 
 ```bash
-# backend (PostgreSQL se spustí přes compose.yaml)
+# backend – Postgres z compose.yaml (port 5438) si nastartuje sám
 cd sraz-be
-./gradlew bootRun --args='--spring.profiles.active=dev'
+./gradlew bootRun
 
 # frontend → http://localhost:4200
 cd sraz-fe
@@ -33,7 +33,14 @@ npm ci
 npm start
 ```
 
+Přihlašovací kód se ve vývoji jen vypíše do logu backendu. Ostatní e-maily (pozvánky) chytá
+[Mailpit](https://mailpit.axllent.org/): `docker run -d -p 1025:1025 -p 8025:8025 axllent/mailpit`.
+
 Testy: `./gradlew test` (vyžaduje Docker – Testcontainers) a `npm test`.
+
+## Nasazení
+Docker Compose na vlastním VPS (Caddy s automatickým HTTPS, Postgres, backend), build na serveru,
+zálohy cronem – postup v [docs/nasazeni.md](docs/nasazeni.md), skripty v [ops/](ops/README.md).
 
 Podrobnosti k architektuře jsou v [CLAUDE.md](CLAUDE.md).
 

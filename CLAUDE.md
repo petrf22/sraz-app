@@ -1,71 +1,100 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Průvodce pro Claude Code v tomto repozitáři. Pravidla a příkazy specifické pro jednotlivé části
+jsou v [`sraz-be/CLAUDE.md`](sraz-be/CLAUDE.md) a [`sraz-fe/CLAUDE.md`](sraz-fe/CLAUDE.md).
 
-## Overview
+## Přehled
 
-A monorepo for the "Sraz" application (signup for recurring sports events, e.g. weekly hockey), split into two independently-built projects:
+**Sraz** – open-source (AGPL-3.0) aplikace pro přihlašování na pravidelné sportovní akce
+(např. večerní hokej): skupiny, pozvánky e-mailem, týmy, kapacita a fronta, uzávěrka přihlášek.
+Monorepo se dvěma samostatně sestavovanými projekty:
 
-- `sraz-be/` — Spring Boot 4 backend (Java 25, Gradle), serving a GraphQL API for domain data and a REST API for authentication.
-- `sraz-fe/` — Angular 21 frontend (standalone components, ng-zorro-antd UI, Apollo GraphQL client).
+- `sraz-be/` – Spring Boot 4 (Java 25, Gradle Groovy DSL), GraphQL API pro doménová data a REST pro
+  přihlašování a veřejné stránky z e-mailů.
+- `sraz-fe/` – Angular 21 (standalone komponenty, signály, ng-zorro-antd, Apollo Angular).
 
-The two communicate over GraphQL (`/graphql`) and REST (`/api/**`). The Angular dev server proxies `/api` and `/graphql` to the backend on port 8080 (`sraz-fe/proxy.conf.json`).
+Frontend volá relativní `/api/**` a `/graphql` – ve vývoji je přeposílá `sraz-fe/proxy.conf.json`
+na `localhost:8080`, v produkci Caddy (stejný origin, viz „Nasazení").
 
-## Commands
+Nasazení, provozní skripty a CI jsou **záměrně stejné jako v aplikaci `kvalita-cena`**
+(`/home/petr/pracovni/github/kvalita-cena`) – jedna sada postupů pro obě aplikace. Při změně
+nasazení nejdřív zkontroluj, jak to řeší tam, a drž se stejného vzoru.
 
-### Backend (`sraz-be/`, run from that directory)
-- Run app: `./gradlew bootRun` (default profile expects PostgreSQL; use `dev` for seed data: `./gradlew bootRun --args='--spring.profiles.active=dev'`)
-- Build: `./gradlew build`
-- All tests: `./gradlew test` (**requires Docker** — uses Testcontainers Postgres)
-- Single test class: `./gradlew test --tests "cz.petrf.sraz.security.JwtServiceTest"`
-- Single test method: `./gradlew test --tests "cz.petrf.sraz.security.JwtServiceTest.methodName"`
-- Start a local PostgreSQL for dev: `docker compose up` (uses `compose.yaml`; Postgres on `localhost:5436`, db `sraz`). Spring Boot's docker-compose support may also start it automatically.
+## Rychlý start (vývoj)
 
-### Frontend (`sraz-fe/`, run from that directory)
-- Dev server: `npm start` (or `ng serve`) → http://localhost:4200
-- Build: `npm run build`
-- Tests (Karma/Jasmine): `npm test` (or `ng test`)
-- Regenerate GraphQL TS types: `npm run codegen` (or `codegen:watch`). `codegen.ts` reads the schema files directly from `../sraz-be/src/main/resources/graphql/`, no running backend needed.
+```bash
+cd sraz-be && ./gradlew bootRun   # Postgres z ../compose.yaml (port 5438) si Boot nastartuje sám
+cd sraz-fe && npm ci && npm start # http://localhost:4200
+```
 
-## Architecture
+Ve výchozím (dev) nastavení se přihlašovací kód neposílá e-mailem, jen se vypíše do logu backendu
+(`[DEV] Přihlašovací kód pro ...`). Ostatní e-maily (pozvánky) jdou na `localhost:1025` – spusť
+Mailpit: `docker run -d -p 1025:1025 -p 8025:8025 axllent/mailpit` (UI na :8025).
+Lokální přepisy patří do `sraz-be/src/main/resources/application-dev.properties` (gitignored,
+profil `dev` zapíná i `DataSeed` s falešnými uživateli).
 
-### Authentication flow (the central concept)
-**No passwords.** Login is e-mail + one-time code (ported from the `kvalita-cena` app):
+## Architektura
 
-1. `POST /api/auth/otp/request {email}` → `OtpService` stores a `LoginChallenge` (BCrypt hash of a 6-digit code, 10 min TTL, max 5 attempts, one active challenge per e-mail) and e-mails the code (`templates/email/otp-code-email.html`). Returns `{challengeUid, expiresInSec, resendAfterSec}`. Rate limited in memory by `OtpRateLimiter` (Caffeine). With `app.auth.otp.mail-enabled=false` the code is only logged (`[DEV]`).
-2. `POST /api/auth/otp/verify {challengeUid, code, email, termsAccepted}` → a new account is created only here and only with `termsAccepted=true`. All failures return the same `INVALID_CHALLENGE`.
+### Přihlašování (převzato z kvalita-cena)
+**Žádná hesla.** E-mail → šestimístný kód:
 
-Token model:
-- **Access token (JWT, 10 min)** in the response body (`TokenResponse`); the FE keeps it **only in memory** and refreshes it proactively before expiry. Sent as `Authorization: Bearer`, validated by `JwtRequestFilter` (invalid/expired token = anonymous request, blocked users are never authenticated).
-- **Refresh token** = random 32 bytes in the httpOnly `SameSite=Strict` cookie `refresh_token` (path `/api/auth`, 90 days); only its SHA-256 is stored (`refresh_token` table). `POST /api/auth/refresh` **rotates** it; reusing an already-used token (after `reuse-grace-period`) revokes the whole family (= that login on that device). `POST /api/auth/logout[?deleteAccount=true]` revokes the family (and optionally deletes the account). "Remember me" = the FE calls `/api/auth/refresh` on app start.
-- Settings live in `AuthProperties` (`app.auth.*`); `app.auth.cookie-secure=false` is needed only for plain-HTTP non-localhost dev.
+1. `POST /api/auth/otp/request {email}` – `OtpService` uloží `LoginChallenge` (BCrypt hash kódu,
+   platnost 10 min, 5 pokusů, jedna aktivní výzva na e-mail) a pošle kód. Limity žádostí v paměti
+   (`OtpRateLimiter`, Caffeine) na e-mail i IP – IP určuje `ClientIpResolver` z `X-Forwarded-For`
+   (Caddy ho přepisuje skutečnou IP).
+2. `POST /api/auth/otp/verify {challengeUid, code, email, termsAccepted}` – účet vzniká až tady a jen
+   se souhlasem. Všechna selhání vrací stejné `INVALID_CHALLENGE`.
 
-**Per-event e-mail tokens are not logins.** `/api/public/invitations/{token}` (FE `/prihlaska/:token`) lets the holder sign up/out for that one event only; `/api/public/group-invites/{token}` (FE `/pozvanka/:token`) accepts a group membership.
+Tokeny:
+- **Access token** (JWT, 10 min) v těle odpovědi; frontend ho drží **jen v paměti** a obnovuje předem.
+  `JwtRequestFilter`: neplatný/prošlý token = anonymní požadavek, zablokovaný uživatel se nepřihlásí.
+- **Refresh token** = 32 náhodných bajtů v httpOnly `SameSite=Strict` cookie `refresh_token`
+  (path `/api/auth`, 90 dní), v DB jen SHA-256. `POST /api/auth/refresh` ho **rotuje**; opakované
+  použití už použitého tokenu zneplatní celou rodinu (= přihlášení na tom zařízení).
+  „Zapamatování" = frontend při startu zavolá `/api/auth/refresh`.
+- Nastavení v `AuthProperties` (`app.auth.*`).
 
-Security is **stateless** (no server session). `SecurityConfig` permits `/api/auth/**`, `/api/public/**` and actuator health/info; everything else under `/api/**` requires authentication. GraphQL (`/graphql`) is reachable anonymously but every resolver requires a user via `CurrentUserService` and group permissions via `AccessService` (member / organizer / global `ROLE_ADMIN`); errors carry `extensions.code` (`UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `BAD_REQUEST`). CORS is locked to `localhost:4200`/`127.0.0.1:4200`.
+**Token z pozvánky na akci není přihlášení.** `/api/public/invitations/{token}` (FE
+`/prihlaska/:token`) smí jen přihlásit/odhlásit držitele na tento jeden termín;
+`/api/public/group-invites/{token}` (FE `/pozvanka/:token`) potvrzuje členství ve skupině.
 
-### Backend package layout (`cz.petrf.sraz`)
-- `db/entity` — JPA entities; `db/repo` — Spring Data repositories; `db/seed/DataSeed` — fake data generator, **`dev` profile only**.
-- `controller` — REST (`AuthController`, `UserController`) and GraphQL (`UserGraphqlController`) controllers.
-- `service`, `security`, `config`, `exception`, `graphql` (`GraphqlExceptionHandler` maps exceptions to GraphQL error codes).
+### Oprávnění
+Bezstavové (žádná session). `SecurityConfig` pouští `/api/auth/**`, `/api/public/**` a actuator
+health/info, zbytek `/api/**` vyžaduje přihlášení. `/graphql` je dostupné anonymně, ale každý resolver
+vyžaduje uživatele (`CurrentUserService`) a oprávnění ve skupině (`AccessService`: člen / organizátor /
+globální `ROLE_ADMIN`). Chyby GraphQL nesou `extensions.code` (`UNAUTHENTICATED`, `FORBIDDEN`,
+`NOT_FOUND`, `BAD_REQUEST`).
 
-### Database & migrations
-Schema is owned by **Liquibase**, not Hibernate — `spring.jpa.hibernate.ddl-auto=validate`, so entity changes must be matched by a changelog. Add changelogs under `sraz-be/src/main/resources/db/changelog/<date>/` and `include` them in `db.changelog-master.yaml`. Changesets are gated by Liquibase **contexts** (`prod`, `dev`, plus `test` for tests); the active context is set per profile (`spring.liquibase.contexts`). Schema changesets carry no context (always run); `dev`-context changesets load seed data only.
+### Doména
+Skupina (`SportGroup`) → týmy, místa, členové (`GroupMember`: stálý/náhradník, hráč/brankář,
+organizátor; pozvaný musí členství potvrdit) → akce (`Event`) → pozvánky (`Invitation`, token osoba ×
+termín platný do začátku akce) a přihlášky (`Registration`: IN/OUT/WAITLIST). Pravidla kapacity,
+fronty a uzávěrky jsou v `RegistrationService`, vlny pozvánek (stálí/náhradníci v různém předstihu,
+plánovač každých 5 min) v `InvitationService`.
 
-Tests run against a **real Postgres via Testcontainers** (`TestcontainersConfiguration`, wired with `@ServiceConnection`); Liquibase runs the migrations under context `test` and Hibernate validates entities against them. This means `./gradlew test` **requires Docker running**. A `@SpringBootTest` must `@Import(TestcontainersConfiguration.class)` to get a datasource (plain unit tests like `JwtServiceTest` don't need it).
+### GraphQL je kontrakt mezi FE a BE
+Schéma: `sraz-be/src/main/resources/graphql/*.graphqls`. Operace frontendu:
+`sraz-fe/src/app/graphql/*.graphql`; `npm run codegen` z nich generuje typy a Apollo služby
+(commitují se, CI hlídá shodu). **Po změně schématu vždy přegeneruj.**
 
-### GraphQL schema is the contract between FE and BE
-Backend schema lives in `sraz-be/src/main/resources/graphql/*.graphqls` (Spring GraphQL default location; the DGS codegen Gradle plugin generates Java types from it via `generateJava.schemaPaths` in `build.gradle`). Frontend operations live in `sraz-fe/src/app/graphql/*.graphql`; `npm run codegen` generates `graphql-types.ts` and per-operation `*.generated.ts` files (Apollo Angular services). **When you change the schema, regenerate types on both sides.**
+## Nasazení (stejné jako kvalita-cena)
 
-### Spring profiles
-- default — production-like, real PostgreSQL, external config via env vars (see `info.md` for the Railway deployment variables).
-- `dev` (`application-dev.properties`) — debug logging, enables `DataSeed`, Liquibase contexts `prod,dev`, non-secure cookies. This file is **gitignored and untracked**; create it locally.
-- `test` (`src/test/resources/application.properties`) — Postgres via Testcontainers, Liquibase context `test`, throwaway test-only JWT secret.
+Vlastní Hetzner VPS, build přímo na serveru, žádný registry ani CD. Podrobný checklist:
+[`docs/nasazeni.md`](docs/nasazeni.md), skripty: [`ops/README.md`](ops/README.md).
 
-### Secrets / configuration
-No secrets are committed. They are supplied as **environment variables** and resolved via Spring's relaxed binding (`JWT_SECRET` → `jwt.secret`, `APP_MAIL_RESEND_API_KEY` → `app.mail.resend.api.key`, `SPRING_DATASOURCE_*` → `spring.datasource.*`, plus `MAIL_USER`/`MAIL_PASS`). See `sraz-be/.env.example` for the full list. For local dev, copy it to `sraz-be/.env` (gitignored) or set the vars in your IDE run configuration. In production (Railway) they are set as service env vars.
+- `compose.prod.yaml`: `postgres` (bez portu ven), `backend` (profil `prod`), `web` = Caddy se zapečeným
+  Angular buildem, proxuje `/api/*`, `/graphql`, `/actuator/health|info` na backend, TLS z Let's Encrypt.
+- Tajemství v `.env` vedle `compose.prod.yaml` (vzor `.env.example`). `SMTP_FROM` vždy v uvozovkách
+  (skripty `.env` načítají přes bash `source`). `POSTGRES_PASSWORD` přes `openssl rand -hex 32`.
+- `application-prod.properties`: proměnné bez výchozí hodnoty – chybějící appku shodí při startu.
+- Vydání: zvýšit `version` v `sraz-be/build.gradle` (+ `sraz-fe/package.json`), tag `vX.Y.Z`,
+  na serveru `./ops/deploy.sh X.Y.Z` (ověří i verzi a commit v `/actuator/info`).
+- Zálohy: `ops/backup.sh` (cron na serveru), `ops/pull-backup.sh` (cron na lokálním PC).
+- **Nikdy `docker compose -f compose.prod.yaml down -v`** (smaže DB i certifikáty).
+- `compose.yaml` v kořeni je jen dev Postgres pro `bootRun`.
 
-## Conventions
-- Code comments, commit messages, and many identifiers are in **Czech**; match the surrounding language when editing.
-- Backend uses **Lombok** (`@RequiredArgsConstructor` constructor injection, `@Slf4j`, `@Builder`).
-- Frontend uses Angular standalone components with lazy-loaded routes (`loadComponent`), `ng-zorro-antd`, and is localized to `cs-CZ`. Prettier config (single quotes, width 100) is in `package.json`.
+## Konvence
+
+- Komentáře, commity, UI texty a řada identifikátorů jsou **česky** – drž se jazyka okolního kódu.
+- Commity **tematicky** (jedna ucelená změna na commit), česky.
+- Tajemství se nikdy necommitují (`.env`, `application-dev.properties` jsou gitignored).
