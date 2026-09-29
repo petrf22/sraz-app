@@ -1,0 +1,179 @@
+@if (data(); as g) {
+  <p class="hint">
+    Opakovaná akce (série) má jedno nebo víc období – např. září–březen každý pátek ve 20:00. Po uložení období se
+    vygenerují všechny termíny sezóny. Změna období upraví jen termíny, na které ještě nikdo nereagoval; ručně upravené
+    a zrušené termíny (např. svátek) zůstávají.
+  </p>
+
+  @if (g.series.length === 0 && !organizer()) {
+    <p>Skupina zatím nemá opakované akce.</p>
+  }
+
+  @for (s of g.series; track s.id) {
+    <nz-card class="space" [nzTitle]="titleTpl" [nzExtra]="organizer() ? extraTpl : undefined">
+      <ng-template #titleTpl>
+        @if (organizer()) {
+          <input nz-input #name [value]="s.name" style="width: 260px" (blur)="renameSeries(s, name.value)"
+            (keyup.enter)="renameSeries(s, name.value)" />
+        } @else {
+          {{ s.name }}
+        }
+      </ng-template>
+      <ng-template #extraTpl>
+        <button nz-button nzSize="small" (click)="newPeriod(s)">Přidat období</button>
+        <a nz-popconfirm nzPopconfirmTitle="Smazat sérii? Budoucí termíny bez přihlášek se smažou, ostatní zůstanou."
+          (nzOnConfirm)="deleteSeries(s)"> smazat sérii</a>
+      </ng-template>
+
+      @if (s.periods.length === 0) {
+        <p class="hint">Zatím žádné období – termíny se negenerují.</p>
+      }
+      <nz-table #periods [nzData]="s.periods" [nzShowPagination]="false" nzSize="small">
+        <thead>
+          <tr><th>Období</th><th>Opakování</th><th>Čas</th><th>Místo</th><th>Kapacita</th><th>Uzávěrka / pozvánky / připomínka</th>
+            @if (organizer()) {<th></th>}</tr>
+        </thead>
+        <tbody>
+          @for (p of periods.data; track p.id) {
+            <tr>
+              <td>{{ p.validFrom | date: 'd. M. y' }} – {{ p.validTo | date: 'd. M. y' }}</td>
+              <td>{{ describeRule(p) }}</td>
+              <td>{{ p.startTime }} ({{ p.durationMinutes }} min)</td>
+              <td>{{ p.venue?.name ?? '—' }}</td>
+              <td>{{ p.maxPlayersPerTeam }} na tým, {{ p.maxGoalies }} br.</td>
+              <td>{{ p.deadlineHoursBefore }} h / {{ p.inviteRegularsHoursBefore }} h a {{ p.inviteSubstitutesHoursBefore }} h /
+                {{ p.reminderHoursBefore != null ? p.reminderHoursBefore + ' h' : 'ne' }}</td>
+              @if (organizer()) {
+                <td>
+                  <a (click)="editPeriod(s, p)">upravit</a> ·
+                  <a nz-popconfirm nzPopconfirmTitle="Smazat období? Budoucí termíny bez přihlášek se smažou."
+                    (nzOnConfirm)="deletePeriod(p)">smazat</a>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </nz-table>
+    </nz-card>
+  }
+
+  @if (organizer()) {
+    <p>
+      <input nz-input placeholder="název nové opakované akce, např. Večerní hokej" style="width: 320px" [(ngModel)]="newSeriesName" />
+      <button nz-button (click)="createSeries()" [nzLoading]="saving()">Založit sérii</button>
+    </p>
+  }
+
+  <nz-modal [nzVisible]="!!form" [nzTitle]="form?.id ? 'Upravit období' : 'Nové období'" [nzFooter]="null" nzWidth="720px"
+    (nzOnCancel)="form = null">
+    <ng-container *nzModalContent>
+      @if (form; as f) {
+        <form nz-form nzLayout="vertical" (ngSubmit)="savePeriod()">
+          <nz-form-item>
+            <nz-form-label nzRequired>Období (od – do)</nz-form-label>
+            <nz-form-control>
+              <nz-range-picker name="range" nzFormat="d. M. yyyy" [(ngModel)]="f.range" (ngModelChange)="preview.set(null)"></nz-range-picker>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Opakování</nz-form-label>
+            <nz-form-control>
+              <nz-radio-group name="recurrence" [(ngModel)]="f.recurrence" (ngModelChange)="preview.set(null)">
+                <label nz-radio nzValue="WEEKLY">týdně</label>
+                <label nz-radio nzValue="MONTHLY">měsíčně</label>
+              </nz-radio-group>
+              každý
+              <nz-input-number name="interval" [nzMin]="1" [nzMax]="12" [(ngModel)]="f.intervalCount" (ngModelChange)="preview.set(null)"></nz-input-number>
+              {{ f.recurrence === 'WEEKLY' ? '. týden' : '. měsíc' }}
+            </nz-form-control>
+          </nz-form-item>
+
+          @if (f.recurrence === 'MONTHLY') {
+            <nz-form-item>
+              <nz-form-label>Kolikátý den v měsíci</nz-form-label>
+              <nz-form-control>
+                @for (w of monthWeeks; track w.value) {
+                  <label nz-checkbox [ngModel]="f.monthWeeks.includes(w.value)" [ngModelOptions]="{ standalone: true }"
+                    (ngModelChange)="toggleWeek(w.value, $event)">{{ w.label }}</label>
+                }
+              </nz-form-control>
+            </nz-form-item>
+          }
+
+          <nz-form-item>
+            <nz-form-label nzRequired>Dny v týdnu</nz-form-label>
+            <nz-form-control>
+              @for (d of days; track d.value) {
+                <label nz-checkbox [ngModel]="f.days.includes(d.value)" [ngModelOptions]="{ standalone: true }"
+                  (ngModelChange)="toggleDay(d.value, $event)">{{ d.short }}</label>
+              }
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label nzRequired>Začátek a délka (min)</nz-form-label>
+            <nz-form-control>
+              <nz-time-picker name="start" nzFormat="HH:mm" [nzMinuteStep]="5" [(ngModel)]="f.startTime" (ngModelChange)="preview.set(null)"></nz-time-picker>
+              &nbsp;
+              <nz-input-number name="duration" [nzMin]="1" [(ngModel)]="f.durationMinutes"></nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Místo</nz-form-label>
+            <nz-form-control>
+              <nz-select name="venue" nzAllowClear nzPlaceHolder="bez místa" [(ngModel)]="f.venueId">
+                @for (v of g.venues; track v.id) { <nz-option [nzValue]="v.id" [nzLabel]="v.name"></nz-option> }
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Hráčů na tým / brankářů celkem</nz-form-label>
+            <nz-form-control>
+              <nz-input-number name="players" [nzMin]="1" [(ngModel)]="f.maxPlayersPerTeam"></nz-input-number>
+              &nbsp;
+              <nz-input-number name="goalies" [nzMin]="0" [(ngModel)]="f.maxGoalies"></nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>V hodinách před začátkem: uzávěrka / pozvat stálé / pozvat náhradníky / připomínka (prázdná = žádná)</nz-form-label>
+            <nz-form-control>
+              <nz-input-number name="deadline" [nzMin]="0" [(ngModel)]="f.deadlineHoursBefore"></nz-input-number>
+              &nbsp;
+              <nz-input-number name="invReg" [nzMin]="0" [(ngModel)]="f.inviteRegularsHoursBefore"></nz-input-number>
+              &nbsp;
+              <nz-input-number name="invSub" [nzMin]="0" [(ngModel)]="f.inviteSubstitutesHoursBefore"></nz-input-number>
+              &nbsp;
+              <nz-input-number name="reminder" [nzMin]="0" [(ngModel)]="f.reminderHoursBefore"></nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Poznámka k termínům</nz-form-label>
+            <nz-form-control>
+              <textarea nz-input name="note" rows="2" [(ngModel)]="f.note"></textarea>
+            </nz-form-control>
+          </nz-form-item>
+
+          <button nz-button type="button" (click)="showPreview()">Náhled termínů</button>
+          <button nz-button nzType="primary" type="submit" [nzLoading]="saving()">Uložit a vygenerovat termíny</button>
+
+          @if (preview(); as pv) {
+            <p class="space-top">
+              <strong>{{ pv.length }} termínů</strong>
+              @if (pv.length && pv[0].past) { (minulé se negenerují) }:
+            </p>
+            <p>
+              @for (x of pv; track $index) {
+                <nz-tag [nzColor]="x.past ? 'default' : 'blue'">{{ x.date | date: 'EEE d. M. H:mm' }}</nz-tag>
+              }
+            </p>
+          }
+        </form>
+      }
+    </ng-container>
+  </nz-modal>
+}

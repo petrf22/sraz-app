@@ -30,6 +30,8 @@ import {
 } from '../graphql/group.generated';
 import { EventInput, MemberType, Position } from '../graphql/graphql-types';
 import { AkceFormularComponent } from '../akce-formular/akce-formular.component';
+import { KalendarComponent } from '../kalendar/kalendar.component';
+import { OpakovaniComponent } from '../opakovani/opakovani.component';
 import { EVENT_STATUS, gqlErrorMessage, MEMBER_TYPE, MEMBERSHIP_STATUS, POSITION, REGISTRATION_COLOR, REGISTRATION_STATUS } from '../shared/labels';
 
 type Group = GroupDetailQuery['group'];
@@ -48,7 +50,7 @@ interface VenueForm {
  */
 @Component({
   selector: 'app-skupina',
-  imports: [DatePipe, FormsModule, RouterLink, AkceFormularComponent, NzButtonModule, NzCardModule, NzCheckboxModule,
+  imports: [DatePipe, FormsModule, RouterLink, AkceFormularComponent, KalendarComponent, OpakovaniComponent, NzButtonModule, NzCardModule, NzCheckboxModule,
     NzFormModule, NzInputModule, NzInputNumberModule, NzModalModule, NzPopconfirmModule, NzSelectModule, NzTableModule,
     NzTabsModule, NzTagModule],
   templateUrl: './skupina.component.html',

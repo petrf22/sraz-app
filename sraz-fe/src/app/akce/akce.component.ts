@@ -124,6 +124,7 @@ export class AkceComponent {
           signupDeadline: new Date(e.signupDeadline),
           inviteRegularsHoursBefore: e.inviteRegularsHoursBefore,
           inviteSubstitutesHoursBefore: e.inviteSubstitutesHoursBefore,
+          reminderHoursBefore: e.reminderHoursBefore ?? null,
           note: e.note ?? '',
         }
       : null;

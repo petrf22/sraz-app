@@ -33,6 +33,18 @@
       </nz-table>
     </nz-tab>
 
+    <nz-tab nzTitle="Kalendář">
+      <ng-template nz-tab>
+        <app-kalendar [groupId]="g.id"></app-kalendar>
+      </ng-template>
+    </nz-tab>
+
+    <nz-tab nzTitle="Opakování">
+      <ng-template nz-tab>
+        <app-opakovani [groupId]="g.id" (changed)="load()"></app-opakovani>
+      </ng-template>
+    </nz-tab>
+
     <nz-tab nzTitle="Členové ({{ g.members.length }})">
       @if (organizer()) {
         <form nz-form nzLayout="inline" class="space" (ngSubmit)="sendInvite()">

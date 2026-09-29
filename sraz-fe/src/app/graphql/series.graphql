@@ -1,0 +1,105 @@
+fragment PeriodFields on SeriesPeriod {
+  id
+  validFrom
+  validTo
+  recurrence
+  intervalCount
+  daysOfWeek
+  monthWeeks
+  startTime
+  durationMinutes
+  venue {
+    id
+    name
+  }
+  maxPlayersPerTeam
+  maxGoalies
+  deadlineHoursBefore
+  inviteRegularsHoursBefore
+  inviteSubstitutesHoursBefore
+  reminderHoursBefore
+  note
+}
+
+query GroupSeries($id: ID!) {
+  group(id: $id) {
+    id
+    amOrganizer
+    venues {
+      id
+      name
+    }
+    series {
+      id
+      name
+      periods {
+        ...PeriodFields
+      }
+    }
+  }
+}
+
+query GroupCalendar($id: ID!, $from: DateTime!, $to: DateTime!) {
+  group(id: $id) {
+    id
+    events(from: $from, to: $to) {
+      id
+      name
+      startsAt
+      status
+      summary {
+        players
+        maxPlayers
+      }
+      myRegistration {
+        id
+        status
+      }
+    }
+  }
+}
+
+query PeriodPreview($input: PeriodInput!) {
+  periodPreview(input: $input)
+}
+
+mutation SeriesCreate($groupId: ID!, $name: String!) {
+  seriesCreate(groupId: $groupId, name: $name) {
+    id
+    name
+  }
+}
+
+mutation SeriesRename($id: ID!, $name: String!) {
+  seriesRename(id: $id, name: $name) {
+    id
+    name
+  }
+}
+
+mutation SeriesDelete($id: ID!) {
+  seriesDelete(id: $id) {
+    created
+    updated
+    removed
+    kept
+  }
+}
+
+mutation PeriodSave($seriesId: ID!, $id: ID, $input: PeriodInput!) {
+  periodSave(seriesId: $seriesId, id: $id, input: $input) {
+    created
+    updated
+    removed
+    kept
+  }
+}
+
+mutation PeriodDelete($id: ID!) {
+  periodDelete(id: $id) {
+    created
+    updated
+    removed
+    kept
+  }
+}

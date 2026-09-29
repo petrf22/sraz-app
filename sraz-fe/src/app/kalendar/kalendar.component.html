@@ -1,0 +1,15 @@
+<nz-calendar [(ngModel)]="selected" (nzPanelChange)="onPanelChange($event)" (nzSelectChange)="onSelect($event)">
+  <ul *nzDateCell="let date" class="events">
+    @for (e of eventsOn(date); track e.id) {
+      <li>
+        <a [routerLink]="['/akce', e.id]" [class.cancelled]="e.status === 'CANCELLED'">
+          <nz-badge [nzStatus]="badge(e)"
+            [nzText]="(e.startsAt | date: 'H:mm') + ' ' + e.name + ' (' + e.summary.players + '/' + e.summary.maxPlayers + ')'"></nz-badge>
+        </a>
+      </li>
+    }
+  </ul>
+</nz-calendar>
+<p class="hint">
+  Barva podle mé přihlášky: zelená přijdu, oranžová fronta, šedá nepřijdu, modrá bez odpovědi, červená zrušeno.
+</p>

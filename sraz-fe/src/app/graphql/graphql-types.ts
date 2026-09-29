@@ -12,8 +12,19 @@ export type Scalars = {
   Time: { input: string; output: string; }
 };
 
+export type DayOfWeek =
+  | 'FRIDAY'
+  | 'MONDAY'
+  | 'SATURDAY'
+  | 'SUNDAY'
+  | 'THURSDAY'
+  | 'TUESDAY'
+  | 'WEDNESDAY';
+
 export type Event = {
   __typename?: 'Event';
+  /** Organizátor termín ručně upravil – přegenerování období ho nepřepíše. */
+  detached: Scalars['Boolean']['output'];
   durationMinutes: Scalars['Int']['output'];
   group: SportGroup;
   id: Scalars['ID']['output'];
@@ -26,6 +37,10 @@ export type Event = {
   note?: Maybe<Scalars['String']['output']>;
   registrations: Array<Registration>;
   regularsInvitedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Připomínka přihlášeným X hodin před začátkem (null = bez připomínky). */
+  reminderHoursBefore?: Maybe<Scalars['Int']['output']>;
+  /** Série, ze které termín vznikl (null = jednorázová akce). */
+  series?: Maybe<EventSeries>;
   signupDeadline: Scalars['DateTime']['output'];
   /** Lze se ještě sám přihlásit/odhlásit (před uzávěrkou, akce není zrušená). */
   signupOpen: Scalars['Boolean']['output'];
@@ -45,9 +60,17 @@ export type EventInput = {
   maxPlayersPerTeam?: InputMaybe<Scalars['Int']['input']>;
   name: Scalars['String']['input'];
   note?: InputMaybe<Scalars['String']['input']>;
+  reminderHoursBefore?: InputMaybe<Scalars['Int']['input']>;
   signupDeadline?: InputMaybe<Scalars['DateTime']['input']>;
   startsAt: Scalars['DateTime']['input'];
   venueId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type EventSeries = {
+  __typename?: 'EventSeries';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  periods: Array<SeriesPeriod>;
 };
 
 export type EventStatus =
@@ -122,11 +145,18 @@ export type Mutation = {
   /** Odebrání člena organizátorem nebo odchod ze skupiny. */
   memberRemove: GroupMember;
   memberUpdate: GroupMember;
+  periodDelete: SyncResult;
+  /** Uloží období (id = null → nové) a srovná s ním budoucí termíny. */
+  periodSave: SyncResult;
   /** Přihlášení/odhlášení přihlášeného uživatele. */
   registrationRespond: Registration;
   /** Organizátor nastaví přihlášku libovolnému členovi (i po uzávěrce). */
   registrationSet: Registration;
   roleSave?: Maybe<Role>;
+  seriesCreate: EventSeries;
+  /** Smaže sérii: budoucí termíny bez aktivity zmizí, ostatní zůstanou jako samostatné akce. */
+  seriesDelete: SyncResult;
+  seriesRename: EventSeries;
   teamDelete: Scalars['Boolean']['output'];
   teamSave: Team;
   userCreate: User;
@@ -195,6 +225,18 @@ export type MutationMemberUpdateArgs = {
 };
 
 
+export type MutationPeriodDeleteArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationPeriodSaveArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: PeriodInput;
+  seriesId: Scalars['ID']['input'];
+};
+
+
 export type MutationRegistrationRespondArgs = {
   eventId: Scalars['ID']['input'];
   status: RegistrationStatus;
@@ -212,6 +254,23 @@ export type MutationRegistrationSetArgs = {
 
 
 export type MutationRoleSaveArgs = {
+  name: Scalars['String']['input'];
+};
+
+
+export type MutationSeriesCreateArgs = {
+  groupId: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
+};
+
+
+export type MutationSeriesDeleteArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationSeriesRenameArgs = {
+  id: Scalars['ID']['input'];
   name: Scalars['String']['input'];
 };
 
@@ -252,6 +311,27 @@ export type MutationVenueSaveArgs = {
   input: VenueInput;
 };
 
+/** Nevyplněné hodnoty = výchozí nastavení jako u jednorázové akce; uzávěrka je v hodinách před začátkem. */
+export type PeriodInput = {
+  daysOfWeek: Array<DayOfWeek>;
+  deadlineHoursBefore?: InputMaybe<Scalars['Int']['input']>;
+  durationMinutes?: InputMaybe<Scalars['Int']['input']>;
+  intervalCount?: InputMaybe<Scalars['Int']['input']>;
+  inviteRegularsHoursBefore?: InputMaybe<Scalars['Int']['input']>;
+  inviteSubstitutesHoursBefore?: InputMaybe<Scalars['Int']['input']>;
+  maxGoalies?: InputMaybe<Scalars['Int']['input']>;
+  maxPlayersPerTeam?: InputMaybe<Scalars['Int']['input']>;
+  monthWeeks?: InputMaybe<Array<Scalars['Int']['input']>>;
+  note?: InputMaybe<Scalars['String']['input']>;
+  recurrence: Recurrence;
+  reminderHoursBefore?: InputMaybe<Scalars['Int']['input']>;
+  /** HH:mm */
+  startTime: Scalars['String']['input'];
+  validFrom: Scalars['Date']['input'];
+  validTo: Scalars['Date']['input'];
+  venueId?: InputMaybe<Scalars['ID']['input']>;
+};
+
 export type Position =
   | 'GOALIE'
   | 'PLAYER';
@@ -272,6 +352,8 @@ export type Query = {
   myGroups: Array<SportGroup>;
   /** Nadcházející termíny ve všech mých skupinách. */
   myUpcomingEvents: Array<Event>;
+  /** Náhled termínů období před uložením. */
+  periodPreview: Array<Scalars['DateTime']['output']>;
   roles: Array<Role>;
   userProfile: User;
 };
@@ -285,6 +367,15 @@ export type QueryEventArgs = {
 export type QueryGroupArgs = {
   id: Scalars['ID']['input'];
 };
+
+
+export type QueryPeriodPreviewArgs = {
+  input: PeriodInput;
+};
+
+export type Recurrence =
+  | 'MONTHLY'
+  | 'WEEKLY';
 
 export type Registration = {
   __typename?: 'Registration';
@@ -315,6 +406,31 @@ export type Role = {
   name: Scalars['String']['output'];
 };
 
+/** Období série s pravidlem opakování (např. září–březen každý pátek). */
+export type SeriesPeriod = {
+  __typename?: 'SeriesPeriod';
+  daysOfWeek: Array<DayOfWeek>;
+  deadlineHoursBefore: Scalars['Int']['output'];
+  durationMinutes: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  /** Každý N-tý týden / měsíc. */
+  intervalCount: Scalars['Int']['output'];
+  inviteRegularsHoursBefore: Scalars['Int']['output'];
+  inviteSubstitutesHoursBefore: Scalars['Int']['output'];
+  maxGoalies: Scalars['Int']['output'];
+  maxPlayersPerTeam: Scalars['Int']['output'];
+  /** Jen MONTHLY: kolikátý výskyt dne v měsíci (1–5, -1 = poslední). */
+  monthWeeks: Array<Scalars['Int']['output']>;
+  note?: Maybe<Scalars['String']['output']>;
+  recurrence: Recurrence;
+  reminderHoursBefore?: Maybe<Scalars['Int']['output']>;
+  /** Čas začátku HH:mm (Europe/Prague). */
+  startTime: Scalars['String']['output'];
+  validFrom: Scalars['Date']['output'];
+  validTo: Scalars['Date']['output'];
+  venue?: Maybe<Venue>;
+};
+
 export type SportGroup = {
   __typename?: 'SportGroup';
   amOrganizer: Scalars['Boolean']['output'];
@@ -325,6 +441,8 @@ export type SportGroup = {
   /** Členství přihlášeného uživatele (null u admina, který není členem). */
   myMembership?: Maybe<GroupMember>;
   name: Scalars['String']['output'];
+  /** Opakované akce skupiny. */
+  series: Array<EventSeries>;
   teams: Array<Team>;
   venues: Array<Venue>;
 };
@@ -333,6 +451,16 @@ export type SportGroup = {
 export type SportGroupEventsArgs = {
   from?: InputMaybe<Scalars['DateTime']['input']>;
   to?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+/** Co se stalo s termíny po uložení/smazání období. */
+export type SyncResult = {
+  __typename?: 'SyncResult';
+  created: Scalars['Int']['output'];
+  /** Termíny s přihláškami/pozvánkami, zrušené nebo ručně upravené – zůstaly beze změny. */
+  kept: Scalars['Int']['output'];
+  removed: Scalars['Int']['output'];
+  updated: Scalars['Int']['output'];
 };
 
 export type Team = {

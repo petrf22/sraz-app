@@ -17,6 +17,7 @@ export type EventInput = {
   maxPlayersPerTeam?: number | null | undefined;
   name: string;
   note?: string | null | undefined;
+  reminderHoursBefore?: number | null | undefined;
   signupDeadline?: string | null | undefined;
   startsAt: string;
   venueId?: string | number | null | undefined;
@@ -58,7 +59,7 @@ export type EventDetailQueryVariables = Exact<{
 }>;
 
 
-export type EventDetailQuery = { event: { id: string, name: string, startsAt: string, durationMinutes: number, maxPlayersPerTeam: number, maxGoalies: number, signupDeadline: string, inviteRegularsHoursBefore: number, inviteSubstitutesHoursBefore: number, regularsInvitedAt: string | null, substitutesInvitedAt: string | null, status: Types.EventStatus, note: string | null, signupOpen: boolean, venue: { id: string, name: string, address: string | null, mapUrl: string | null, latitude: number | null, longitude: number | null } | null, summary: { players: number, maxPlayers: number, goalies: number, maxGoalies: number, waitlist: number }, myRegistration: { id: string, status: Types.RegistrationStatus, team: { id: string } | null } | null, registrations: Array<{ id: string, status: Types.RegistrationStatus, position: Types.Position, source: Types.RegistrationSource, queuedAt: string | null, updatedAt: string | null, user: { id: string, publicName: string }, team: { id: string } | null }>, group: { id: string, name: string, amOrganizer: boolean, teams: Array<{ id: string, name: string, color: string | null, sortOrder: number }>, venues: Array<{ id: string, name: string, address: string | null, mapUrl: string | null, latitude: number | null, longitude: number | null }>, members: Array<{ id: string, status: Types.MembershipStatus, position: Types.Position, memberType: Types.MemberType, user: { id: string, publicName: string } | null }> } } };
+export type EventDetailQuery = { event: { id: string, name: string, startsAt: string, durationMinutes: number, maxPlayersPerTeam: number, maxGoalies: number, signupDeadline: string, inviteRegularsHoursBefore: number, inviteSubstitutesHoursBefore: number, regularsInvitedAt: string | null, substitutesInvitedAt: string | null, status: Types.EventStatus, note: string | null, signupOpen: boolean, detached: boolean, reminderHoursBefore: number | null, series: { id: string, name: string } | null, venue: { id: string, name: string, address: string | null, mapUrl: string | null, latitude: number | null, longitude: number | null } | null, summary: { players: number, maxPlayers: number, goalies: number, maxGoalies: number, waitlist: number }, myRegistration: { id: string, status: Types.RegistrationStatus, team: { id: string } | null } | null, registrations: Array<{ id: string, status: Types.RegistrationStatus, position: Types.Position, source: Types.RegistrationSource, queuedAt: string | null, updatedAt: string | null, user: { id: string, publicName: string }, team: { id: string } | null }>, group: { id: string, name: string, amOrganizer: boolean, teams: Array<{ id: string, name: string, color: string | null, sortOrder: number }>, venues: Array<{ id: string, name: string, address: string | null, mapUrl: string | null, latitude: number | null, longitude: number | null }>, members: Array<{ id: string, status: Types.MembershipStatus, position: Types.Position, memberType: Types.MemberType, user: { id: string, publicName: string } | null }> } } };
 
 export type EventCreateMutationVariables = Exact<{
   groupId: string | number;
@@ -129,6 +130,12 @@ export const EventDetailDocument = gql`
     status
     note
     signupOpen
+    detached
+    reminderHoursBefore
+    series {
+      id
+      name
+    }
     venue {
       ...VenueFields
     }

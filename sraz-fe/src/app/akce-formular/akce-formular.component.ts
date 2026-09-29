@@ -19,6 +19,8 @@ export interface EventFormValue {
   signupDeadline: Date | null;
   inviteRegularsHoursBefore: number;
   inviteSubstitutesHoursBefore: number;
+  /** null = bez připomínky */
+  reminderHoursBefore: number | null;
   note: string;
 }
 
@@ -33,6 +35,7 @@ export function emptyEventForm(): EventFormValue {
     signupDeadline: null,
     inviteRegularsHoursBefore: 96,
     inviteSubstitutesHoursBefore: 48,
+    reminderHoursBefore: 3,
     note: '',
   };
 }
@@ -73,6 +76,7 @@ export class AkceFormularComponent {
       signupDeadline: v.signupDeadline ? v.signupDeadline.toISOString() : null,
       inviteRegularsHoursBefore: v.inviteRegularsHoursBefore,
       inviteSubstitutesHoursBefore: v.inviteSubstitutesHoursBefore,
+      reminderHoursBefore: v.reminderHoursBefore,
       note: v.note.trim() || null,
     });
   }

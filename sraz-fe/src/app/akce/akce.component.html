@@ -9,6 +9,15 @@
     <div nz-col nzXs="24" nzLg="10">
       <nz-card nzTitle="Informace">
         <p>Délka {{ e.durationMinutes }} min, uzávěrka přihlášek {{ e.signupDeadline | date: 'EEEE d. M. H:mm' }}</p>
+        @if (e.series) {
+          <p>
+            Opakovaná akce <nz-tag>{{ e.series.name }}</nz-tag>
+            @if (e.detached) { <span class="hint">– termín upravený ručně, změny období se ho netýkají</span> }
+          </p>
+        }
+        @if (e.reminderHoursBefore != null) {
+          <p class="hint">Přihlášeným přijde připomínka {{ e.reminderHoursBefore }} h před začátkem.</p>
+        }
         @if (e.venue; as v) {
           <p>
             {{ v.name }}@if (v.address) {, {{ v.address }}}
@@ -127,6 +136,9 @@
 
     <nz-modal [nzVisible]="editVisible()" nzTitle="Upravit akci" [nzFooter]="null" (nzOnCancel)="editVisible.set(false)">
       <ng-container *nzModalContent>
+        @if (e.series && !e.detached) {
+          <p class="hint">Termín patří do opakované akce „{{ e.series.name }}". Po úpravě se od ní odpojí – pozdější změny období se ho už netýkají.</p>
+        }
         <app-akce-formular [venues]="e.group.venues" [initial]="formValue()!" [saving]="saving()" (submitted)="update($event)"></app-akce-formular>
       </ng-container>
     </nz-modal>

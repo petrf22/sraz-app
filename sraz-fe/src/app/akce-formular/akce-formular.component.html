@@ -50,6 +50,12 @@
     </nz-form-control>
   </nz-form-item>
   <nz-form-item>
+    <nz-form-label>Připomínka přihlášeným (hodin před začátkem, prázdné = bez připomínky)</nz-form-label>
+    <nz-form-control>
+      <nz-input-number name="reminder" [nzMin]="0" [(ngModel)]="value.reminderHoursBefore"></nz-input-number>
+    </nz-form-control>
+  </nz-form-item>
+  <nz-form-item>
     <nz-form-label>Poznámka</nz-form-label>
     <nz-form-control>
       <textarea nz-input name="note" rows="2" [(ngModel)]="value.note"></textarea>
