@@ -1,0 +1,52 @@
+# Produkční web (stejný setup jako kvalita-cena): Caddy servíruje statický Angular build A ZÁROVEŇ
+# proxuje /api a /graphql na backend – web i API na stejném originu, protože refresh token je
+# httpOnly cookie se SameSite=Strict (na jiné doméně by se neodeslala a přihlášení by nefungovalo).
+
+# Globální blok – ACME_EMAIL dostává upozornění Let's Encrypt na problémy s obnovou certifikátu.
+# ACME_CA jde přepnout na staging (https://acme-staging-v02.api.letsencrypt.org/directory) při
+# prvním ladění DNS, ať se nepálí ostrý rate limit.
+{
+	email {$ACME_EMAIL:kontakt@sraz.app}
+	acme_ca {$ACME_CA:https://acme-v02.api.letsencrypt.org/directory}
+}
+
+# SITE_ADDRESS = doména appky (https://sraz.app). Adresa s http:// (IP serveru, localhost) poslouchá
+# jen na :80 bez TLS – tak jde image vyzkoušet před přepnutím DNS.
+{$SITE_ADDRESS:http://localhost} {
+	encode gzip
+
+	# header_up X-Forwarded-For PŘEPÍŠE hlavičku skutečnou spojovací IP (výchozí chování Caddy ji jen
+	# připojí) – jinak by si klient mohl poslat vlastní IP a obejít limity žádostí o přihlašovací kód.
+	handle /api/* {
+		reverse_proxy backend:8080 {
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+
+	handle /graphql {
+		reverse_proxy backend:8080 {
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+
+	# Stav a verze pro ops/deploy.sh (detaily health jen pro přihlášené, zbytek actuatoru ven nejde)
+	handle /actuator/health {
+		reverse_proxy backend:8080
+	}
+
+	handle /actuator/info {
+		reverse_proxy backend:8080
+	}
+
+	# Angular SPA – neznámá cesta padá na index.html (odkazy z e-mailů /prihlaska/..., /pozvanka/...).
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# WWW_ADDRESS = www.sraz.app, nepovinné – jen přesměruje na kanonickou adresu bez www.
+{$WWW_ADDRESS:http://www.localhost} {
+	redir {$SITE_ADDRESS}{uri} permanent
+}

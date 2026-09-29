@@ -1,0 +1,7 @@
+# Do build kontextu jen zdrojáky – ne lokální build výstupy a cache
+build/
+.gradle/
+.git/
+*.md
+src/main/resources/application-dev.properties
+.env

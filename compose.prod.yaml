@@ -1,0 +1,73 @@
+# Produkční nasazení (stejný setup jako kvalita-cena) – na rozdíl od compose.yaml, který je jen dev
+# Postgres pro spring-boot-docker-compose. Build probíhá přímo na serveru, viz ops/deploy.sh.
+#
+# Proměnné (POSTGRES_USER/PASSWORD, JWT_SECRET, SMTP_*, ...) čte Docker Compose ze souboru `.env`
+# ve stejném adresáři (viz .env.example) – `.env` samotný je v .gitignore, nikdy se necommituje.
+#
+# Volumes mají suffix "-prod" a pevné `name:` – oba compose soubory leží ve stejném adresáři (stejný
+# název Compose projektu) a ops/backup.sh by jinak mohl sáhnout na jinou volume než appka.
+#
+# NIKDY `docker compose -f compose.prod.yaml down -v` – smaže produkční databázi i certifikáty.
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=sraz
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - sraz-postgres-data-prod:/var/lib/postgresql/data
+    # Žádné `ports:` – Postgres je dostupný jen z backendu přes interní síť compose.
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d sraz']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./sraz-be
+      # Commit do /actuator/info – ops/deploy.sh exportuje GIT_SHA před buildem.
+      args:
+        GIT_SHA: ${GIT_SHA:-}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
+      # Jméno služby, ne localhost – appka běží v kontejneru vedle Postgresu.
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/sraz
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./sraz-fe
+    restart: unless-stopped
+    environment:
+      - SITE_ADDRESS=${SITE_ADDRESS:-http://localhost}
+      - WWW_ADDRESS=${WWW_ADDRESS:-http://www.localhost}
+      - ACME_EMAIL=${ACME_EMAIL:-kontakt@sraz.app}
+      - ACME_CA=${ACME_CA:-https://acme-v02.api.letsencrypt.org/directory}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      # Certifikáty Let's Encrypt musí přežít restart, jinak Caddy při každém nasazení žádá nový
+      # a narazí na rate limit.
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - backend
+
+volumes:
+  sraz-postgres-data-prod:
+    name: sraz-postgres-data-prod
+  caddy-data:
+    name: sraz-caddy-data
+  caddy-config:
+    name: sraz-caddy-config

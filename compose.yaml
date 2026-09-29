@@ -1,0 +1,17 @@
+# Dev Postgres – spouští ho sám backend přes spring-boot-docker-compose (application.properties,
+# spring.docker.compose.file). Produkce je compose.prod.yaml.
+services:
+  postgres:
+    image: 'postgres:17'
+    environment:
+      - 'POSTGRES_DB=sraz'
+      - 'POSTGRES_PASSWORD=1234'
+      - 'POSTGRES_USER=postgres'
+    ports:
+      # Nestandardní port, ať neběží proti "prani" (5436) ani kvalita-cena (5437) na stejném stroji.
+      - '127.0.0.1:5438:5432'
+    volumes:
+      - sraz-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  sraz-postgres-data:

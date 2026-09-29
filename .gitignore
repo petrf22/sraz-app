@@ -1,1 +1,3 @@
-info-railway.md
+# Produkční tajemství (vzor v .env.example) a lokální kopie záloh (ops/pull-backup.sh)
+.env
+/backup/
