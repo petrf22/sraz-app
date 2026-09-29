@@ -77,6 +77,13 @@ termín platný do začátku akce) a přihlášky (`Registration`: IN/OUT/WAITLI
 fronty a uzávěrky jsou v `RegistrationService`, vlny pozvánek (stálí/náhradníci v různém předstihu,
 plánovač každých 5 min) v `InvitationService`.
 
+Opakované akce: série (`EventSeries`) → období (`SeriesPeriod`: týdně / n-tý den v měsíci, čas
+v Europe/Prague, kapacita, předstihy) → vygenerované termíny (`SeriesService`, výpočet dnů
+`RecurrenceCalculator`). Uložení období vygeneruje celou sezónu; přegenerování mění jen budoucí
+termíny bez aktivity – ručně upravené (`detached`), zrušené a termíny s přihláškami/pozvánkami
+zůstávají. `ReminderService` posílá připomínky přihlášeným a souhrn organizátorům po uzávěrce
+(spouští `InvitationScheduler`).
+
 ### GraphQL je kontrakt mezi FE a BE
 Schéma: `sraz-be/src/main/resources/graphql/*.graphqls`. Operace frontendu:
 `sraz-fe/src/app/graphql/*.graphql`; `npm run codegen` z nich generuje typy a Apollo služby
