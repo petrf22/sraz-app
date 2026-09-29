@@ -4,7 +4,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { icons } from './icons-provider';
 import { provideNzIcons } from 'ng-zorro-antd/icon';
-import { cs_CZ, provideNzI18n } from 'ng-zorro-antd/i18n';
+import { cs_CZ, NZ_DATE_CONFIG, provideNzI18n } from 'ng-zorro-antd/i18n';
 import { registerLocaleData } from '@angular/common';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -77,6 +77,8 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes), provideNzIcons(icons),
     provideAnimations(),
     { provide: LOCALE_ID, useValue: 'cs-CZ' }, provideNzI18n(cs_CZ),
+    // týden v kalendáři a výběru data začíná pondělím
+    { provide: NZ_DATE_CONFIG, useValue: { firstDayOfWeek: 1 } },
     provideHttpClient(withInterceptors([tokenInterceptor])),
     provideAppInitializer(authInitializer()),
     provideApollo(() => {

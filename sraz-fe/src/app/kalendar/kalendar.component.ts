@@ -33,6 +33,8 @@ export class KalendarComponent implements OnInit {
   readonly regStatus = REGISTRATION_STATUS;
   selected = new Date();
   private byDay = signal(new Map<string, CalendarEvent[]>());
+  /** Načtený měsíc (rok-měsíc) – ngModel mění `selected` dřív, než přijde nzSelectChange. */
+  private loadedMonth = '';
 
   ngOnInit(): void {
     this.load(this.selected);
@@ -63,13 +65,15 @@ export class KalendarComponent implements OnInit {
   }
 
   onSelect(date: Date): void {
-    if (date.getMonth() !== this.selected.getMonth() || date.getFullYear() !== this.selected.getFullYear()) {
-      this.load(date);
-    }
-    this.selected = date;
+    this.load(date);
   }
 
   private load(month: Date): void {
+    const key = `${month.getFullYear()}-${month.getMonth()}`;
+    if (key === this.loadedMonth) {
+      return;
+    }
+    this.loadedMonth = key;
     const from = new Date(month.getFullYear(), month.getMonth(), 1 - 7);
     const to = new Date(month.getFullYear(), month.getMonth() + 1, 7);
     this.calendarGQL
