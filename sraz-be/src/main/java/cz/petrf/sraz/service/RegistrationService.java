@@ -57,6 +57,12 @@ public class RegistrationService {
     return registrationRepo.findByEventIdOrderByCreatedAt(eventId);
   }
 
+  /** Soupiska bez kontroly oprávnění – pro držitele platného tokenu pozvánky. */
+  @Transactional(readOnly = true)
+  public List<Registration> rosterUnchecked(Long eventId) {
+    return registrationRepo.findByEventIdOrderByCreatedAt(eventId);
+  }
+
   /**
    * Hráč se sám přihlásí (IN) nebo odhlásí (OUT). Při plné kapacitě skončí ve frontě (WAITLIST).
    */
