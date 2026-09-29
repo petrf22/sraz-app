@@ -1,0 +1,184 @@
+# Skupiny, členství, místa, akce a přihlášky.
+# Všechna pole vyžadují přihlášeného uživatele; oprávnění (člen / organizátor / admin) kontrolují služby.
+
+enum MemberType { REGULAR SUBSTITUTE }
+enum Position { PLAYER GOALIE }
+enum MembershipStatus { INVITED ACTIVE DECLINED REMOVED }
+enum EventStatus { PLANNED OPEN LOCKED DONE CANCELLED }
+enum RegistrationStatus { IN OUT WAITLIST }
+enum RegistrationSource { EMAIL_LINK WEB ORGANIZER }
+
+"Veřejně viditelné údaje o uživateli (bez e-mailu)."
+type PublicUser {
+    id: ID!
+    publicName: String!
+}
+
+type SportGroup {
+    id: ID!
+    name: String!
+    description: String
+    teams: [Team!]!
+    venues: [Venue!]!
+    members: [GroupMember!]!
+    "Členství přihlášeného uživatele (null u admina, který není členem)."
+    myMembership: GroupMember
+    amOrganizer: Boolean!
+    events(from: DateTime, to: DateTime): [Event!]!
+}
+
+type Team {
+    id: ID!
+    name: String!
+    color: String
+    sortOrder: Int!
+}
+
+type Venue {
+    id: ID!
+    name: String!
+    address: String
+    mapUrl: String
+    latitude: Float
+    longitude: Float
+}
+
+type GroupMember {
+    id: ID!
+    group: SportGroup!
+    "E-mail vidí jen organizátor a člen sám."
+    email: String
+    user: PublicUser
+    memberType: MemberType!
+    position: Position!
+    organizer: Boolean!
+    status: MembershipStatus!
+    invitedBy: PublicUser
+    respondedAt: DateTime
+}
+
+type Event {
+    id: ID!
+    group: SportGroup!
+    venue: Venue
+    name: String!
+    startsAt: DateTime!
+    durationMinutes: Int!
+    maxPlayersPerTeam: Int!
+    maxGoalies: Int!
+    signupDeadline: DateTime!
+    inviteRegularsHoursBefore: Int!
+    inviteSubstitutesHoursBefore: Int!
+    regularsInvitedAt: DateTime
+    substitutesInvitedAt: DateTime
+    status: EventStatus!
+    note: String
+    "Lze se ještě sám přihlásit/odhlásit (před uzávěrkou, akce není zrušená)."
+    signupOpen: Boolean!
+    registrations: [Registration!]!
+    myRegistration: Registration
+    summary: EventSummary!
+}
+
+type Registration {
+    id: ID!
+    user: PublicUser!
+    status: RegistrationStatus!
+    position: Position!
+    team: Team
+    source: RegistrationSource!
+    queuedAt: DateTime
+    createdAt: DateTime
+    updatedAt: DateTime
+}
+
+type EventSummary {
+    players: Int!
+    maxPlayers: Int!
+    goalies: Int!
+    maxGoalies: Int!
+    waitlist: Int!
+}
+
+input GroupInput {
+    name: String!
+    description: String
+}
+
+input TeamInput {
+    id: ID
+    name: String!
+    color: String
+    sortOrder: Int
+}
+
+input VenueInput {
+    id: ID
+    name: String!
+    address: String
+    mapUrl: String
+    latitude: Float
+    longitude: Float
+}
+
+input MemberInviteInput {
+    email: String!
+    memberType: MemberType
+    position: Position
+}
+
+input MemberUpdateInput {
+    memberType: MemberType
+    position: Position
+    organizer: Boolean
+}
+
+"Nevyplněné hodnoty = výchozí nastavení (60 min, 10 hráčů na tým, 2 brankáři, pozvánky 96/48 h předem, uzávěrka 24 h předem)."
+input EventInput {
+    name: String!
+    startsAt: DateTime!
+    durationMinutes: Int
+    venueId: ID
+    maxPlayersPerTeam: Int
+    maxGoalies: Int
+    signupDeadline: DateTime
+    inviteRegularsHoursBefore: Int
+    inviteSubstitutesHoursBefore: Int
+    note: String
+}
+
+extend type Query {
+    myGroups: [SportGroup!]!
+    group(id: ID!): SportGroup!
+    event(id: ID!): Event!
+    "Nadcházející termíny ve všech mých skupinách."
+    myUpcomingEvents: [Event!]!
+    "Pozvánky do skupin, které čekají na moji odpověď."
+    myGroupInvites: [GroupMember!]!
+}
+
+extend type Mutation {
+    groupCreate(input: GroupInput!): SportGroup!
+    groupUpdate(id: ID!, input: GroupInput!): SportGroup!
+    teamSave(groupId: ID!, input: TeamInput!): Team!
+    teamDelete(id: ID!): Boolean!
+    venueSave(groupId: ID!, input: VenueInput!): Venue!
+    venueDelete(id: ID!): Boolean!
+
+    memberInvite(groupId: ID!, input: MemberInviteInput!): GroupMember!
+    memberUpdate(id: ID!, input: MemberUpdateInput!): GroupMember!
+    "Odebrání člena organizátorem nebo odchod ze skupiny."
+    memberRemove(id: ID!): GroupMember!
+    groupInviteRespond(memberId: ID!, accept: Boolean!): GroupMember!
+
+    eventCreate(groupId: ID!, input: EventInput!): Event!
+    eventUpdate(id: ID!, input: EventInput!): Event!
+    eventCancel(id: ID!, reason: String): Event!
+    "Rozešle pozvánky hned (vrací počet odeslaných e-mailů)."
+    eventSendInvitations(id: ID!, memberType: MemberType!): Int!
+
+    "Přihlášení/odhlášení přihlášeného uživatele."
+    registrationRespond(eventId: ID!, status: RegistrationStatus!, teamId: ID): Registration!
+    "Organizátor nastaví přihlášku libovolnému členovi (i po uzávěrce)."
+    registrationSet(eventId: ID!, userId: ID!, status: RegistrationStatus!, teamId: ID, position: Position): Registration!
+}

@@ -1,48 +1,50 @@
 package cz.petrf.sraz.graphql;
 
+import cz.petrf.sraz.exception.DomainException;
+import cz.petrf.sraz.exception.NotFoundException;
 import graphql.GraphQLError;
 import graphql.GraphqlErrorBuilder;
-import graphql.execution.DataFetcherExceptionHandler;
-import graphql.execution.DataFetcherExceptionHandlerParameters;
-import graphql.execution.DataFetcherExceptionHandlerResult;
+import graphql.schema.DataFetchingEnvironment;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter;
 import org.springframework.graphql.execution.ErrorType;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.Map;
 
+/**
+ * Převod výjimek na GraphQL chyby. Rozšíření {@code code} čte frontend
+ * (UNAUTHENTICATED → přesměrování na přihlášení).
+ */
 @Component
-public class GraphqlExceptionHandler implements DataFetcherExceptionHandler {
+@Slf4j
+public class GraphqlExceptionHandler extends DataFetcherExceptionResolverAdapter {
 
   @Override
-  public CompletableFuture<DataFetcherExceptionHandlerResult> handleException(DataFetcherExceptionHandlerParameters handlerParameters) {
-    Throwable ex = handlerParameters.getException();
-    GraphQLError error;
-
-    if (ex instanceof AccessDeniedException) {
-      error = GraphqlErrorBuilder.newError()
-          .message("Access denied")
-          .errorType(ErrorType.UNAUTHORIZED)
-          .path(handlerParameters.getPath())
-          .location(handlerParameters.getSourceLocation())
-          .build();
-    } else {
-      error = GraphqlErrorBuilder.newError()
-          .message(ex.getMessage()!=null ? ex.getMessage():"Internal server error")
-          .errorType(ErrorType.INTERNAL_ERROR)
-          .path(handlerParameters.getPath())
-          .location(handlerParameters.getSourceLocation())
-          .build();
-    }
-
-    DataFetcherExceptionHandlerResult.newResult().error(GraphqlErrorBuilder.newError()
-        .message(ex.getMessage()).build()).build();
-
-    DataFetcherExceptionHandlerResult result = DataFetcherExceptionHandlerResult.newResult()
-        .error(error)
-        .build();
-
-    return CompletableFuture.completedFuture(result);
+  protected GraphQLError resolveToSingleError(Throwable ex, DataFetchingEnvironment env) {
+    return switch (ex) {
+      case AuthenticationException e -> error(env, ErrorType.UNAUTHORIZED, "UNAUTHENTICATED", "Přihlaste se prosím.");
+      case AccessDeniedException e -> error(env, ErrorType.FORBIDDEN, "FORBIDDEN", message(e, "Přístup odepřen."));
+      case NotFoundException e -> error(env, ErrorType.NOT_FOUND, "NOT_FOUND", e.getMessage());
+      case DomainException e -> error(env, ErrorType.BAD_REQUEST, "BAD_REQUEST", e.getMessage());
+      default -> {
+        log.error("GraphQL chyba v {}", env.getExecutionStepInfo().getPath(), ex);
+        yield error(env, ErrorType.INTERNAL_ERROR, "INTERNAL_ERROR", "Neočekávaná chyba serveru.");
+      }
+    };
   }
 
+  private static String message(Throwable ex, String fallback) {
+    return ex.getMessage()!=null ? ex.getMessage():fallback;
+  }
+
+  private static GraphQLError error(DataFetchingEnvironment env, ErrorType type, String code, String message) {
+    return GraphqlErrorBuilder.newError(env)
+        .errorType(type)
+        .message(message)
+        .extensions(Map.of("code", code))
+        .build();
+  }
 }
