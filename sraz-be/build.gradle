@@ -51,7 +51,7 @@ dependencies {
 
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
-    implementation 'com.graphql-java:graphql-java-extended-scalars:21.0'
+    implementation 'com.graphql-java:graphql-java-extended-scalars:24.0'
 
     implementation("com.github.javafaker:javafaker:1.0.2") {
         exclude group: "org.yaml"
