@@ -3,6 +3,7 @@ package cz.petrf.sraz.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,6 +23,9 @@ public class EmailAuthenticationProvider implements AuthenticationProvider {
     UserDetails user = userDetailsService.loadUserByUsername(email);
     if (user==null) {
       throw new BadCredentialsException("Neznámý e-mail");
+    }
+    if (!user.isEnabled()) {
+      throw new DisabledException("Účet je zablokovaný");
     }
 
     return new EmailAuthenticationToken(

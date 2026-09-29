@@ -2,10 +2,12 @@ package cz.petrf.sraz.config;
 
 import cz.petrf.sraz.security.EmailAuthenticationProvider;
 import cz.petrf.sraz.security.JwtRequestFilter;
+import cz.petrf.sraz.service.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -29,15 +31,23 @@ public class SecurityConfig {
 
   private final JwtRequestFilter jwtRequestFilter;
   private final EmailAuthenticationProvider emailProvider;
+  private final UserDetailsServiceImpl userDetailsService;
 
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder(10);   // strength 10
   }
 
+  /**
+   * Dva způsoby přihlášení: e-mail + heslo (DaoAuthenticationProvider) a magic link (EmailAuthenticationProvider).
+   */
   @Bean
   public AuthenticationManager authenticationManager(HttpSecurity http) {
+    DaoAuthenticationProvider passwordProvider = new DaoAuthenticationProvider(userDetailsService);
+    passwordProvider.setPasswordEncoder(passwordEncoder());
+
     return http.getSharedObject(AuthenticationManagerBuilder.class)
+        .authenticationProvider(passwordProvider)
         .authenticationProvider(emailProvider)
         .build();
   }
