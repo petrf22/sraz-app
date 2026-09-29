@@ -11,8 +11,10 @@
 
       <ul nz-menu nzTheme="dark" nzMode="horizontal" class="desktop-menu">
         <li nz-menu-item routerLink="/">Úvod</li>
-        @if(isAuthenticated()) {
+        @if(auth.isLoggedIn()) {
         <li nz-menu-item routerLink="/logout">Odhlásit se</li>
+        } @else {
+        <li nz-menu-item routerLink="/login">Přihlásit se</li>
         }
       </ul>
     </div>
@@ -28,8 +30,10 @@
     <ng-container *nzDrawerContent>
       <ul nz-menu nzMode="inline">
         <li nz-menu-item routerLink="/" (click)="closeDrawer()">Úvod</li>
-        @if(isAuthenticated()) {
+        @if(auth.isLoggedIn()) {
         <li nz-menu-item routerLink="/logout" (click)="closeDrawer()">Odhlásit se</li>
+        } @else {
+        <li nz-menu-item routerLink="/login" (click)="closeDrawer()">Přihlásit se</li>
         }
       </ul>
     </ng-container>

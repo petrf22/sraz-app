@@ -10,21 +10,21 @@
     <h3>Jak to funguje?</h3>
   </div>
   <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
-    @if (userService.tokenSig()) {
+    @if (auth.isLoggedIn()) {
     <!-- Verze pro přihlášené uživatele -->
     <p>Jste přihlášen(a). Přehled akcí a skupin bude brzy k dispozici.</p>
     } @else {
     <!-- Verze pro anonymní uživatele -->
     <ul>
-      <li>Zadáte svůj e-mail.</li>
-      <li>Na zadaný e-mail vám přijde odkaz pro přihlášení do aplikace.</li>
-      <li>Klikněte na odkaz ve vašem e-mailu. Odkaz má omezenou platnost, přihlášení je možné opakovat.</li>
+      <li>Zadáte svůj e-mail a přijde vám šestimístný kód – žádné heslo.</li>
+      <li>Aplikace si přihlášení zapamatuje, příště už kód nepotřebujete.</li>
+      <li>Na akce se můžete přihlásit i přímo odkazem z pozvánky v e-mailu, bez přihlášení do aplikace.</li>
     </ul>
     }
   </div>
-  @if (!userService.tokenSig()) {
+  @if (!auth.isLoggedIn()) {
   <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
-    <app-mail></app-mail>
+    <a nz-button nzType="primary" routerLink="/login">Přihlásit se</a>
   </div>
   }
 </div>

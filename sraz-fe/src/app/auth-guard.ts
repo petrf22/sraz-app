@@ -1,15 +1,9 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { UserService } from './services/user-service';
+import { AuthService } from './services/auth.service';
 
-export const authGuard: CanActivateFn = (route, state) => {
-  const userService = inject(UserService);
-  const router = inject(Router);
-  const isAuthenticated = userService.tokenSig() !== null;
-
-  if (!isAuthenticated) {
-    router.navigate(['/'], { replaceUrl: true });
-  }
-
-  return isAuthenticated;
+/** Nepřihlášeného uživatele pošle na přihlášení a po něm ho vrátí zpět. */
+export const authGuard: CanActivateFn = (_route, state) => {
+  const auth = inject(AuthService);
+  return auth.isLoggedIn() ? true : inject(Router).createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
 };

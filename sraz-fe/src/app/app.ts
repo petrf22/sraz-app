@@ -5,7 +5,7 @@ import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { NzDrawerModule } from 'ng-zorro-antd/drawer';
 import { Observable, filter, map } from 'rxjs';
-import { UserService } from './services/user-service';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -16,10 +16,9 @@ import { UserService } from './services/user-service';
 export class App {
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
-  private userService = inject(UserService);
+  protected auth = inject(AuthService);
 
   isCollapsed = false;
-  isAuthenticated = computed(() => this.userService.tokenSig() !== null);
   drawerVisible = false;
 
   getRouteTitle(): Observable<string> {

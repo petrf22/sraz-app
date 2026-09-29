@@ -12,7 +12,7 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzResultModule } from 'ng-zorro-antd/result';
 import { NzUploadModule } from 'ng-zorro-antd/upload';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
-import { UserService } from '../services/user-service';
+import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
@@ -29,7 +29,7 @@ import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 export class LogoutComponent {
   readonly smazatUcetInfo = "Smazání účtu je nevratná akce, která smaže všechny vaše údaje z této aplikace.";
 
-  private userService = inject(UserService);
+  private auth = inject(AuthService);
   private router = inject(Router);
   private messageService = inject(NzMessageService);
   private modalService = inject(NzModalService);
@@ -39,7 +39,7 @@ export class LogoutComponent {
   submitForm() {
     this.modalService.confirm({
       nzTitle: this.smazatUcet ? 'Potvrzení smazání účtu' : 'Potvrzení odhlášení',
-      nzContent: this.smazatUcet ? `<b style="color: red;">${this.smazatUcetInfo}</b>` : 'Pro nové přihlášení budete potřebovat ověření přes e-mail',
+      nzContent: this.smazatUcet ? `<b style="color: red;">${this.smazatUcetInfo}</b>` : 'Pro nové přihlášení budete potřebovat kód z e-mailu.',
       nzOkText: 'Ano',
       nzOkType: 'primary',
       nzOkDanger: true,
@@ -50,7 +50,7 @@ export class LogoutComponent {
   }
 
   logout(): void {
-    this.userService.logout(this.smazatUcet).subscribe({
+    this.auth.logout(this.smazatUcet).subscribe({
       next: (response) => {
         console.log('LogoutComponent :: Logout successful:', response);
 

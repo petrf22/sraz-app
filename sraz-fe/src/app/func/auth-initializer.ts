@@ -1,27 +1,11 @@
-
 import { inject } from '@angular/core';
-import { UserService } from '../services/user-service';
-import { catchError, Observable, tap } from 'rxjs';
-import { Router } from '@angular/router';
+import { catchError, Observable, of } from 'rxjs';
+import { AuthService } from '../services/auth.service';
 
-export function authInitializer(): () => void | Observable<unknown> | Promise<unknown> {
-  return () => {
-    const user = inject(UserService);
-    const router = inject(Router);
-
-    return user.refreshToken()
-      .pipe(
-        tap(token => {
-          console.log('Auth Initializer :: Token refreshed successfully');
-          if (token) {
-            router.navigate(['/'], { replaceUrl: true });
-          } else {
-            router.navigate(['/'], { replaceUrl: true });
-          }
-        }),
-        catchError((error) => {
-          console.error('Auth Initializer :: Token refresh failed:', error);
-          return [];
-        }));
-  };
+/**
+ * Při startu aplikace tiše obnoví přihlášení z refresh cookie – uživatel se nemusí
+ * při každé návštěvě znovu přihlašovat. Bez platné cookie zůstane anonymní.
+ */
+export function authInitializer(): () => Observable<unknown> {
+  return () => inject(AuthService).refresh().pipe(catchError(() => of(null)));
 }

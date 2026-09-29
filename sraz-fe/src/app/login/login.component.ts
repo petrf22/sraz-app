@@ -1,68 +1,124 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
-
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzInputModule } from 'ng-zorro-antd/input';
-import { AuthService } from '../service/auth.service';
-import { NzIconModule } from 'ng-zorro-antd/icon';
-import { UserService } from '../service/user.service';
+import { first, Observable, shareReplay, switchMap } from 'rxjs';
+import { AuthService, authErrorMessage, OtpRequestResponse } from '../services/auth.service';
 
+/**
+ * Přihlášení bez hesla: 1) e-mail → 2) šestimístný kód z e-mailu.
+ * Nový účet vznikne až po zadání kódu a se souhlasem se zpracováním údajů.
+ */
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, NzButtonModule, NzCheckboxModule, NzFormModule, NzInputModule, NzIconModule],
+  imports: [FormsModule, NzAlertModule, NzButtonModule, NzCardModule, NzCheckboxModule, NzFormModule, NzGridModule, NzInputModule],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrl: './login.component.scss',
 })
-export class LoginComponent implements OnInit {
-  private userService = inject(UserService);
-  private fb = inject(NonNullableFormBuilder);
+export class LoginComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
+  step = signal<'email' | 'code'>('email');
+  email = signal('');
+  code = signal('');
+  consentGiven = signal(false);
+  sendingCode = signal(false);
+  verifying = signal(false);
+  errorMessage = signal<string | null>(null);
+  resendCooldown = signal(0);
 
-  validateForm = this.fb.group({
-    username: this.fb.control('', [Validators.required]),
-    password: this.fb.control('', [Validators.required]),
-    remember: this.fb.control(true)
-  });
+  private otpRequest$: Observable<OtpRequestResponse> | null = null;
+  private resendTimer: ReturnType<typeof setInterval> | null = null;
 
-  submitForm(): void {
-    if (this.validateForm.valid) {
-      console.log('submit', this.validateForm.value);
-
-      this.auth.login(this.validateForm.value as { username: string; password: string })
-        .subscribe({
-          next: (next) => {
-            console.log('submit :: next:', next);
-
-            const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/dashboard';
-            this.router.navigateByUrl(returnUrl);
-          },
-          error: err => console.error(err)
-        });
-
-
-    } else {
-      Object.values(this.validateForm.controls).forEach(control => {
-        if (control.invalid) {
-          control.markAsDirty();
-          control.updateValueAndValidity({ onlySelf: true });
-        }
-      });
-    }
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.clearResendTimer());
   }
 
+  /** Na krok s kódem přepne hned – odeslání e-mailu může chvíli trvat. */
+  requestCode(): void {
+    if (!this.email().trim() || this.sendingCode()) {
+      return;
+    }
+    this.sendingCode.set(true);
+    this.errorMessage.set(null);
+    this.step.set('code');
 
-
-  ngOnInit(): void {
-    console.log('Welcome :: ngOnInit ...');
-    this.userService.profile().subscribe(profile => {
-      console.log('Welcome :: ngOnInit :: User profile:', profile);
+    const request$ = this.auth.requestOtp(this.email().trim()).pipe(shareReplay(1));
+    this.otpRequest$ = request$;
+    request$.subscribe({
+      next: (response) => {
+        this.sendingCode.set(false);
+        this.startResendCooldown(response.resendAfterSec);
+      },
+      error: (err) => {
+        this.sendingCode.set(false);
+        this.otpRequest$ = null;
+        this.clearResendTimer();
+        this.resendCooldown.set(0);
+        this.step.set('email');
+        this.errorMessage.set(authErrorMessage(err));
+      },
     });
   }
 
+  verifyCode(): void {
+    const request$ = this.otpRequest$;
+    if (!request$ || !this.code().trim() || this.verifying()) {
+      return;
+    }
+    this.verifying.set(true);
+    this.errorMessage.set(null);
+    request$
+      .pipe(
+        first(),
+        switchMap((r) => this.auth.verifyOtp(r.challengeUid, this.code().trim(), this.email().trim(), this.consentGiven())),
+      )
+      .subscribe({
+        next: () => {
+          this.verifying.set(false);
+          const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+          this.router.navigateByUrl(returnUrl && returnUrl.startsWith('/') ? returnUrl : '/', { replaceUrl: true });
+        },
+        error: (err) => {
+          this.verifying.set(false);
+          this.errorMessage.set(authErrorMessage(err));
+        },
+      });
+  }
+
+  backToEmail(): void {
+    this.step.set('email');
+    this.code.set('');
+    this.errorMessage.set(null);
+    this.otpRequest$ = null;
+    this.clearResendTimer();
+    this.resendCooldown.set(0);
+  }
+
+  private startResendCooldown(seconds: number): void {
+    this.clearResendTimer();
+    this.resendCooldown.set(seconds);
+    this.resendTimer = setInterval(() => {
+      const left = this.resendCooldown() - 1;
+      this.resendCooldown.set(Math.max(0, left));
+      if (left <= 0) {
+        this.clearResendTimer();
+      }
+    }, 1000);
+  }
+
+  private clearResendTimer(): void {
+    if (this.resendTimer) {
+      clearInterval(this.resendTimer);
+      this.resendTimer = null;
+    }
+  }
 }

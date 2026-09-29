@@ -1,31 +1,45 @@
-<form nz-form [formGroup]="validateForm" class="login-form" (ngSubmit)="submitForm()">
-  <nz-form-item>
-    <nz-form-control nzErrorTip="Please input your username!">
-      <nz-input-wrapper>
-        <nz-icon nzInputPrefix nzType="user" />
-        <input type="text" nz-input formControlName="username" placeholder="Username" />
-      </nz-input-wrapper>
-    </nz-form-control>
-  </nz-form-item>
-  <nz-form-item>
-    <nz-form-control nzErrorTip="Please input your Password!">
-      <nz-input-wrapper>
-        <nz-icon nzInputPrefix nzType="lock" />
-        <input type="password" nz-input formControlName="password" placeholder="Password" />
-      </nz-input-wrapper>
-    </nz-form-control>
-  </nz-form-item>
-  <div nz-row class="login-form-margin">
-    <div nz-col [nzSpan]="12">
-      <label nz-checkbox formControlName="remember">
-        <span>Remember me</span>
-      </label>
-    </div>
-    <div nz-col [nzSpan]="12">
-      <a class="login-form-forgot">Forgot password</a>
-    </div>
+<div nz-row>
+  <div nz-col nzXs="24" [nzMd]="{ span: 10, offset: 7 }">
+    <nz-card nzTitle="Přihlášení">
+      @if (errorMessage()) {
+        <nz-alert nzType="error" [nzMessage]="errorMessage()!" nzShowIcon class="space-bottom"></nz-alert>
+      }
+
+      @if (step() === 'email') {
+        <form nz-form nzLayout="vertical" (ngSubmit)="requestCode()">
+          <nz-form-item>
+            <nz-form-label>E-mail</nz-form-label>
+            <nz-form-control>
+              <input nz-input type="email" name="email" autocomplete="email" required
+                [ngModel]="email()" (ngModelChange)="email.set($event)" />
+            </nz-form-control>
+          </nz-form-item>
+          <p class="hint">Pošleme vám šestimístný kód – žádné heslo si nemusíte pamatovat.</p>
+          <label nz-checkbox name="consent" [ngModel]="consentGiven()" (ngModelChange)="consentGiven.set($event)">
+            Souhlasím se zpracováním e-mailu a údajů o účasti pro potřeby aplikace (nutné jen při prvním přihlášení).
+          </label>
+          <button nz-button nzType="primary" nzBlock type="submit" class="space-top" [nzLoading]="sendingCode()">
+            Poslat kód
+          </button>
+        </form>
+      } @else {
+        <form nz-form nzLayout="vertical" (ngSubmit)="verifyCode()">
+          <p class="hint">Kód jsme poslali na <strong>{{ email() }}</strong>. Odeslání může chvíli trvat.</p>
+          <nz-form-item>
+            <nz-form-label>Kód z e-mailu</nz-form-label>
+            <nz-form-control>
+              <input nz-input name="code" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" required
+                [ngModel]="code()" (ngModelChange)="code.set($event)" />
+            </nz-form-control>
+          </nz-form-item>
+          <button nz-button nzType="primary" nzBlock type="submit" [nzLoading]="verifying()">Přihlásit</button>
+          <button nz-button nzType="link" nzBlock type="button" [nzLoading]="sendingCode()"
+            [disabled]="resendCooldown() > 0" (click)="requestCode()">
+            {{ resendCooldown() > 0 ? 'Poslat znovu (za ' + resendCooldown() + ' s)' : 'Poslat kód znovu' }}
+          </button>
+          <button nz-button nzType="link" nzBlock type="button" (click)="backToEmail()">Změnit e-mail</button>
+        </form>
+      }
+    </nz-card>
   </div>
-  <button nz-button class="login-form-button login-form-margin" [nzType]="'primary'">Log in</button>
-  Or
-  <a>register now!</a>
-</form>
+</div>
