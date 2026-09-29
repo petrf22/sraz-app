@@ -1,0 +1,185 @@
+@if (group(); as g) {
+  <h2>
+    {{ g.name }}
+    @if (organizer()) { <nz-tag nzColor="blue">organizátor</nz-tag> }
+  </h2>
+  @if (g.description) { <p>{{ g.description }}</p> }
+
+  <nz-tabs>
+    <nz-tab nzTitle="Akce">
+      @if (organizer()) {
+        <button nz-button nzType="primary" class="space" (click)="eventModalVisible.set(true)">Nová akce</button>
+      }
+      <nz-table #events [nzData]="g.events" [nzShowPagination]="false" nzSize="small">
+        <thead>
+          <tr><th>Kdy</th><th>Akce</th><th>Obsazenost</th><th>Stav</th><th>Já</th></tr>
+        </thead>
+        <tbody>
+          @for (e of events.data; track e.id) {
+            <tr>
+              <td>{{ e.startsAt | date: 'EEE d. M. H:mm' }}</td>
+              <td><a [routerLink]="['/akce', e.id]">{{ e.name }}</a></td>
+              <td>{{ e.summary.players }}/{{ e.summary.maxPlayers }} + {{ e.summary.goalies }}/{{ e.summary.maxGoalies }} br.
+                @if (e.summary.waitlist) { (fronta {{ e.summary.waitlist }}) }</td>
+              <td>{{ eventStatus[e.status] }}</td>
+              <td>
+                @if (e.myRegistration; as r) {
+                  <nz-tag [nzColor]="regColor[r.status]">{{ regStatus[r.status] }}</nz-tag>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </nz-table>
+    </nz-tab>
+
+    <nz-tab nzTitle="Členové ({{ g.members.length }})">
+      @if (organizer()) {
+        <form nz-form nzLayout="inline" class="space" (ngSubmit)="sendInvite()">
+          <nz-form-item>
+            <nz-form-control>
+              <input nz-input type="email" name="email" placeholder="e-mail" required [(ngModel)]="invite.email" />
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-select name="type" [(ngModel)]="invite.memberType" style="width: 140px">
+              <nz-option nzValue="REGULAR" nzLabel="stálý člen"></nz-option>
+              <nz-option nzValue="SUBSTITUTE" nzLabel="náhradník"></nz-option>
+            </nz-select>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-select name="position" [(ngModel)]="invite.position" style="width: 110px">
+              <nz-option nzValue="PLAYER" nzLabel="hráč"></nz-option>
+              <nz-option nzValue="GOALIE" nzLabel="brankář"></nz-option>
+            </nz-select>
+          </nz-form-item>
+          <button nz-button nzType="primary" type="submit" [nzLoading]="saving()">Pozvat</button>
+        </form>
+        <p class="hint">Pozvaný musí členství potvrdit odkazem z e-mailu – do té doby mu nic dalšího nechodí.</p>
+      }
+
+      <nz-table #membersTable [nzData]="members()" [nzShowPagination]="false" nzSize="small">
+        <thead>
+          <tr><th>Jméno</th><th>E-mail</th><th>Typ</th><th>Pozice</th><th>Stav</th>@if (organizer()) {<th></th>}</tr>
+        </thead>
+        <tbody>
+          @for (m of membersTable.data; track m.id) {
+            <tr>
+              <td>{{ m.user?.publicName ?? '—' }} @if (m.organizer) { <nz-tag nzColor="blue">org.</nz-tag> }</td>
+              <td>{{ m.email ?? '' }}</td>
+              @if (organizer() && m.status === 'ACTIVE') {
+                <td>
+                  <nz-select [ngModel]="m.memberType" (ngModelChange)="updateMember(m.id, { memberType: $event })" style="width: 130px">
+                    <nz-option nzValue="REGULAR" nzLabel="stálý člen"></nz-option>
+                    <nz-option nzValue="SUBSTITUTE" nzLabel="náhradník"></nz-option>
+                  </nz-select>
+                </td>
+                <td>
+                  <nz-select [ngModel]="m.position" (ngModelChange)="updateMember(m.id, { position: $event })" style="width: 100px">
+                    <nz-option nzValue="PLAYER" nzLabel="hráč"></nz-option>
+                    <nz-option nzValue="GOALIE" nzLabel="brankář"></nz-option>
+                  </nz-select>
+                </td>
+              } @else {
+                <td>{{ memberType[m.memberType] }}</td>
+                <td>{{ position[m.position] }}</td>
+              }
+              <td>{{ membershipStatus[m.status] }}</td>
+              @if (organizer()) {
+                <td>
+                  @if (m.status === 'ACTIVE') {
+                    <label nz-checkbox [ngModel]="m.organizer" (ngModelChange)="updateMember(m.id, { organizer: $event })">org.</label>
+                  }
+                  @if (m.status === 'ACTIVE' || m.status === 'INVITED') {
+                    <a nz-popconfirm nzPopconfirmTitle="Odebrat člena?" (nzOnConfirm)="removeMember(m.id)">odebrat</a>
+                  }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </nz-table>
+      @if (g.myMembership) {
+        <p class="space-top">
+          <a nz-popconfirm nzPopconfirmTitle="Opravdu opustit skupinu?" (nzOnConfirm)="leaveGroup()">Opustit skupinu</a>
+        </p>
+      }
+    </nz-tab>
+
+    <nz-tab nzTitle="Týmy">
+      @for (t of g.teams; track t.id) {
+        <p>
+          @if (organizer()) {
+            <input nz-input #name [value]="t.name" style="width: 180px" />
+            <input type="color" #color [value]="t.color ?? '#1677ff'" />
+            <button nz-button nzSize="small" (click)="saveTeam({ id: t.id, name: name.value, color: color.value, sortOrder: t.sortOrder })">Uložit</button>
+            <a nz-popconfirm nzPopconfirmTitle="Smazat tým?" (nzOnConfirm)="deleteTeam(t.id)">smazat</a>
+          } @else {
+            <span [style.color]="t.color">■</span> {{ t.name }}
+          }
+        </p>
+      }
+      @if (organizer()) {
+        <p>
+          <input nz-input placeholder="nový tým" style="width: 180px" [(ngModel)]="newTeamName" />
+          <button nz-button nzSize="small" (click)="saveTeam({ id: null, name: newTeamName, color: null })">Přidat</button>
+        </p>
+        <p class="hint">Bez týmů se hráči nedělí a limit hráčů platí pro celou akci.</p>
+      }
+    </nz-tab>
+
+    <nz-tab nzTitle="Místa">
+      <nz-table #venues [nzData]="g.venues" [nzShowPagination]="false" nzSize="small">
+        <thead><tr><th>Název</th><th>Adresa</th><th>Mapa</th>@if (organizer()) {<th></th>}</tr></thead>
+        <tbody>
+          @for (v of venues.data; track v.id) {
+            <tr>
+              <td>{{ v.name }}</td>
+              <td>{{ v.address }}</td>
+              <td>
+                @if (v.mapUrl) { <a [href]="v.mapUrl" target="_blank" rel="noopener">mapa</a> }
+                @if (v.latitude != null && v.longitude != null) { ({{ v.latitude }}, {{ v.longitude }}) }
+              </td>
+              @if (organizer()) {
+                <td>
+                  <a (click)="editVenue(v)">upravit</a> ·
+                  <a nz-popconfirm nzPopconfirmTitle="Smazat místo?" (nzOnConfirm)="deleteVenue(v.id)">smazat</a>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </nz-table>
+      @if (organizer()) {
+        @if (venueForm; as f) {
+          <nz-card nzSize="small" nzTitle="Místo" class="space-top">
+            <form nz-form nzLayout="vertical" (ngSubmit)="saveVenue()">
+              <nz-form-item><nz-form-label nzRequired>Název</nz-form-label>
+                <nz-form-control><input nz-input name="vname" required [(ngModel)]="f.name" /></nz-form-control></nz-form-item>
+              <nz-form-item><nz-form-label>Adresa</nz-form-label>
+                <nz-form-control><input nz-input name="vaddr" [(ngModel)]="f.address" /></nz-form-control></nz-form-item>
+              <nz-form-item><nz-form-label>Odkaz na mapu</nz-form-label>
+                <nz-form-control><input nz-input name="vmap" [(ngModel)]="f.mapUrl" placeholder="https://mapy.com/..." /></nz-form-control></nz-form-item>
+              <nz-form-item><nz-form-label>GPS (šířka, délka)</nz-form-label>
+                <nz-form-control>
+                  <nz-input-number name="vlat" [nzStep]="0.000001" [(ngModel)]="f.latitude"></nz-input-number>
+                  &nbsp;
+                  <nz-input-number name="vlon" [nzStep]="0.000001" [(ngModel)]="f.longitude"></nz-input-number>
+                </nz-form-control></nz-form-item>
+              <button nz-button nzType="primary" type="submit" [nzLoading]="saving()">Uložit</button>
+              <button nz-button type="button" (click)="venueForm = null">Zrušit</button>
+            </form>
+          </nz-card>
+        } @else {
+          <button nz-button class="space-top" (click)="editVenue()">Přidat místo</button>
+        }
+      }
+    </nz-tab>
+  </nz-tabs>
+
+  <nz-modal [nzVisible]="eventModalVisible()" nzTitle="Nová akce" [nzFooter]="null" (nzOnCancel)="eventModalVisible.set(false)">
+    <ng-container *nzModalContent>
+      <app-akce-formular [venues]="g.venues" [saving]="saving()" submitLabel="Založit" (submitted)="createEvent($event)"></app-akce-formular>
+    </ng-container>
+  </nz-modal>
+}

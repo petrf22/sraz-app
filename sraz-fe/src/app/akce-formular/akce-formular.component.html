@@ -1,0 +1,61 @@
+<form nz-form nzLayout="vertical" (ngSubmit)="submit()">
+  <nz-form-item>
+    <nz-form-label nzRequired>Název</nz-form-label>
+    <nz-form-control>
+      <input nz-input name="name" required [(ngModel)]="value.name" placeholder="např. Večerní hokej" />
+    </nz-form-control>
+  </nz-form-item>
+  <nz-form-item>
+    <nz-form-label nzRequired>Začátek</nz-form-label>
+    <nz-form-control>
+      <nz-date-picker name="startsAt" nzShowTime nzFormat="d. M. yyyy HH:mm" [(ngModel)]="value.startsAt"></nz-date-picker>
+    </nz-form-control>
+  </nz-form-item>
+  <nz-form-item>
+    <nz-form-label>Délka (min)</nz-form-label>
+    <nz-form-control>
+      <nz-input-number name="duration" [nzMin]="1" [(ngModel)]="value.durationMinutes"></nz-input-number>
+    </nz-form-control>
+  </nz-form-item>
+  <nz-form-item>
+    <nz-form-label>Místo</nz-form-label>
+    <nz-form-control>
+      <nz-select name="venue" nzAllowClear nzPlaceHolder="bez místa" [(ngModel)]="value.venueId">
+        @for (v of venues(); track v.id) {
+          <nz-option [nzValue]="v.id" [nzLabel]="v.name"></nz-option>
+        }
+      </nz-select>
+    </nz-form-control>
+  </nz-form-item>
+  <nz-form-item>
+    <nz-form-label>Hráčů na tým / brankářů celkem</nz-form-label>
+    <nz-form-control>
+      <nz-input-number name="players" [nzMin]="1" [(ngModel)]="value.maxPlayersPerTeam"></nz-input-number>
+      &nbsp;
+      <nz-input-number name="goalies" [nzMin]="0" [(ngModel)]="value.maxGoalies"></nz-input-number>
+    </nz-form-control>
+  </nz-form-item>
+  <nz-form-item>
+    <nz-form-label>Pozvat stálé / náhradníky (hodin před začátkem)</nz-form-label>
+    <nz-form-control>
+      <nz-input-number name="invReg" [nzMin]="0" [(ngModel)]="value.inviteRegularsHoursBefore"></nz-input-number>
+      &nbsp;
+      <nz-input-number name="invSub" [nzMin]="0" [(ngModel)]="value.inviteSubstitutesHoursBefore"></nz-input-number>
+    </nz-form-control>
+  </nz-form-item>
+  <nz-form-item>
+    <nz-form-label>Uzávěrka přihlášek (prázdné = 24 h před začátkem)</nz-form-label>
+    <nz-form-control>
+      <nz-date-picker name="deadline" nzShowTime nzFormat="d. M. yyyy HH:mm" [(ngModel)]="value.signupDeadline"></nz-date-picker>
+    </nz-form-control>
+  </nz-form-item>
+  <nz-form-item>
+    <nz-form-label>Poznámka</nz-form-label>
+    <nz-form-control>
+      <textarea nz-input name="note" rows="2" [(ngModel)]="value.note"></textarea>
+    </nz-form-control>
+  </nz-form-item>
+  <button nz-button nzType="primary" type="submit" [nzLoading]="saving()" [disabled]="!value.name.trim() || !value.startsAt">
+    {{ submitLabel() }}
+  </button>
+</form>
