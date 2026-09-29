@@ -1,5 +1,7 @@
 # Sraz
 
+Web: [sraz.app](https://sraz.app) (připravuje se)
+
 Open-source aplikace pro přihlašování na pravidelné sportovní akce (např. večerní hokej jednou týdně).
 
 ## Co bude umět
@@ -34,3 +36,6 @@ npm start
 Testy: `./gradlew test` (vyžaduje Docker – Testcontainers) a `npm test`.
 
 Podrobnosti k architektuře jsou v [CLAUDE.md](CLAUDE.md).
+
+## Licence
+[GNU AGPL-3.0](LICENSE) – upravenou verzi provozovanou jako službu je nutné zveřejnit pod stejnou licencí.
