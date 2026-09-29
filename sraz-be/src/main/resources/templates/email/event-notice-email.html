@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #1677ff; color: white; padding: 10px; text-align: center; }
+        .footer { margin-top: 30px; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <hgroup class="header">
+        <h1 th:text="${eventName}">Akce</h1>
+        <p th:text="${startsAt}">datum</p>
+    </hgroup>
+
+    <p>Ahoj <strong th:text="${playerName}">hráči</strong>,</p>
+
+    <h2 th:text="${headline}">Oznámení</h2>
+    <p th:text="${message}">Text</p>
+    <p th:if="${teamName}">Tým: <strong th:text="${teamName}">tým</strong></p>
+
+    <p><a th:href="${appUrl}">Detail akce</a></p>
+
+    <div class="footer">
+        <p>Tento e-mail byl odeslán automaticky, neodpovídejte na něj.</p>
+    </div>
+</div>
+</body>
+</html>
