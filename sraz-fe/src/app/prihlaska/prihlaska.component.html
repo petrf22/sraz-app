@@ -1,0 +1,109 @@
+<div nz-row>
+  <div nz-col nzXs="24" [nzMd]="{ span: 16, offset: 4 }">
+    @if (loading()) {
+      <nz-spin nzSimple class="center"></nz-spin>
+    }
+
+    @if (error()) {
+      <nz-alert nzType="error" [nzMessage]="error()!" nzShowIcon class="space"></nz-alert>
+    }
+
+    @if (invitation(); as inv) {
+      <nz-card [nzTitle]="inv.eventName" [nzExtra]="groupTag">
+        <p>
+          <span nz-icon nzType="calendar"></span>
+          <strong>{{ inv.startsAt | date: 'EEEE d. M. y, H:mm' }}</strong> ({{ inv.durationMinutes }} min)
+        </p>
+        @if (inv.venue; as v) {
+          <p>
+            <span nz-icon nzType="environment"></span>
+            {{ v.name }}@if (v.address) {, {{ v.address }}}
+            @if (v.mapUrl) {
+              – <a [href]="v.mapUrl" target="_blank" rel="noopener">mapa</a>
+            }
+          </p>
+        }
+        @if (inv.note) {
+          <p>{{ inv.note }}</p>
+        }
+        <p>
+          Ahoj <strong>{{ inv.playerName }}</strong>, přihlášeno
+          <strong>{{ inv.summary.players }} / {{ inv.summary.maxPlayers }}</strong> hráčů a
+          <strong>{{ inv.summary.goalies }} / {{ inv.summary.maxGoalies }}</strong> brankářů.
+        </p>
+
+        <p>
+          Váš stav:
+          @switch (inv.myStatus) {
+            @case ('IN') { <nz-tag nzColor="success">přihlášen(a){{ myTeamName() ? ' – ' + myTeamName() : '' }}</nz-tag> }
+            @case ('WAITLIST') { <nz-tag nzColor="warning">ve frontě</nz-tag> }
+            @case ('OUT') { <nz-tag>odhlášen(a)</nz-tag> }
+            @default { <nz-tag>zatím bez odpovědi</nz-tag> }
+          }
+        </p>
+
+        @if (saved()) {
+          <nz-alert nzType="success" [nzMessage]="saved()!" nzShowIcon class="space"></nz-alert>
+        }
+
+        @if (inv.expired || inv.eventStatus === 'CANCELLED') {
+          <nz-alert nzType="warning" nzShowIcon class="space"
+            [nzMessage]="inv.eventStatus === 'CANCELLED' ? 'Akce je zrušená.' : 'Akce už začala, odkaz není platný.'"></nz-alert>
+        } @else if (!inv.signupOpen) {
+          <nz-alert nzType="info" nzShowIcon class="space"
+            nzMessage="Přihlašování skončilo {{ inv.signupDeadline | date: 'd. M. H:mm' }}. Změnu domluvte s organizátorem."></nz-alert>
+        } @else {
+          @if (pending(); as p) {
+            <nz-alert nzType="info" nzShowIcon class="space"
+              [nzMessage]="p.status === 'IN' ? 'Potvrďte přihlášení' + (p.team ? ' do týmu ' + p.team.name : '') : 'Potvrďte odhlášení'"
+              [nzAction]="confirmTpl"></nz-alert>
+            <ng-template #confirmTpl>
+              <button nz-button nzType="primary" nzSize="small" [nzLoading]="saving()" (click)="choose(p.status, p.team)">Potvrdit</button>
+              <button nz-button nzSize="small" (click)="cancelPending()">Zpět</button>
+            </ng-template>
+          } @else {
+            <div class="actions">
+              @if (inv.position !== 'GOALIE' && inv.teams.length > 0) {
+                @for (t of inv.teams; track t.id) {
+                  <button nz-button nzType="primary" [style.background]="t.color" [style.border-color]="t.color"
+                    [nzLoading]="saving()" (click)="choose('IN', t)">
+                    Přijdu – {{ t.name }}
+                  </button>
+                }
+              } @else {
+                <button nz-button nzType="primary" [nzLoading]="saving()" (click)="choose('IN')">Přijdu</button>
+              }
+              <button nz-button nzDanger [nzLoading]="saving()" (click)="choose('OUT')">Nepřijdu</button>
+            </div>
+            <p class="hint">Změnit to můžete do {{ inv.signupDeadline | date: 'EEEE d. M. H:mm' }}.</p>
+          }
+        }
+      </nz-card>
+
+      <nz-card nzTitle="Kdo přijde" class="space">
+        <div nz-row [nzGutter]="[16, 16]">
+          @for (col of columns(); track col.title) {
+            <div nz-col nzXs="24" nzSm="8">
+              <h4 [style.color]="col.color">{{ col.title }} ({{ col.names.length }})</h4>
+              <ol>
+                @for (name of col.names; track $index) {
+                  <li>{{ name }}</li>
+                }
+              </ol>
+            </div>
+          }
+        </div>
+        @if (waitlist().length > 0) {
+          <h4>Fronta</h4>
+          <ol>
+            @for (name of waitlist(); track $index) {
+              <li>{{ name }}</li>
+            }
+          </ol>
+        }
+      </nz-card>
+
+      <ng-template #groupTag><nz-tag>{{ inv.groupName }}</nz-tag></ng-template>
+    }
+  </div>
+</div>

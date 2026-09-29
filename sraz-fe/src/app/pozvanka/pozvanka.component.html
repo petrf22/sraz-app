@@ -1,0 +1,44 @@
+<div nz-row>
+  <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
+    @if (loading()) {
+      <nz-spin nzSimple></nz-spin>
+    }
+
+    @if (error()) {
+      <nz-alert nzType="error" [nzMessage]="error()!" nzShowIcon></nz-alert>
+    }
+
+    @switch (answered()) {
+      @case ('accepted') {
+        <nz-result nzStatus="success" nzTitle="Vítejte ve skupině {{ invite()?.groupName }}"
+          nzSubTitle="Pozvánky na akce vám budou chodit e-mailem. Do aplikace se můžete přihlásit svým e-mailem.">
+          <div nz-result-extra>
+            <a nz-button nzType="primary" routerLink="/uvod">Přihlásit se</a>
+          </div>
+        </nz-result>
+      }
+      @case ('declined') {
+        <nz-result nzStatus="info" nzTitle="Pozvánku jste odmítli" nzSubTitle="Žádné další e-maily od této skupiny vám nepřijdou."></nz-result>
+      }
+      @default {
+        @if (invite(); as inv) {
+          <h2>Pozvánka do skupiny {{ inv.groupName }}</h2>
+          <p>
+            @if (inv.invitedBy) {<strong>{{ inv.invitedBy }}</strong> vás zve}
+            @else {Jste zváni}
+            do skupiny <strong>{{ inv.groupName }}</strong> jako
+            <strong>{{ inv.memberType === 'REGULAR' ? 'stálý člen' : 'náhradník' }}</strong>
+            ({{ inv.position === 'GOALIE' ? 'brankář' : 'hráč' }}).
+          </p>
+          <p>
+            Po přijetí vám budou na <strong>{{ inv.email }}</strong> chodit pozvánky na akce skupiny.
+            Dokud pozvánku nepřijmete, nic dalšího vám nepošleme.
+          </p>
+          <button nz-button nzType="primary" [nzLoading]="saving()" (click)="respond(true)">Přijmout</button>
+          &nbsp;
+          <button nz-button [nzLoading]="saving()" (click)="respond(false)">Odmítnout</button>
+        }
+      }
+    }
+  </div>
+</div>

@@ -5,7 +5,10 @@ import {
   DashboardOutline,
   DownloadOutline,
   MailOutline,
-  MenuOutline
+  MenuOutline,
+  CalendarOutline,
+  EnvironmentOutline
 } from '@ant-design/icons-angular/icons';
 
-export const icons = [MenuFoldOutline, MenuUnfoldOutline, DashboardOutline, FormOutline, DownloadOutline, MailOutline, MenuOutline];
+export const icons = [MenuFoldOutline, MenuUnfoldOutline, DashboardOutline, FormOutline, DownloadOutline, MailOutline, MenuOutline,
+  CalendarOutline, EnvironmentOutline];
