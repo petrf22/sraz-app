@@ -22,9 +22,9 @@ import { IconDefinition } from '@ant-design/icons-angular';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { ErrorLink, onError } from '@apollo/client/link/error';
 
-import cs from '@angular/common/locales/en';
+import cs from '@angular/common/locales/cs';
 
-registerLocaleData(cs);
+registerLocaleData(cs, 'cs-CZ');
 
 export function apolloOptionsFactory(
   httpLink: HttpLink,
