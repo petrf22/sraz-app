@@ -25,6 +25,7 @@ import java.util.List;
 public class SecurityConfig {
 
   private final JwtRequestFilter jwtRequestFilter;
+  private final SecurityProperties securityProperties;
 
   /** Hash přihlašovacích kódů (hesla aplikace nepoužívá). */
   @Bean
@@ -41,10 +42,7 @@ public class SecurityConfig {
             .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
             .requestMatchers("/actuator/health/**", "/actuator/info/**").permitAll()
             .requestMatchers("/api/**").authenticated()
-            //.requestMatchers("/api/admin/**").hasRole("ADMIN")
-            //.requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
-            // Všechny ostatní požadavky vyžadují autentizaci
-            //.anyRequest().authenticated()
+            // /graphql: oprávnění kontrolují resolvery (CurrentUserService, AccessService)
             .anyRequest().permitAll()
         )
         .sessionManagement(sess -> sess
@@ -58,7 +56,7 @@ public class SecurityConfig {
   public UrlBasedCorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
     config.setAllowCredentials(true);                                  // cookies, JWT
-    config.setAllowedOrigins(List.of("http://localhost:4200", "http://127.0.0.1:4200"));
+    config.setAllowedOrigins(securityProperties.getAllowedOrigins());
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     config.setAllowedHeaders(List.of("*"));
     config.setExposedHeaders(List.of("Authorization"));                // pokud posíláte JWT v hlavičce

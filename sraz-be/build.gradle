@@ -7,7 +7,8 @@ plugins {
 }
 
 group = 'cz.petrf'
-version = '0.0.1-SNAPSHOT'
+// Verze musí odpovídat tagu vydání vX.Y.Z – ops/deploy.sh ji po nasazení ověřuje přes /actuator/info
+version = '0.1.0'
 description = 'Sraz – přihlašování na sportovní akce'
 
 java {
@@ -48,7 +49,6 @@ dependencies {
 
     implementation 'org.liquibase:liquibase-core'
 
-    implementation 'org.springframework.retry:spring-retry:2.0.13'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
     implementation 'com.graphql-java:graphql-java-extended-scalars:21.0'
@@ -57,8 +57,6 @@ dependencies {
         exclude group: "org.yaml"
     }
 
-
-    implementation 'com.resend:resend-java:4.13.0'
 
     // omezení počtu požadavků na přihlašovací kód
     implementation 'com.github.ben-manes.caffeine:caffeine'
@@ -97,6 +95,15 @@ dependencies {
     testImplementation 'org.testcontainers:testcontainers-postgresql'
 
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// /actuator/info: verze + commit (GIT_SHA předává compose.prod.yaml jako build arg, viz ops/deploy.sh)
+springBoot {
+    buildInfo {
+        properties {
+            additional = ['commit': (System.getenv('GIT_SHA') ?: '')]
+        }
+    }
 }
 
 // GraphQL schéma leží ve výchozím umístění Spring GraphQL (classpath:graphql/)

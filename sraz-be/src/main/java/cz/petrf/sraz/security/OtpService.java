@@ -52,7 +52,7 @@ public class OtpService {
   private final Clock clock;
   private final SecureRandom secureRandom = new SecureRandom();
 
-  @Value("${app.magic-link.mail.from:petr.franta@gmail.com}")
+  @Value("${app.mail.from}")
   private String fromEmail;
 
   public record OtpRequestResult(UUID challengeUid, long expiresInSec, long resendAfterSec) {

@@ -5,6 +5,7 @@ import cz.petrf.sraz.db.entity.Role;
 import cz.petrf.sraz.db.entity.User;
 import cz.petrf.sraz.exception.AuthException;
 import cz.petrf.sraz.exception.DomainException;
+import cz.petrf.sraz.security.ClientIpResolver;
 import cz.petrf.sraz.security.JwtService;
 import cz.petrf.sraz.security.OtpService;
 import cz.petrf.sraz.security.RefreshTokenService;
@@ -44,6 +45,7 @@ public class AuthController {
   private final JwtService jwtService;
   private final UserService userService;
   private final AuthProperties properties;
+  private final ClientIpResolver clientIpResolver;
 
   public record OtpRequest(String email) {
   }
@@ -56,7 +58,7 @@ public class AuthController {
 
   @PostMapping("/otp/request")
   public OtpService.OtpRequestResult requestOtp(@RequestBody OtpRequest request, HttpServletRequest servletRequest) {
-    return otpService.requestOtp(request.email(), servletRequest.getRemoteAddr());
+    return otpService.requestOtp(request.email(), clientIpResolver.resolve(servletRequest));
   }
 
   @PostMapping("/otp/verify")

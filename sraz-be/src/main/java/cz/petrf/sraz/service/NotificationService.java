@@ -29,7 +29,7 @@ public class NotificationService {
 
   @Value("${app.frontend-url:http://localhost:4200}")
   private String frontendUrl;
-  @Value("${app.magic-link.mail.from:petr.franta@gmail.com}")
+  @Value("${app.mail.from}")
   private String fromEmail;
   @Value("${app.time-zone:Europe/Prague}")
   private String timeZone;
