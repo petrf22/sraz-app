@@ -8,7 +8,7 @@
   <nz-form-item>
     <nz-form-label nzRequired>Začátek</nz-form-label>
     <nz-form-control>
-      <nz-date-picker name="startsAt" nzShowTime nzFormat="d. M. yyyy HH:mm" [(ngModel)]="value.startsAt"></nz-date-picker>
+      <nz-date-picker name="startsAt" [nzShowTime]="{ nzFormat: 'HH:mm', nzMinuteStep: 5 }" nzFormat="d. M. yyyy HH:mm" [(ngModel)]="value.startsAt"></nz-date-picker>
     </nz-form-control>
   </nz-form-item>
   <nz-form-item>
@@ -46,7 +46,7 @@
   <nz-form-item>
     <nz-form-label>Uzávěrka přihlášek (prázdné = 24 h před začátkem)</nz-form-label>
     <nz-form-control>
-      <nz-date-picker name="deadline" nzShowTime nzFormat="d. M. yyyy HH:mm" [(ngModel)]="value.signupDeadline"></nz-date-picker>
+      <nz-date-picker name="deadline" [nzShowTime]="{ nzFormat: 'HH:mm', nzMinuteStep: 5 }" nzFormat="d. M. yyyy HH:mm" [(ngModel)]="value.signupDeadline"></nz-date-picker>
     </nz-form-control>
   </nz-form-item>
   <nz-form-item>

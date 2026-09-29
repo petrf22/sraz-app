@@ -24,6 +24,8 @@ import { ErrorLink, onError } from '@apollo/client/link/error';
 
 import cs from '@angular/common/locales/cs';
 
+// ng-zorro (cs_CZ) formátuje data pod locale 'cs', aplikace (LOCALE_ID) pod 'cs-CZ'
+registerLocaleData(cs);
 registerLocaleData(cs, 'cs-CZ');
 
 export function apolloOptionsFactory(
