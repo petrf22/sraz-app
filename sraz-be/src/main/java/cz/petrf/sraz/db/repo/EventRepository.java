@@ -29,6 +29,26 @@ public interface EventRepository extends JpaRepository<Event, Long> {
       """)
   List<Event> findUpcomingForUser(Long userId, OffsetDateTime from);
 
+  List<Event> findByPeriodIdOrderByStartsAt(Long periodId);
+
+  List<Event> findBySeriesIdOrderByStartsAt(Long seriesId);
+
+  /** Termíny s nastavenou a dosud neodeslanou připomínkou. */
+  @Query("""
+      select e from Event e
+      where e.reminderHoursBefore is not null and e.reminderSentAt is null
+        and e.status in :statuses and e.startsAt > :now
+      """)
+  List<Event> findPendingReminders(Collection<EventStatus> statuses, OffsetDateTime now);
+
+  /** Termíny po uzávěrce, u kterých organizátoři ještě nedostali souhrn. */
+  @Query("""
+      select e from Event e
+      where e.deadlineSummarySentAt is null and e.status in :statuses
+        and e.signupDeadline <= :now and e.startsAt > :now
+      """)
+  List<Event> findPendingDeadlineSummaries(Collection<EventStatus> statuses, OffsetDateTime now);
+
   /** Termíny, u kterých ještě neproběhlo rozeslání některé vlny pozvánek. */
   @Query("""
       select e from Event e

@@ -54,6 +54,27 @@ public class Event extends BaseEntity {
 
   private String note;
 
+  /** Série a období, ze kterých termín vznikl (null = jednorázová akce). */
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "series_id")
+  private EventSeries series;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "period_id")
+  private SeriesPeriod period;
+
+  /** Organizátor termín ručně upravil – přegenerování období ho nepřepíše ani nesmaže. */
+  private boolean detached;
+
+  /** Připomínka přihlášeným X hodin před začátkem (null = bez připomínky). */
+  private Integer reminderHoursBefore;
+
+  @Column(columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime reminderSentAt;
+
+  @Column(columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime deadlineSummarySentAt;
+
   public boolean isSignupOpen(OffsetDateTime now) {
     return (status==EventStatus.PLANNED || status==EventStatus.OPEN) && now.isBefore(signupDeadline);
   }
