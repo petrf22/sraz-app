@@ -2,65 +2,59 @@ package cz.petrf.sraz.db.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.domain.Persistable;
 
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.OffsetTime;
 
+/**
+ * Konkrétní termín akce.
+ */
 @Entity
-@Table(name = "events", uniqueConstraints = @UniqueConstraint(columnNames = {"owner_id", "name"}))
+@Table(name = "events")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Event implements Persistable<Long> {
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+public class Event extends BaseEntity {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "owner_id", nullable = false)
-  private Owner owner;
+  @JoinColumn(name = "group_id")
+  private SportGroup group;
 
-  @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "event_template_id", nullable = false)
-  private EventTemplate eventTemplate;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "venue_id")
+  private Venue venue;
 
-  @Column(nullable = false, length = 255)
+  @Column(nullable = false)
   private String name;
 
-  @Builder.Default
-  @Column(nullable = false)
-  private Boolean active = true;
+  @Column(nullable = false, columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime startsAt;
 
-  @Builder.Default
-  @Column(nullable = false)
-  private Boolean publicVisible = false;
+  private int durationMinutes;
+  private int maxPlayersPerTeam;
+  private int maxGoalies;
 
-  private LocalDate eventDate;
-  @Column(nullable = false)
-  private OffsetTime eventTime;
+  /** Po uzávěrce se hráči nemohou sami přihlásit ani odhlásit – řídí to organizátor. */
+  @Column(nullable = false, columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime signupDeadline;
+
+  private int inviteRegularsHoursBefore;
+  private int inviteSubstitutesHoursBefore;
 
   @Column(columnDefinition = "TIMESTAMPTZ")
-  private OffsetDateTime deletedAt;
+  private OffsetDateTime regularsInvitedAt;
 
-  @Builder.Default
-  @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMPTZ")
-  private OffsetDateTime createdAt = OffsetDateTime.now();
+  @Column(columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime substitutesInvitedAt;
 
-  @Builder.Default
-  @Column(nullable = false, columnDefinition = "TIMESTAMPTZ")
-  private OffsetDateTime updatedAt = OffsetDateTime.now();
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private EventStatus status;
 
-  @PreUpdate
-  public void onUpdate() {
-    updatedAt = OffsetDateTime.now();
-  }
+  private String note;
 
-  @Override
-  public boolean isNew() {
-    return id==null;
+  public boolean isSignupOpen(OffsetDateTime now) {
+    return (status==EventStatus.PLANNED || status==EventStatus.OPEN) && now.isBefore(signupDeadline);
   }
 }

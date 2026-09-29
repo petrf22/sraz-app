@@ -1,0 +1,177 @@
+# Schéma pro skupiny, členství, místa, akce, pozvánky a přihlášky (fáze 2 – MVP).
+# Výčtové hodnoty se ukládají jako VARCHAR (JPA @Enumerated(STRING)).
+databaseChangeLog:
+
+  - changeSet:
+      id: 2026-09-29-10-users-phone-blocked
+      author: Petr F.
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column: { name: phone, type: VARCHAR(30) }
+              - column: { name: blocked_at, type: TIMESTAMPTZ }
+
+  # Skupina = parta, která spolu pravidelně hraje (např. "Večerní hokej")
+  - changeSet:
+      id: 2026-09-29-20-sport-groups
+      author: Petr F.
+      changes:
+        - createTable:
+            tableName: sport_groups
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: description, type: TEXT }
+              - column: { name: created_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+
+  - changeSet:
+      id: 2026-09-29-30-teams
+      author: Petr F.
+      changes:
+        - createTable:
+            tableName: teams
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: group_id, type: BIGINT, constraints: { nullable: false, foreignKeyName: fk_teams_group, references: sport_groups(id), deleteCascade: true } }
+              - column: { name: name, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: color, type: VARCHAR(20) }
+              - column: { name: sort_order, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+
+  # Členství: user_id je NULL, dokud pozvaný člověk pozvánku nepřijme (souhlas s členstvím)
+  - changeSet:
+      id: 2026-09-29-40-group-members
+      author: Petr F.
+      changes:
+        - createTable:
+            tableName: group_members
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: group_id, type: BIGINT, constraints: { nullable: false, foreignKeyName: fk_group_members_group, references: sport_groups(id), deleteCascade: true } }
+              - column: { name: user_id, type: BIGINT, constraints: { foreignKeyName: fk_group_members_user, references: users(id), deleteCascade: true } }
+              - column: { name: email, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: member_type, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: position, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: organizer, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: invite_token, type: VARCHAR(40), constraints: { unique: true } }
+              - column: { name: invited_by, type: BIGINT, constraints: { foreignKeyName: fk_group_members_invited_by, references: users(id), deleteSetNull: true } }
+              - column: { name: responded_at, type: TIMESTAMPTZ }
+              - column: { name: created_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+        - addUniqueConstraint:
+            tableName: group_members
+            columnNames: group_id, email
+            constraintName: uq_group_members_group_email
+
+  - changeSet:
+      id: 2026-09-29-50-venues
+      author: Petr F.
+      changes:
+        - createTable:
+            tableName: venues
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: group_id, type: BIGINT, constraints: { nullable: false, foreignKeyName: fk_venues_group, references: sport_groups(id), deleteCascade: true } }
+              - column: { name: name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: address, type: VARCHAR(500) }
+              - column: { name: map_url, type: VARCHAR(1000) }
+              - column: { name: latitude, type: "DECIMAL(9,6)" }
+              - column: { name: longitude, type: "DECIMAL(9,6)" }
+              - column: { name: created_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+
+  # Konkrétní termín akce
+  - changeSet:
+      id: 2026-09-29-60-events
+      author: Petr F.
+      changes:
+        - createTable:
+            tableName: events
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: group_id, type: BIGINT, constraints: { nullable: false, foreignKeyName: fk_events_group, references: sport_groups(id), deleteCascade: true } }
+              - column: { name: venue_id, type: BIGINT, constraints: { foreignKeyName: fk_events_venue, references: venues(id), deleteSetNull: true } }
+              - column: { name: name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: starts_at, type: TIMESTAMPTZ, constraints: { nullable: false } }
+              - column: { name: duration_minutes, type: INT, constraints: { nullable: false } }
+              - column: { name: max_players_per_team, type: INT, constraints: { nullable: false } }
+              - column: { name: max_goalies, type: INT, constraints: { nullable: false } }
+              - column: { name: signup_deadline, type: TIMESTAMPTZ, constraints: { nullable: false } }
+              - column: { name: invite_regulars_hours_before, type: INT, constraints: { nullable: false } }
+              - column: { name: invite_substitutes_hours_before, type: INT, constraints: { nullable: false } }
+              - column: { name: regulars_invited_at, type: TIMESTAMPTZ }
+              - column: { name: substitutes_invited_at, type: TIMESTAMPTZ }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: note, type: TEXT }
+              - column: { name: created_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+        - createIndex:
+            tableName: events
+            indexName: ix_events_group_starts
+            columns:
+              - column: { name: group_id }
+              - column: { name: starts_at }
+
+  # Pozvánka = unikátní token (osoba × termín), platný do začátku akce
+  - changeSet:
+      id: 2026-09-29-70-invitations
+      author: Petr F.
+      changes:
+        - createTable:
+            tableName: invitations
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: event_id, type: BIGINT, constraints: { nullable: false, foreignKeyName: fk_invitations_event, references: events(id), deleteCascade: true } }
+              - column: { name: user_id, type: BIGINT, constraints: { nullable: false, foreignKeyName: fk_invitations_user, references: users(id), deleteCascade: true } }
+              - column: { name: token, type: VARCHAR(40), constraints: { nullable: false, unique: true } }
+              - column: { name: expires_at, type: TIMESTAMPTZ, constraints: { nullable: false } }
+              - column: { name: sent_at, type: TIMESTAMPTZ }
+              - column: { name: opened_at, type: TIMESTAMPTZ }
+              - column: { name: created_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+        - addUniqueConstraint:
+            tableName: invitations
+            columnNames: event_id, user_id
+            constraintName: uq_invitations_event_user
+
+  - changeSet:
+      id: 2026-09-29-80-registrations
+      author: Petr F.
+      changes:
+        - createTable:
+            tableName: registrations
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: event_id, type: BIGINT, constraints: { nullable: false, foreignKeyName: fk_registrations_event, references: events(id), deleteCascade: true } }
+              - column: { name: user_id, type: BIGINT, constraints: { nullable: false, foreignKeyName: fk_registrations_user, references: users(id), deleteCascade: true } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: position, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: team_id, type: BIGINT, constraints: { foreignKeyName: fk_registrations_team, references: teams(id), deleteSetNull: true } }
+              - column: { name: source, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: queued_at, type: TIMESTAMPTZ }
+              - column: { name: created_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+        - addUniqueConstraint:
+            tableName: registrations
+            columnNames: event_id, user_id
+            constraintName: uq_registrations_event_user
+
+  # Kdo, co a kdy – jistota v tom, kdo se kdy přihlásil
+  - changeSet:
+      id: 2026-09-29-90-audit-log
+      author: Petr F.
+      changes:
+        - createTable:
+            tableName: audit_log
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: actor_id, type: BIGINT, constraints: { foreignKeyName: fk_audit_log_actor, references: users(id), deleteSetNull: true } }
+              - column: { name: action, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: entity, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: entity_id, type: BIGINT }
+              - column: { name: detail, type: TEXT }
+              - column: { name: created_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }

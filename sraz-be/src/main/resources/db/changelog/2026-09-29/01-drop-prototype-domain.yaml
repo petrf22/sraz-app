@@ -1,0 +1,14 @@
+# Odstranění doménových tabulek z prototypu (owners/members/labels/...).
+# Nikdy do nich nezapisovala žádná služba, nahrazuje je schéma v 02-sport-schema.yaml.
+databaseChangeLog:
+  - changeSet:
+      id: 2026-09-29-01-drop-prototype-domain
+      author: Petr F.
+      changes:
+        - sql:
+            sql: >
+              DROP TABLE IF EXISTS
+                banks, event_members, reminder_rules, member_labels, members,
+                reminder_events, reminder_labels, labels, events, reminders,
+                event_templates, owner_users, owners
+              CASCADE;
