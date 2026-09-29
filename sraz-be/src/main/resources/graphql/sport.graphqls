@@ -7,6 +7,8 @@ enum MembershipStatus { INVITED ACTIVE DECLINED REMOVED }
 enum EventStatus { PLANNED OPEN LOCKED DONE CANCELLED }
 enum RegistrationStatus { IN OUT WAITLIST }
 enum RegistrationSource { EMAIL_LINK WEB ORGANIZER }
+enum Recurrence { WEEKLY MONTHLY }
+enum DayOfWeek { MONDAY TUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY SUNDAY }
 
 "Veřejně viditelné údaje o uživateli (bez e-mailu)."
 type PublicUser {
@@ -25,6 +27,8 @@ type SportGroup {
     myMembership: GroupMember
     amOrganizer: Boolean!
     events(from: DateTime, to: DateTime): [Event!]!
+    "Opakované akce skupiny."
+    series: [EventSeries!]!
 }
 
 type Team {
@@ -73,6 +77,12 @@ type Event {
     substitutesInvitedAt: DateTime
     status: EventStatus!
     note: String
+    "Série, ze které termín vznikl (null = jednorázová akce)."
+    series: EventSeries
+    "Organizátor termín ručně upravil – přegenerování období ho nepřepíše."
+    detached: Boolean!
+    "Připomínka přihlášeným X hodin před začátkem (null = bez připomínky)."
+    reminderHoursBefore: Int
     "Lze se ještě sám přihlásit/odhlásit (před uzávěrkou, akce není zrušená)."
     signupOpen: Boolean!
     registrations: [Registration!]!
@@ -90,6 +100,45 @@ type Registration {
     queuedAt: DateTime
     createdAt: DateTime
     updatedAt: DateTime
+}
+
+type EventSeries {
+    id: ID!
+    name: String!
+    periods: [SeriesPeriod!]!
+}
+
+"Období série s pravidlem opakování (např. září–březen každý pátek)."
+type SeriesPeriod {
+    id: ID!
+    validFrom: Date!
+    validTo: Date!
+    recurrence: Recurrence!
+    "Každý N-tý týden / měsíc."
+    intervalCount: Int!
+    daysOfWeek: [DayOfWeek!]!
+    "Jen MONTHLY: kolikátý výskyt dne v měsíci (1–5, -1 = poslední)."
+    monthWeeks: [Int!]!
+    "Čas začátku HH:mm (Europe/Prague)."
+    startTime: String!
+    durationMinutes: Int!
+    venue: Venue
+    maxPlayersPerTeam: Int!
+    maxGoalies: Int!
+    deadlineHoursBefore: Int!
+    inviteRegularsHoursBefore: Int!
+    inviteSubstitutesHoursBefore: Int!
+    reminderHoursBefore: Int
+    note: String
+}
+
+"Co se stalo s termíny po uložení/smazání období."
+type SyncResult {
+    created: Int!
+    updated: Int!
+    removed: Int!
+    "Termíny s přihláškami/pozvánkami, zrušené nebo ručně upravené – zůstaly beze změny."
+    kept: Int!
 }
 
 type EventSummary {
@@ -144,6 +193,28 @@ input EventInput {
     signupDeadline: DateTime
     inviteRegularsHoursBefore: Int
     inviteSubstitutesHoursBefore: Int
+    reminderHoursBefore: Int
+    note: String
+}
+
+"Nevyplněné hodnoty = výchozí nastavení jako u jednorázové akce; uzávěrka je v hodinách před začátkem."
+input PeriodInput {
+    validFrom: Date!
+    validTo: Date!
+    recurrence: Recurrence!
+    intervalCount: Int
+    daysOfWeek: [DayOfWeek!]!
+    monthWeeks: [Int!]
+    "HH:mm"
+    startTime: String!
+    durationMinutes: Int
+    venueId: ID
+    maxPlayersPerTeam: Int
+    maxGoalies: Int
+    deadlineHoursBefore: Int
+    inviteRegularsHoursBefore: Int
+    inviteSubstitutesHoursBefore: Int
+    reminderHoursBefore: Int
     note: String
 }
 
@@ -155,6 +226,8 @@ extend type Query {
     myUpcomingEvents: [Event!]!
     "Pozvánky do skupin, které čekají na moji odpověď."
     myGroupInvites: [GroupMember!]!
+    "Náhled termínů období před uložením."
+    periodPreview(input: PeriodInput!): [DateTime!]!
 }
 
 extend type Mutation {
@@ -179,6 +252,14 @@ extend type Mutation {
 
     "Přihlášení/odhlášení přihlášeného uživatele."
     registrationRespond(eventId: ID!, status: RegistrationStatus!, teamId: ID): Registration!
+    seriesCreate(groupId: ID!, name: String!): EventSeries!
+    seriesRename(id: ID!, name: String!): EventSeries!
+    "Smaže sérii: budoucí termíny bez aktivity zmizí, ostatní zůstanou jako samostatné akce."
+    seriesDelete(id: ID!): SyncResult!
+    "Uloží období (id = null → nové) a srovná s ním budoucí termíny."
+    periodSave(seriesId: ID!, id: ID, input: PeriodInput!): SyncResult!
+    periodDelete(id: ID!): SyncResult!
+
     "Organizátor nastaví přihlášku libovolnému členovi (i po uzávěrce)."
     registrationSet(eventId: ID!, userId: ID!, status: RegistrationStatus!, teamId: ID, position: Position): Registration!
 }

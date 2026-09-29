@@ -107,6 +107,7 @@ public class EventGraphqlController {
         .signupDeadline(in.signupDeadline())
         .inviteRegularsHoursBefore(in.inviteRegularsHoursBefore())
         .inviteSubstitutesHoursBefore(in.inviteSubstitutesHoursBefore())
+        .reminderHoursBefore(in.reminderHoursBefore())
         .note(in.note())
         .build();
   }
