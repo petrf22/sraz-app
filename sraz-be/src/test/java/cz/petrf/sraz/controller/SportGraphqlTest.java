@@ -70,7 +70,6 @@ class SportGraphqlTest {
     return userRepo.save(User.builder()
         .publicName(name)
         .email("gql-" + UUID.randomUUID() + "@example.com")
-        .password("")
         .roles(Set.of(roleRepo.findByName("ROLE_USER").orElseThrow()))
         .build());
   }

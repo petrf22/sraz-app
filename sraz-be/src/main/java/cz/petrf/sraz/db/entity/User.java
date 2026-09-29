@@ -34,14 +34,18 @@ public class User implements Persistable<Long> {
   @Column(columnDefinition = "TIMESTAMPTZ")
   private OffsetDateTime emailVerifiedAt;
 
-  @Column(nullable = false)
-  private String password;
-
   private String phone;
 
   /** Zablokovaný uživatel (globálním adminem) se nemůže přihlásit. */
   @Column(columnDefinition = "TIMESTAMPTZ")
   private OffsetDateTime blockedAt;
+
+  /** Souhlas se zpracováním údajů (při registraci kódem nebo přijetím pozvánky). */
+  @Column(columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime termsAcceptedAt;
+
+  @Column(columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime lastLoginAt;
 
   @Column(columnDefinition = "TIMESTAMPTZ")
   private OffsetDateTime createdAt;

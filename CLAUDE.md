@@ -30,16 +30,19 @@ The two communicate over GraphQL (`/graphql`) and REST (`/api/**`). The Angular 
 ## Architecture
 
 ### Authentication flow (the central concept)
-Two login paths, both ending in the same token issuance (`AuthController.createLoginResponseEntity`):
+**No passwords.** Login is e-mail + one-time code (ported from the `kvalita-cena` app):
 
-1. **Password login** — `POST /api/auth/login` → `EmailAuthenticationProvider` / `UserDetailsServiceImpl`.
-2. **Magic link (passwordless)** — `POST /api/auth/mail-token?email=` creates a `MagicLinkToken`, emails a link (via Resend or SMTP, `EmailService`/`MagicLinkService`); the user hits the FE route `verify-token/:emailToken`, which calls `GET /api/auth/verify/{token}`.
+1. `POST /api/auth/otp/request {email}` → `OtpService` stores a `LoginChallenge` (BCrypt hash of a 6-digit code, 10 min TTL, max 5 attempts, one active challenge per e-mail) and e-mails the code (`templates/email/otp-code-email.html`). Returns `{challengeUid, expiresInSec, resendAfterSec}`. Rate limited in memory by `OtpRateLimiter` (Caffeine). With `app.auth.otp.mail-enabled=false` the code is only logged (`[DEV]`).
+2. `POST /api/auth/otp/verify {challengeUid, code, email, termsAccepted}` → a new account is created only here and only with `termsAccepted=true`. All failures return the same `INVALID_CHALLENGE`.
 
 Token model:
-- **Access token (JWT)**: returned in the response body (`TokenDto`), stored by the FE in `sessionStorage` under key `jwt`, and sent back as `Authorization: Bearer <jwt>` (added by `func/token-func.ts` interceptor; validated by `JwtRequestFilter`).
-- **Refresh token (JWT)**: set as an httpOnly cookie named `refresh`. `POST /api/auth/refresh` mints a new access token; `POST /api/auth/logout?deleteAccount=` revokes it. Refresh tokens are tracked server-side (`UserRefreshToken` / jti blacklist in `JwtService`) so they can be revoked.
+- **Access token (JWT, 10 min)** in the response body (`TokenResponse`); the FE keeps it **only in memory** and refreshes it proactively before expiry. Sent as `Authorization: Bearer`, validated by `JwtRequestFilter` (invalid/expired token = anonymous request, blocked users are never authenticated).
+- **Refresh token** = random 32 bytes in the httpOnly `SameSite=Strict` cookie `refresh_token` (path `/api/auth`, 90 days); only its SHA-256 is stored (`refresh_token` table). `POST /api/auth/refresh` **rotates** it; reusing an already-used token (after `reuse-grace-period`) revokes the whole family (= that login on that device). `POST /api/auth/logout[?deleteAccount=true]` revokes the family (and optionally deletes the account). "Remember me" = the FE calls `/api/auth/refresh` on app start.
+- Settings live in `AuthProperties` (`app.auth.*`); `app.auth.cookie-secure=false` is needed only for plain-HTTP non-localhost dev.
 
-Security is **stateless** (no server session). `SecurityConfig` permits `/api/auth/**` and actuator health/info; everything else under `/api/**` requires authentication. CORS is locked to `localhost:4200`/`127.0.0.1:4200`. On the FE, routes are protected by `authGuard`; Apollo's error link redirects to `/login` on a GraphQL `UNAUTHENTICATED` extension code.
+**Per-event e-mail tokens are not logins.** `/api/public/invitations/{token}` (FE `/prihlaska/:token`) lets the holder sign up/out for that one event only; `/api/public/group-invites/{token}` (FE `/pozvanka/:token`) accepts a group membership.
+
+Security is **stateless** (no server session). `SecurityConfig` permits `/api/auth/**`, `/api/public/**` and actuator health/info; everything else under `/api/**` requires authentication. GraphQL (`/graphql`) is reachable anonymously but every resolver requires a user via `CurrentUserService` and group permissions via `AccessService` (member / organizer / global `ROLE_ADMIN`); errors carry `extensions.code` (`UNAUTHENTICATED`, `FORBIDDEN`, `NOT_FOUND`, `BAD_REQUEST`). CORS is locked to `localhost:4200`/`127.0.0.1:4200`.
 
 ### Backend package layout (`cz.petrf.sraz`)
 - `db/entity` — JPA entities; `db/repo` — Spring Data repositories; `db/seed/DataSeed` — fake data generator, **`dev` profile only**.

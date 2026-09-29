@@ -15,7 +15,7 @@ public class AppUser extends org.springframework.security.core.userdetails.User 
   }
 
   public AppUser(User dbUser, boolean enabled, boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked) {
-    super(dbUser.getEmail(), dbUser.getPassword(), enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, dbUser.getRoles().stream()
+    super(dbUser.getEmail(), "", enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, dbUser.getRoles().stream()
         .map(role -> new SimpleGrantedAuthority(role.getName()))
         .toList());
 

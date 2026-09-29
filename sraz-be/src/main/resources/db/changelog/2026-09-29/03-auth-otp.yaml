@@ -1,0 +1,75 @@
+# Přihlašování kódem z e-mailu (bez hesla) a rotující refresh tokeny – podle aplikace kvalita-cena.
+databaseChangeLog:
+
+  - changeSet:
+      id: 2026-09-29-100-drop-password-and-magic-link
+      author: Petr F.
+      changes:
+        - dropTable: { tableName: magic_link_token }
+        - dropTable: { tableName: user_refresh_token }
+        - dropColumn: { tableName: users, columnName: password }
+        - dropColumn: { tableName: users, columnName: remember_token }
+        - addColumn:
+            tableName: users
+            columns:
+              - column: { name: terms_accepted_at, type: TIMESTAMPTZ }
+              - column: { name: last_login_at, type: TIMESTAMPTZ }
+
+  # Jednorázová výzva s kódem – v DB je jen hash kódu
+  - changeSet:
+      id: 2026-09-29-110-login-challenge
+      author: Petr F.
+      changes:
+        - createTable:
+            tableName: login_challenge
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: challenge_uid, type: UUID, constraints: { nullable: false, unique: true } }
+              - column: { name: email, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: code_hash, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: expires_at, type: TIMESTAMPTZ, constraints: { nullable: false } }
+              - column: { name: consumed_at, type: TIMESTAMPTZ }
+              - column: { name: attempts, type: SMALLINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: max_attempts, type: SMALLINT, defaultValueNumeric: 5, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+        - createIndex:
+            tableName: login_challenge
+            indexName: ix_login_challenge_email
+            columns:
+              - column: { name: email }
+        - createIndex:
+            tableName: login_challenge
+            indexName: ix_login_challenge_expires
+            columns:
+              - column: { name: expires_at }
+
+  # Refresh token = náhodný řetězec, v DB jen SHA-256. Rodina (family_uid) = jedno přihlášení na jednom zařízení.
+  - changeSet:
+      id: 2026-09-29-120-refresh-token
+      author: Petr F.
+      changes:
+        - createTable:
+            tableName: refresh_token
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true } }
+              - column: { name: family_uid, type: UUID, constraints: { nullable: false } }
+              - column: { name: token_hash, type: BYTEA, constraints: { nullable: false, unique: true } }
+              - column: { name: user_id, type: BIGINT, constraints: { nullable: false, foreignKeyName: fk_refresh_token_user, references: users(id), deleteCascade: true } }
+              - column: { name: parent_id, type: BIGINT, constraints: { foreignKeyName: fk_refresh_token_parent, references: refresh_token(id), deleteSetNull: true } }
+              - column: { name: device_label, type: VARCHAR(60) }
+              - column: { name: issued_at, type: TIMESTAMPTZ, defaultValueComputed: CURRENT_TIMESTAMP }
+              - column: { name: expires_at, type: TIMESTAMPTZ, constraints: { nullable: false } }
+              - column: { name: used_at, type: TIMESTAMPTZ }
+              - column: { name: revoked_at, type: TIMESTAMPTZ }
+              - column: { name: revoke_reason, type: VARCHAR(20) }
+        - createIndex:
+            tableName: refresh_token
+            indexName: ix_refresh_token_family
+            columns:
+              - column: { name: family_uid }
+        - createIndex:
+            tableName: refresh_token
+            indexName: ix_refresh_token_user
+            columns:
+              - column: { name: user_id }
+              - column: { name: revoked_at }

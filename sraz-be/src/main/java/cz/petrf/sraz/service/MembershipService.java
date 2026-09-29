@@ -187,8 +187,8 @@ public class MembershipService {
     }).orElseGet(() -> userRepo.save(User.builder()
         .publicName(StringUtils.substringBefore(email, "@"))
         .email(email)
-        .password("")
         .emailVerifiedAt(OffsetDateTime.now(clock))
+        .termsAcceptedAt(OffsetDateTime.now(clock))
         .roles(Set.of(roleRepo.findByName("ROLE_USER").orElseThrow()))
         .build()));
   }

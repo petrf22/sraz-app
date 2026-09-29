@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
@@ -24,7 +23,6 @@ public class DataSeed {
 
   private final UserRepository users;
   private final RoleRepository roles;
-  private final PasswordEncoder encoder;
 
   @EventListener
   public void onAppReady(ApplicationReadyEvent ev) {
@@ -40,7 +38,6 @@ public class DataSeed {
         .firstName("Petr")
         .lastName("F")
         .email("petrf@wo.cz")
-        .password(encoder.encode("petrf@wo.cz"))
         .emailVerifiedAt(OffsetDateTime.now())
         .roles(Set.of(adminRole))
         .build();
@@ -54,7 +51,6 @@ public class DataSeed {
           .firstName(faker.name().firstName())
           .lastName(faker.name().lastName())
           .email(faker.internet().emailAddress())
-          .password(encoder.encode("password"))
           .roles(Set.of(userRole))
           .build();
       users.save(u);

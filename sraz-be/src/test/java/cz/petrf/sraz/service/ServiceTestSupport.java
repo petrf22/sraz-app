@@ -42,7 +42,6 @@ abstract class ServiceTestSupport {
     return userRepo.save(User.builder()
         .publicName(name)
         .email(name.toLowerCase() + "-" + UUID.randomUUID() + "@example.com")
-        .password("")
         .roles(Set.of(roleRepo.findByName("ROLE_USER").orElseThrow()))
         .build());
   }

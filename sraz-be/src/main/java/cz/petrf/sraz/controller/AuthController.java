@@ -1,236 +1,131 @@
 package cz.petrf.sraz.controller;
 
-import cz.petrf.sraz.db.entity.MagicLinkToken;
+import cz.petrf.sraz.config.AuthProperties;
 import cz.petrf.sraz.db.entity.Role;
 import cz.petrf.sraz.db.entity.User;
-import cz.petrf.sraz.exception.EmailException;
-import cz.petrf.sraz.exception.ExpiredTokenException;
-import cz.petrf.sraz.exception.InvalidTokenException;
-import cz.petrf.sraz.security.*;
-import cz.petrf.sraz.service.MagicLinkService;
-import cz.petrf.sraz.service.UserDetailsServiceImpl;
+import cz.petrf.sraz.exception.AuthException;
+import cz.petrf.sraz.exception.DomainException;
+import cz.petrf.sraz.security.JwtService;
+import cz.petrf.sraz.security.OtpService;
+import cz.petrf.sraz.security.RefreshTokenService;
 import cz.petrf.sraz.service.UserService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Přihlášení kódem z e-mailu. Access token (JWT) jde v těle odpovědi a klient ho drží jen v paměti;
+ * refresh token je v httpOnly cookie – díky ní se uživatel při další návštěvě nemusí přihlašovat.
+ */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Slf4j
 public class AuthController {
 
-  private final AuthenticationManager authenticationManager;
-  private final UserDetailsServiceImpl userDetailsService;
+  private static final String REFRESH_COOKIE_NAME = "refresh_token";
+  private static final String REFRESH_COOKIE_PATH = "/api/auth";
+
+  private final OtpService otpService;
+  private final RefreshTokenService refreshTokenService;
   private final JwtService jwtService;
-  private final MagicLinkService magicLinkService;
   private final UserService userService;
+  private final AuthProperties properties;
 
-  @Value("${app.refresh.token.max.age:90}")
-  private int refreshTokenMaxAge;
-  @Value("${app.security.cookie.secure:true}")
-  private boolean secureCookie;
+  public record OtpRequest(String email) {
+  }
 
-  @PostMapping("/login")
-  public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletRequest req, HttpServletResponse resp) {
+  public record OtpVerifyRequest(UUID challengeUid, String code, String email, Boolean termsAccepted) {
+  }
 
-    try {
-      log.info("login :: Login attempt for user: {} from IP: {}", loginRequest.getUsername(), req.getRemoteAddr());
+  public record TokenResponse(String accessToken, long expiresInSec, boolean newUser, String email, List<String> roles) {
+  }
 
-      Authentication authentication = authenticationManager.authenticate(
-          new UsernamePasswordAuthenticationToken(
-              loginRequest.getUsername(),
-              loginRequest.getPassword()
-          )
-      );
+  @PostMapping("/otp/request")
+  public OtpService.OtpRequestResult requestOtp(@RequestBody OtpRequest request, HttpServletRequest servletRequest) {
+    return otpService.requestOtp(request.email(), servletRequest.getRemoteAddr());
+  }
 
-      SecurityContextHolder.getContext().setAuthentication(authentication);
-
-      final AppUser appUser = userDetailsService.loadUserByUsername(loginRequest.getUsername());
-      log.info("login :: Successful login for user: {}", loginRequest.getUsername());
-
-      return createLoginResponseEntity(appUser.getDbUser(), req, resp);
-    } catch (BadCredentialsException e) {
-      log.warn("login :: Failed login attempt for user: {} from IP: {}", loginRequest.getUsername(), req.getRemoteAddr());
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-    }
+  @PostMapping("/otp/verify")
+  public ResponseEntity<TokenResponse> verifyOtp(@RequestBody OtpVerifyRequest request, HttpServletRequest servletRequest) {
+    OtpService.VerifiedUser verified = otpService.verifyOtp(request.challengeUid(), request.code(), request.email(), request.termsAccepted());
+    RefreshTokenService.IssuedToken refresh = refreshTokenService.issueNewFamily(verified.user(), deviceLabel(servletRequest));
+    log.info("verifyOtp :: přihlášen uživatel {} (nový: {})", verified.user().getId(), verified.newUser());
+    return respondWithTokens(verified.user(), refresh.rawToken(), verified.newUser());
   }
 
   @PostMapping("/refresh")
-  public ResponseEntity<?> refresh(@CookieValue(name = "refresh", required = false) String refreshToken,
-                                   HttpServletRequest req, HttpServletResponse resp) {
-    log.info("refresh :: refreshToken==null: {}", refreshToken==null);
-
-    /* 1. chybí cookie */
-    if (refreshToken==null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
-
-    try {
-      /* 2. parse */
-      Claims claims = jwtService.extractAllClaims(refreshToken);
-      Optional<UUID> jtiOpt = Optional.ofNullable(claims.getId())
-          .map(UUID::fromString);
-
-      /* 1. chybí JIT */
-      if (jtiOpt.isEmpty()) {
-        log.info("refresh :: jtiOpt.isEmpty(): true");
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-      }
-
-      /* 3. blacklist */
-      if (!jwtService.isValid(jtiOpt.get())) {
-        log.info("refresh :: jwtService.isValid(jtiOpt.get()): {}", jwtService.isValid(jtiOpt.get()));
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-      }
-
-      /* 4. najdi uživatele */
-      Optional<User> userOpt = jwtService.findByJti(jtiOpt.get());
-
-      if (userOpt.isEmpty()) {
-        log.info("refresh :: userOpt.isEmpty(): true");
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-      }
-
-      return createLoginResponseEntity(userOpt.get(), req, resp);
-    } catch (JwtException | UsernameNotFoundException ex) {
-      log.error("refresh :: Chyba refresh tokenu", ex);
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-    }
+  public ResponseEntity<TokenResponse> refresh(HttpServletRequest servletRequest) {
+    String rawToken = readCookie(servletRequest).orElseThrow(AuthException::sessionExpired);
+    RefreshTokenService.IssuedToken issued = refreshTokenService.rotate(rawToken, deviceLabel(servletRequest));
+    return respondWithTokens(issued.entity().getUser(), issued.rawToken(), false);
   }
 
+  /**
+   * Odhlášení na tomto zařízení; s {@code deleteAccount=true} navíc smaže účet (GDPR).
+   */
   @PostMapping("/logout")
-  public ResponseEntity<?> logout(@CookieValue(name = "refresh", required = false) String refreshToken,
-                                  @RequestParam("deleteAccount") boolean deleteAccount,
-                                  HttpServletResponse resp) {
-    log.info("logout :: deleteAccount: {}, refreshToken!=null: {}", deleteAccount, refreshToken!=null);
-    Optional<User> userOpt = Optional.empty();
-
-    if (refreshToken!=null) {
-      try {
-        String jti = jwtService.extractAllClaims(refreshToken).getId();
-        UUID jtiUuid = UUID.fromString(jti);
-        jwtService.revokeAllForUserByJti(jtiUuid);
-
-        userOpt = jwtService.findByJti(jtiUuid);
-        log.info("logout :: user email:: {}", userOpt.map(User::getEmail).orElse(null));
-      } catch (JwtException ignored) {
-        log.warn("logout :: nepodařilo se zpracovat token z cookies");
+  public ResponseEntity<Void> logout(@RequestParam(name = "deleteAccount", defaultValue = "false") boolean deleteAccount,
+                                     HttpServletRequest servletRequest) {
+    readCookie(servletRequest).ifPresent(rawToken -> {
+      if (deleteAccount) {
+        userService.deleteAccountByRefreshToken(rawToken);
+      } else {
+        refreshTokenService.revokeFamilyByRawToken(rawToken);
       }
-    }
-
-    // Delete cookie
-    deleteRefreshCookie(resp);
-    log.info("logout :: voláno: deleteRefreshCookie(...)");
-
-    if (userOpt.isPresent() && deleteAccount) {
-      userService.deleteUserAccount(userOpt.get());
-      log.info("logout :: voláno: userService.deleteUserAccount(...)");
-    }
-
-    return ResponseEntity.ok().build();
+    });
+    return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, cookie("", Duration.ZERO).toString()).build();
   }
 
-  private void deleteRefreshCookie(HttpServletResponse resp) {
-    addRefreshCookie(resp, "", Duration.ZERO);
+  private ResponseEntity<TokenResponse> respondWithTokens(User user, String refreshToken, boolean newUser) {
+    return ResponseEntity.ok()
+        .header(HttpHeaders.SET_COOKIE, cookie(refreshToken, properties.getRefreshToken().getTtl()).toString())
+        .body(new TokenResponse(jwtService.generateToken(user), jwtService.accessTokenTtlSec(), newUser,
+            user.getEmail(), user.getRoles().stream().map(Role::getName).toList()));
   }
 
-  private void addRefreshCookie(HttpServletResponse resp, String refreshToken, Duration maxAge) {
-    ResponseCookie cookie = ResponseCookie.from("refresh", refreshToken)
+  private ResponseCookie cookie(String value, Duration maxAge) {
+    return ResponseCookie.from(REFRESH_COOKIE_NAME, value)
         .httpOnly(true)
-        .secure(secureCookie)
-        .sameSite(secureCookie ? "Strict":"Lax")
-        .path(secureCookie ? "/api/auth":"/")
+        .secure(properties.isCookieSecure())
+        .sameSite("Strict")
+        .path(REFRESH_COOKIE_PATH)
         .maxAge(maxAge)
         .build();
-
-    log.info("addRefreshCookie :: cookie: {}", cookie);
-
-    resp.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
   }
 
-  @GetMapping("/validate")
-  public ResponseEntity<?> validateToken() {
-    log.info("validate :: validateToken()");
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth!=null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
-      return ResponseEntity.ok().build();
-    }
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+  private static Optional<String> readCookie(HttpServletRequest request) {
+    return Optional.ofNullable(request.getCookies()).stream().flatMap(Arrays::stream)
+        .filter(c -> REFRESH_COOKIE_NAME.equals(c.getName()))
+        .map(Cookie::getValue)
+        .filter(StringUtils::isNotBlank)
+        .findFirst();
   }
 
-  private ResponseEntity<?> createLoginResponseEntity(User dbUser, HttpServletRequest req, HttpServletResponse resp) {
-    final String accessToken = jwtService.generateToken(dbUser);
-    final String device = jwtService.guessDevice(req);
-    final Duration maxAge = Duration.ofDays(refreshTokenMaxAge);
-    final String refreshToken = jwtService.createRefresh(dbUser, UUID.randomUUID(), device, maxAge);
-
-    addRefreshCookie(resp, refreshToken, maxAge);
-
-    return ResponseEntity.ok(new TokenDto(accessToken, dbUser.getEmail(), dbUser.getRoles().stream().map(Role::getName).toList()));
+  private static String deviceLabel(HttpServletRequest request) {
+    return StringUtils.truncate(StringUtils.defaultString(request.getHeader(HttpHeaders.USER_AGENT), "unknown"), 60);
   }
 
-  @GetMapping("/verify/{emailToken}")
-  public ResponseEntity<?> verifyToken(@PathVariable String emailToken, HttpServletRequest req, HttpServletResponse resp) {
-
-    try {
-      log.info("verify :: Login attempt for emailToken: {} from IP: {}", emailToken, req.getRemoteAddr());
-
-      MagicLinkToken linkToken = magicLinkService.verifyToken(emailToken);
-      Authentication authentication = authenticationManager.authenticate(
-          new EmailAuthenticationToken(
-              linkToken.getEmail()
-          )
-      );
-
-      SecurityContextHolder.getContext().setAuthentication(authentication);
-
-      final AppUser appUser = userDetailsService.loadUserByUsername(linkToken.getEmail());
-      log.info("verify :: Successful login for user email: {}", linkToken.getEmail());
-
-      return createLoginResponseEntity(appUser.getDbUser(), req, resp);
-    } catch (InvalidTokenException | ExpiredTokenException e) {
-      log.warn("verify :: Failed login attempt for token: {} from IP: {}", emailToken, req.getRemoteAddr());
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
-    }
+  @ExceptionHandler(AuthException.class)
+  public ResponseEntity<Map<String, String>> authError(AuthException e) {
+    return ResponseEntity.status(e.getStatus()).body(Map.of("code", e.getCode(), "message", e.getMessage()));
   }
 
-  @PostMapping("/mail-token")
-  public ResponseEntity<?> mailToken(@RequestParam String email, HttpServletRequest req) {
-
-    try {
-      log.info("Login attempt for email: {} from IP: {}", email, req.getRemoteAddr());
-
-      String magicLink = magicLinkService.createMagicLink(email);
-
-      log.info("Send magicLink: {}", magicLink);
-
-      magicLinkService.sendMagicLink(magicLink, email);
-
-      return ResponseEntity.ok().build();
-    } catch (EmailException e) {
-      log.warn("Failed send attempt for email: {} from IP: {}", email, req.getRemoteAddr());
-      return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-    }
+  @ExceptionHandler(DomainException.class)
+  public ResponseEntity<Map<String, String>> domainError(DomainException e) {
+    return ResponseEntity.badRequest().body(Map.of("code", "VALIDATION_FAILED", "message", e.getMessage()));
   }
 }
