@@ -25,7 +25,7 @@ The two communicate over GraphQL (`/graphql`) and REST (`/api/**`). The Angular 
 - Dev server: `npm start` (or `ng serve`) → http://localhost:4200
 - Build: `npm run build`
 - Tests (Karma/Jasmine): `npm test` (or `ng test`)
-- Regenerate GraphQL TS types from the running backend: `npm run codegen` (or `codegen:watch`). **The backend must be running on :8080** because `codegen.ts` introspects `http://localhost:8080/graphql`.
+- Regenerate GraphQL TS types: `npm run codegen` (or `codegen:watch`). `codegen.ts` reads the schema files directly from `../sraz-be/src/main/resources/graphql/`, no running backend needed.
 
 ## Architecture
 

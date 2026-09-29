@@ -1,14 +1,27 @@
+/** Internal type. DO NOT USE DIRECTLY. */
+type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+/** Internal type. DO NOT USE DIRECTLY. */
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 import * as Types from './graphql-types';
 
 import { gql } from 'apollo-angular';
 import { Injectable } from '@angular/core';
 import * as Apollo from 'apollo-angular';
-export type UserCreateMutationVariables = Types.Exact<{
+export type UserInput = {
+  email: string;
+  firstName?: string | null | undefined;
+  id?: string | number | null | undefined;
+  lastName?: string | null | undefined;
+  password?: string | null | undefined;
+  publicName: string;
+};
+
+export type UserCreateMutationVariables = Exact<{
   userInput: Types.UserInput;
 }>;
 
 
-export type UserCreateMutation = { __typename?: 'Mutation', userCreate: { __typename?: 'User', id?: string | null, publicName: string, firstName?: string | null, lastName?: string | null, email: string, emailVerifiedAt?: any | null, roles: Array<{ __typename?: 'Role', name: string }> } };
+export type UserCreateMutation = { userCreate: { id: string | null, publicName: string, firstName: string | null, lastName: string | null, email: string, emailVerifiedAt: string | null, roles: Array<{ name: string }> } };
 
 export const UserCreateDocument = gql`
     mutation UserCreate($userInput: UserInput!) {

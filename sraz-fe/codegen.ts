@@ -1,7 +1,8 @@
 import { CodegenConfig } from '@graphql-codegen/cli';
 
 const config: CodegenConfig = {
-  schema: 'http://localhost:8080/graphql',
+  // schéma čteme přímo ze souborů backendu – není potřeba běžící server
+  schema: '../sraz-be/src/main/resources/graphql/*.graphqls',
   documents: 'src/app/graphql/**/*.graphql',
   overwrite: true,
   generates: {
@@ -9,6 +10,10 @@ const config: CodegenConfig = {
       plugins: [
         'typescript',
       ],
+      config: {
+        scalars: { DateTime: 'string', Date: 'string', Time: 'string' },
+        enumsAsTypes: true,
+      },
     },
     'src/app/graphql/': {
       preset: 'near-operation-file',
@@ -22,6 +27,8 @@ const config: CodegenConfig = {
       ],
       config: {
         gqlImport: 'apollo-angular#gql',
+        scalars: { DateTime: 'string', Date: 'string', Time: 'string' },
+        enumsAsTypes: true,
       },
     },
   }
