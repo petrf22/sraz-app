@@ -20,7 +20,11 @@ Open-source aplikace pro přihlašování na pravidelné sportovní akce (např.
 - `sraz-fe/` – Angular 21, ng-zorro-antd, Apollo GraphQL
 
 ## Spuštění pro vývoj
-Potřeba: JDK 25, Node.js 24, Docker.
+Potřeba: JDK 25, Node.js 24 (nvm), Docker.
+
+Nejrychlejší je `./start-dev.sh` – otevře okna s databází, Mailpitem, backendem a frontendem,
+nahraje testovací data (`dev/seed.sql`), otevře prohlížeč a po stisku klávesy vše ukončí.
+Ručně:
 
 ```bash
 # backend – Postgres z compose.yaml (port 5438) si nastartuje sám

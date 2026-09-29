@@ -22,6 +22,11 @@ nasazení nejdřív zkontroluj, jak to řeší tam, a drž se stejného vzoru.
 
 ## Rychlý start (vývoj)
 
+`./start-dev.sh [--no-seed] [--no-open]` (stejný spouštěč jako v kvalita-cena) otevře gnome-terminal
+okna s DB, Mailpitem, backendem a frontendem, nahraje `dev/seed.sql` (testovací účty
+`organizator@example.com`, `hrac01..12@example.com`, `brankar1/2@example.com`, skupina a akce)
+a po stisku klávesy vše korektně ukončí. Ručně:
+
 ```bash
 cd sraz-be && ./gradlew bootRun   # Postgres z ../compose.yaml (port 5438) si Boot nastartuje sám
 cd sraz-fe && npm ci && npm start # http://localhost:4200
