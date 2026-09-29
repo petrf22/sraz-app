@@ -77,6 +77,27 @@ public class NotificationService {
     send(registration.getUser().getEmail(), "Uvolnilo se místo: " + registration.getEvent().getName(), "email/event-notice-email", ctx);
   }
 
+  /** Připomínka přihlášenému hráči před začátkem akce. */
+  public void sendReminder(Registration registration) {
+    Event event = registration.getEvent();
+    Context ctx = eventContext(event);
+    ctx.setVariable("playerName", registration.getUser().getPublicName());
+    ctx.setVariable("teamName", registration.getTeam()!=null ? registration.getTeam().getName():null);
+    ctx.setVariable("headline", "Připomínka: " + formatStart(event));
+    ctx.setVariable("message", "Jste přihlášen(a). Pokud nemůžete přijít, dejte vědět organizátorovi.");
+
+    send(registration.getUser().getEmail(), "Připomínka: " + event.getName() + " – " + formatStart(event), "email/event-notice-email", ctx);
+  }
+
+  /** Souhrn pro organizátora po uzávěrce přihlášek. */
+  public void sendDeadlineSummary(Event event, User organizer, DeadlineSummary summary) {
+    Context ctx = eventContext(event);
+    ctx.setVariable("organizerName", organizer.getPublicName());
+    ctx.setVariable("summary", summary);
+
+    send(organizer.getEmail(), "Uzávěrka: " + event.getName() + " – " + formatStart(event), "email/deadline-summary-email", ctx);
+  }
+
   public void sendEventCancelled(Event event, User recipient, String reason) {
     Context ctx = eventContext(event);
     ctx.setVariable("playerName", recipient.getPublicName());
@@ -106,6 +127,12 @@ public class NotificationService {
   private void send(String to, String subject, String template, Context ctx) {
     String html = templateEngine.process(template, ctx);
     emailService.sendHtmlEmail(fromEmail, to, subject, html);
+  }
+
+  /** Soupiska po uzávěrce: sloupce (tým / brankáři), fronta a stálí členové bez odpovědi. */
+  public record DeadlineSummary(List<Column> columns, List<String> waitlist, List<String> noResponse, EventSummary counts) {
+    public record Column(String title, List<String> names) {
+    }
   }
 
   /** Obsazenost termínu pro text e-mailu. */

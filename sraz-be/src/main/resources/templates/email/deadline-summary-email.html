@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #1677ff; color: white; padding: 10px; text-align: center; }
+        .footer { margin-top: 30px; font-size: 12px; color: #666; }
+        h3 { margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <hgroup class="header">
+        <h1 th:text="${eventName}">Akce</h1>
+        <p th:text="${startsAt}">datum</p>
+    </hgroup>
+
+    <p>Ahoj <strong th:text="${organizerName}">organizátore</strong>,</p>
+
+    <p>přihlašování skončilo. Přihlášeno <strong th:text="${summary.counts.players} + ' / ' + ${summary.counts.maxPlayers}">0 / 0</strong> hráčů
+        a <strong th:text="${summary.counts.goalies} + ' / ' + ${summary.counts.maxGoalies}">0 / 0</strong> brankářů.
+        Změny teď děláš už jen ty v aplikaci.</p>
+
+    <th:block th:each="col : ${summary.columns}">
+        <h3 th:text="${col.title} + ' (' + ${col.names.size()} + ')'">Tým</h3>
+        <ol>
+            <li th:each="n : ${col.names}" th:text="${n}">hráč</li>
+        </ol>
+    </th:block>
+
+    <th:block th:if="${!summary.waitlist.isEmpty()}">
+        <h3>Fronta</h3>
+        <ol>
+            <li th:each="n : ${summary.waitlist}" th:text="${n}">hráč</li>
+        </ol>
+    </th:block>
+
+    <th:block th:if="${!summary.noResponse.isEmpty()}">
+        <h3>Stálí členové bez odpovědi</h3>
+        <p th:text="${#strings.listJoin(summary.noResponse, ', ')}">jména</p>
+    </th:block>
+
+    <p><a th:href="${appUrl}">Otevřít akci v aplikaci</a></p>
+
+    <div class="footer">
+        <p>Tento e-mail byl odeslán automaticky, neodpovídejte na něj.</p>
+    </div>
+</div>
+</body>
+</html>

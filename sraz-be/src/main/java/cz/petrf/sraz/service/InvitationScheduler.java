@@ -6,7 +6,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Pravidelně kontroluje, zda nenastal čas rozeslat pozvánky stálým členům nebo náhradníkům.
+ * Pravidelné e-mailové úlohy: vlny pozvánek (stálí / náhradníci), připomínky přihlášeným
+ * a souhrn organizátorům po uzávěrce. Každá úloha běží zvlášť, chyba jedné nezastaví ostatní.
  */
 @Component
 @RequiredArgsConstructor
@@ -14,13 +15,20 @@ import org.springframework.stereotype.Component;
 public class InvitationScheduler {
 
   private final InvitationService invitationService;
+  private final ReminderService reminderService;
 
   @Scheduled(fixedDelayString = "${app.invitations.check-interval:PT5M}", initialDelayString = "${app.invitations.initial-delay:PT1M}")
-  public void sendDueInvitations() {
+  public void run() {
+    run("pozvánky", invitationService::sendDueWaves);
+    run("připomínky", reminderService::sendDueReminders);
+    run("souhrny po uzávěrce", reminderService::sendDueDeadlineSummaries);
+  }
+
+  private static void run(String name, Runnable job) {
     try {
-      invitationService.sendDueWaves();
+      job.run();
     } catch (RuntimeException e) {
-      log.error("sendDueInvitations :: chyba při rozesílání pozvánek", e);
+      log.error("run :: chyba úlohy {}", name, e);
     }
   }
 }
