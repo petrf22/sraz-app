@@ -44,7 +44,8 @@ public class EventService {
   @Builder
   public record EventData(String name, OffsetDateTime startsAt, Integer durationMinutes, Long venueId,
                           Integer maxPlayersPerTeam, Integer maxGoalies, OffsetDateTime signupDeadline,
-                          Integer inviteRegularsHoursBefore, Integer inviteSubstitutesHoursBefore, String note) {
+                          Integer inviteRegularsHoursBefore, Integer inviteSubstitutesHoursBefore,
+                          Integer reminderHoursBefore, String note) {
   }
 
   @Transactional(readOnly = true)
@@ -92,6 +93,8 @@ public class EventService {
       throw new DomainException("Zrušenou nebo ukončenou akci nelze upravovat.");
     }
     apply(event, data, false);
+    // ručně upravený termín série už přegenerování období nepřepíše
+    event.setDetached(event.getPeriod()!=null);
 
     audit.log(user, "EVENT_UPDATE", "event", event.getId(), event.getName() + " " + event.getStartsAt());
     return event;
@@ -143,6 +146,10 @@ public class EventService {
     event.setSignupDeadline(deadline);
     event.setVenue(d.venueId()!=null ? groupService.findVenue(event.getGroup().getId(), d.venueId()):null);
     event.setNote(StringUtils.trimToNull(d.note()));
+    if (d.reminderHoursBefore()!=null && d.reminderHoursBefore() < 0) {
+      throw new DomainException("Připomínka nesmí být záporná.");
+    }
+    event.setReminderHoursBefore(d.reminderHoursBefore());
   }
 
   private static int positive(Integer value, int def, String field) {
