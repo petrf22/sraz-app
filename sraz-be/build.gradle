@@ -96,6 +96,11 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+// GraphQL schéma leží ve výchozím umístění Spring GraphQL (classpath:graphql/)
+generateJava {
+    schemaPaths = ["${projectDir}/src/main/resources/graphql"]
+}
+
 tasks.named('test') {
     outputs.dir snippetsDir
     useJUnitPlatform()

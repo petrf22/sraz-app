@@ -52,7 +52,7 @@ Schema is owned by **Liquibase**, not Hibernate — `spring.jpa.hibernate.ddl-au
 Tests run against a **real Postgres via Testcontainers** (`TestcontainersConfiguration`, wired with `@ServiceConnection`); Liquibase runs the migrations under context `test` and Hibernate validates entities against them. This means `./gradlew test` **requires Docker running**. A `@SpringBootTest` must `@Import(TestcontainersConfiguration.class)` to get a datasource (plain unit tests like `JwtServiceTest` don't need it).
 
 ### GraphQL schema is the contract between FE and BE
-Backend schema lives in `sraz-be/src/main/resources/schema/*.graphqls` (the DGS codegen Gradle plugin generates Java types from it). Frontend operations live in `sraz-fe/src/app/graphql/*.graphql`; `npm run codegen` generates `graphql-types.ts` and per-operation `*.generated.ts` files (Apollo Angular services). **When you change the schema, regenerate types on both sides.**
+Backend schema lives in `sraz-be/src/main/resources/graphql/*.graphqls` (Spring GraphQL default location; the DGS codegen Gradle plugin generates Java types from it via `generateJava.schemaPaths` in `build.gradle`). Frontend operations live in `sraz-fe/src/app/graphql/*.graphql`; `npm run codegen` generates `graphql-types.ts` and per-operation `*.generated.ts` files (Apollo Angular services). **When you change the schema, regenerate types on both sides.**
 
 ### Spring profiles
 - default — production-like, real PostgreSQL, external config via env vars (see `info.md` for the Railway deployment variables).
