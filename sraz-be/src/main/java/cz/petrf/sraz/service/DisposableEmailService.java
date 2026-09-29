@@ -35,7 +35,7 @@ public class DisposableEmailService {
     updateBlocklist(); // načti hned při startu
   }
 
-  @Scheduled(fixedRateString = "${app.disposable.update-interval-hours:24} * 60 * 60 * 1000", initialDelay = 60000)
+  @Scheduled(fixedRateString = "#{${app.disposable.update-interval-hours:24} * 60 * 60 * 1000}", initialDelay = 60000)
   public void scheduledUpdate() {
     updateBlocklist();
   }
