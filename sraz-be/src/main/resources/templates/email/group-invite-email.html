@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #1677ff; color: white; padding: 10px; text-align: center; }
+        .button { display: inline-block; padding: 10px 20px; background-color: #1677ff; color: white; text-decoration: none; border-radius: 5px; }
+        .footer { margin-top: 30px; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <hgroup class="header">
+        <h1>Sraz</h1>
+        <p>Pozvánka do skupiny</p>
+    </hgroup>
+
+    <p>Dobrý den,</p>
+
+    <p><strong th:text="${invitedBy}">Organizátor</strong> vás zve do skupiny
+        <strong th:text="${groupName}">Skupina</strong> jako <strong th:text="${memberType}">člen</strong>.</p>
+
+    <p>Dokud pozvánku nepřijmete, nebudeme vám posílat žádné další e-maily.</p>
+
+    <p style="text-align: center;">
+        <a class="button" th:href="${link}">Zobrazit pozvánku</a>
+    </p>
+
+    <div class="footer">
+        <p>Tento e-mail byl odeslán automaticky, neodpovídejte na něj.
+            Pokud pozvánku nečekáte, můžete ji odmítnout nebo ignorovat.</p>
+    </div>
+</div>
+</body>
+</html>
