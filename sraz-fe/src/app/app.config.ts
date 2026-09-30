@@ -24,6 +24,7 @@ import { ErrorLink, onError } from '@apollo/client/link/error';
 
 import cs from '@angular/common/locales/cs';
 import { provideNzDateFnsAdapter } from 'ng-zorro-antd/core/time';
+import { cs as csDateFns } from 'date-fns/locale';
 
 // ng-zorro (cs_CZ) formátuje data pod locale 'cs', aplikace (LOCALE_ID) pod 'cs-CZ'
 registerLocaleData(cs);
@@ -89,7 +90,8 @@ export const appConfig: ApplicationConfig = {
 
       return apolloOptionsFactory(httpLink, router, msg);
     }),
-    provideNzDateFnsAdapter(),
+    // ng-zorro 22 formátuje data přes date-fns – bez locale by kalendář byl anglicky
+    provideNzDateFnsAdapter({ locale: csDateFns, firstDayOfWeek: 1 }),
 
   ]
 };
