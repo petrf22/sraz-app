@@ -56,6 +56,14 @@
     </nz-form-control>
   </nz-form-item>
   <nz-form-item>
+    <nz-form-label>Cena ledu/hřiště za hodinu a poplatek stálého člena (Kč, prázdné = zdarma / jen podíl)</nz-form-label>
+    <nz-form-control>
+      <nz-input-number name="price" [nzMin]="0" [nzStep]="100" [(ngModel)]="value.pricePerHour"></nz-input-number>
+      &nbsp;
+      <nz-input-number name="fee" [nzMin]="0" [nzStep]="10" [(ngModel)]="value.regularFee"></nz-input-number>
+    </nz-form-control>
+  </nz-form-item>
+  <nz-form-item>
     <nz-form-label>Poznámka</nz-form-label>
     <nz-form-control>
       <textarea nz-input name="note" rows="2" [(ngModel)]="value.note"></textarea>

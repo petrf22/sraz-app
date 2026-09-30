@@ -21,6 +21,9 @@ export interface EventFormValue {
   inviteSubstitutesHoursBefore: number;
   /** null = bez připomínky */
   reminderHoursBefore: number | null;
+  /** Kč za hodinu, null = zdarma */
+  pricePerHour: number | null;
+  regularFee: number | null;
   note: string;
 }
 
@@ -36,6 +39,8 @@ export function emptyEventForm(): EventFormValue {
     inviteRegularsHoursBefore: 96,
     inviteSubstitutesHoursBefore: 48,
     reminderHoursBefore: 3,
+    pricePerHour: null,
+    regularFee: null,
     note: '',
   };
 }
@@ -77,6 +82,8 @@ export class AkceFormularComponent {
       inviteRegularsHoursBefore: v.inviteRegularsHoursBefore,
       inviteSubstitutesHoursBefore: v.inviteSubstitutesHoursBefore,
       reminderHoursBefore: v.reminderHoursBefore,
+      pricePerHour: v.pricePerHour,
+      regularFee: v.regularFee,
       note: v.note.trim() || null,
     });
   }

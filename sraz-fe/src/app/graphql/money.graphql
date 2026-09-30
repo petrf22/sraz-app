@@ -1,0 +1,85 @@
+query MyCharges {
+  myCharges {
+    id
+    amount
+    kind
+    paidAt
+    paidMethod
+    iban
+    event {
+      id
+      name
+      startsAt
+      group {
+        id
+        name
+      }
+    }
+  }
+}
+
+query GroupBank($id: ID!) {
+  group(id: $id) {
+    id
+    name
+    description
+    iban
+    amOrganizer
+    bankBalance
+    bankEntries {
+      id
+      kind
+      amount
+      description
+      createdAt
+      createdBy {
+        id
+        publicName
+      }
+      event {
+        id
+        name
+        startsAt
+      }
+    }
+  }
+}
+
+mutation AttendanceSet($eventId: ID!, $userId: ID!, $attended: Boolean!) {
+  attendanceSet(eventId: $eventId, userId: $userId, attended: $attended) {
+    id
+    attended
+  }
+}
+
+mutation EventClose($id: ID!) {
+  eventClose(id: $id) {
+    id
+    amount
+  }
+}
+
+mutation EventReopen($id: ID!) {
+  eventReopen(id: $id) {
+    id
+    closedAt
+  }
+}
+
+mutation ChargeSetPaid($id: ID!, $paid: Boolean!, $method: PaymentMethod) {
+  chargeSetPaid(id: $id, paid: $paid, method: $method) {
+    id
+    paidAt
+    paidMethod
+  }
+}
+
+mutation BankEntryAdd($groupId: ID!, $amount: Float!, $description: String!) {
+  bankEntryAdd(groupId: $groupId, amount: $amount, description: $description) {
+    id
+  }
+}
+
+mutation BankEntryDelete($id: ID!) {
+  bankEntryDelete(id: $id)
+}

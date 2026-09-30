@@ -10,5 +10,6 @@ export const routes: Routes = [
   { path: 'login', title: 'Přihlášení', loadComponent: () => import('./login/login.component').then(c => c.LoginComponent) },
   { path: 'skupiny/:id', title: 'Skupina', loadComponent: () => import('./skupina/skupina.component').then(c => c.SkupinaComponent), canActivate: [authGuard] },
   { path: 'akce/:id', title: 'Akce', loadComponent: () => import('./akce/akce.component').then(c => c.AkceComponent), canActivate: [authGuard] },
+  { path: 'platby', title: 'Moje platby', loadComponent: () => import('./platby/platby.component').then(c => c.PlatbyComponent), canActivate: [authGuard] },
   { path: 'logout', title: 'Odhlásit se', loadComponent: () => import('./logout/logout.component').then(c => c.LogoutComponent), canActivate: [authGuard] }
 ];

@@ -58,6 +58,8 @@ interface PeriodForm {
   inviteRegularsHoursBefore: number;
   inviteSubstitutesHoursBefore: number;
   reminderHoursBefore: number | null;
+  pricePerHour: number | null;
+  regularFee: number | null;
   note: string;
 }
 
@@ -213,6 +215,8 @@ export class OpakovaniComponent implements OnInit {
       inviteRegularsHoursBefore: 96,
       inviteSubstitutesHoursBefore: 48,
       reminderHoursBefore: 3,
+      pricePerHour: null,
+      regularFee: null,
       note: '',
     };
     this.preview.set(null);
@@ -237,6 +241,8 @@ export class OpakovaniComponent implements OnInit {
       inviteRegularsHoursBefore: p.inviteRegularsHoursBefore,
       inviteSubstitutesHoursBefore: p.inviteSubstitutesHoursBefore,
       reminderHoursBefore: p.reminderHoursBefore ?? null,
+      pricePerHour: p.pricePerHour ?? null,
+      regularFee: p.regularFee ?? null,
       note: p.note ?? '',
     };
     this.preview.set(null);
@@ -277,6 +283,8 @@ export class OpakovaniComponent implements OnInit {
       inviteRegularsHoursBefore: f.inviteRegularsHoursBefore,
       inviteSubstitutesHoursBefore: f.inviteSubstitutesHoursBefore,
       reminderHoursBefore: f.reminderHoursBefore,
+      pricePerHour: f.pricePerHour,
+      regularFee: f.regularFee,
       note: f.note.trim() || null,
     };
   }

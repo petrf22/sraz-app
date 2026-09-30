@@ -14,6 +14,7 @@ const reg = (id: string, u: ReturnType<typeof user>, status: 'IN' | 'OUT' | 'WAI
   source: 'WEB' as const,
   queuedAt,
   updatedAt: null,
+  attended: null,
   user: u,
   team: teamId ? { __typename: 'Team' as const, id: teamId } : null,
 });
@@ -37,6 +38,10 @@ const event: EventDetailQuery['event'] = {
   detached: false,
   reminderHoursBefore: null,
   series: null,
+  pricePerHour: null,
+  regularFee: null,
+  closedAt: null,
+  charges: [],
   venue: null,
   summary: { __typename: 'EventSummary', players: 2, maxPlayers: 2, goalies: 0, maxGoalies: 2, waitlist: 1 },
   myRegistration: null,

@@ -24,7 +24,11 @@ import {
 } from '../graphql/event.generated';
 import { EventInput, MemberType, RegistrationStatus } from '../graphql/graphql-types';
 import { AkceFormularComponent, EventFormValue } from '../akce-formular/akce-formular.component';
-import { EVENT_STATUS, gqlErrorMessage, MEMBER_TYPE, POSITION, REGISTRATION_COLOR, REGISTRATION_STATUS } from '../shared/labels';
+import { AttendanceSetGQL, ChargeSetPaidGQL, EventCloseGQL, EventReopenGQL } from '../graphql/money.generated';
+import { DecimalPipe } from '@angular/common';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
+import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
+import { CHARGE_KIND, EVENT_STATUS, gqlErrorMessage, MEMBER_TYPE, POSITION, REGISTRATION_COLOR, REGISTRATION_STATUS } from '../shared/labels';
 
 type EventDetail = EventDetailQuery['event'];
 type Team = EventDetail['group']['teams'][number];
@@ -35,7 +39,7 @@ type Team = EventDetail['group']['teams'][number];
  */
 @Component({
   selector: 'app-akce',
-  imports: [DatePipe, FormsModule, RouterLink, AkceFormularComponent, NzAlertModule, NzButtonModule, NzCardModule, NzGridModule,
+  imports: [DatePipe, DecimalPipe, FormsModule, NzCheckboxModule, NzPopconfirmModule, RouterLink, AkceFormularComponent, NzAlertModule, NzButtonModule, NzCardModule, NzGridModule,
     NzInputModule, NzModalModule, NzSelectModule, NzTableModule, NzTagModule],
   templateUrl: './akce.component.html',
   styleUrl: './akce.component.scss',
@@ -49,6 +53,11 @@ export class AkceComponent {
   private sendGQL = inject(EventSendInvitationsGQL);
   private updateGQL = inject(EventUpdateGQL);
   private cancelGQL = inject(EventCancelGQL);
+  private attendanceGQL = inject(AttendanceSetGQL);
+  private closeGQL = inject(EventCloseGQL);
+  private reopenGQL = inject(EventReopenGQL);
+  private paidGQL = inject(ChargeSetPaidGQL);
+  readonly chargeKind = CHARGE_KIND;
 
   readonly eventStatus = EVENT_STATUS;
   readonly regStatus = REGISTRATION_STATUS;
@@ -65,6 +74,19 @@ export class AkceComponent {
 
   organizer = computed(() => this.event()?.group.amOrganizer ?? false);
   cancelled = computed(() => this.event()?.status === 'CANCELLED');
+  /** Vyúčtovat jde až akci, která začala. */
+  started = computed(() => {
+    const e = this.event();
+    return !!e && new Date(e.startsAt).getTime() <= Date.now();
+  });
+  /** Kandidáti na vyúčtování: přihlášení (IN); zaškrtnutí = přišel. */
+  attendees = computed(() =>
+    (this.event()?.registrations ?? [])
+      .filter((r) => r.status === 'IN')
+      .sort((a, b) => a.user.publicName.localeCompare(b.user.publicName, 'cs')),
+  );
+  chargesTotal = computed(() => (this.event()?.charges ?? []).reduce((s, c) => s + c.amount, 0));
+  chargesPaid = computed(() => (this.event()?.charges ?? []).filter((c) => c.paidAt).reduce((s, c) => s + c.amount, 0));
 
   /** Sloupce soupisky: týmy (nebo „Hráči“ bez týmů) a brankáři. */
   columns = computed(() => {
@@ -125,6 +147,8 @@ export class AkceComponent {
           inviteRegularsHoursBefore: e.inviteRegularsHoursBefore,
           inviteSubstitutesHoursBefore: e.inviteSubstitutesHoursBefore,
           reminderHoursBefore: e.reminderHoursBefore ?? null,
+          pricePerHour: e.pricePerHour ?? null,
+          regularFee: e.regularFee ?? null,
           note: e.note ?? '',
         }
       : null;
@@ -180,6 +204,26 @@ export class AkceComponent {
 
   update(input: EventInput): void {
     this.run(this.updateGQL.mutate({ variables: { id: this.eventId, input } }), 'Akce upravena.', () => this.editVisible.set(false));
+  }
+
+  setAttendance(userId: string, attended: boolean): void {
+    this.run(this.attendanceGQL.mutate({ variables: { eventId: this.eventId, userId, attended } }), attended ? 'Přišel.' : 'Nepřišel.');
+  }
+
+  closeAccounting(): void {
+    this.run(this.closeGQL.mutate({ variables: { id: this.eventId } }),
+      (r) => `Vyúčtováno – plateb: ${(r as { data?: { eventClose: unknown[] } }).data?.eventClose.length ?? 0}, účastníkům odešel e-mail.`);
+  }
+
+  reopenAccounting(): void {
+    this.run(this.reopenGQL.mutate({ variables: { id: this.eventId } }), 'Vyúčtování je znovu otevřené.');
+  }
+
+  setPaid(chargeId: string, state: 'NO' | 'CASH' | 'TRANSFER'): void {
+    this.run(
+      this.paidGQL.mutate({ variables: { id: chargeId, paid: state !== 'NO', method: state === 'NO' ? null : state } }),
+      state === 'NO' ? 'Označeno jako nezaplacené.' : 'Zaplaceno.',
+    );
   }
 
   cancel(): void {

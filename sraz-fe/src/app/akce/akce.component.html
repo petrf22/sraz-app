@@ -38,6 +38,12 @@
             @for (t of e.group.teams; track t.id) { @if (t.id === r.team?.id) { {{ t.name }} } }
           </p>
         }
+        @if (e.closedAt && !e.group.amOrganizer) {
+          @for (c of e.charges; track c.id) {
+            <nz-alert [nzType]="c.paidAt ? 'success' : 'info'" class="space"
+              [nzMessage]="c.paidAt ? 'Zaplaceno ' + (c.amount | number: '1.0-2') + ' Kč. Díky!' : 'K zaplacení ' + (c.amount | number: '1.0-2') + ' Kč – QR platba v Mých platbách.'"></nz-alert>
+          }
+        }
         @if (cancelled()) {
           <nz-alert nzType="warning" nzMessage="Akce je zrušená."></nz-alert>
         } @else if (!e.signupOpen) {
@@ -105,7 +111,7 @@
 
       <h4 class="space-top">Přihlášky členů</h4>
       <p class="hint">Organizátor může měnit přihlášky i po uzávěrce a nad kapacitu – fronta se pak neposouvá automaticky.</p>
-      <nz-table #rosterTable [nzData]="roster()" [nzShowPagination]="false" nzSize="small">
+      <nz-table #rosterTable [nzData]="roster()" [nzShowPagination]="false" [nzFrontPagination]="false" nzSize="small">
         <thead><tr><th>Člen</th><th>Typ</th><th>Stav</th><th>Tým</th></tr></thead>
         <tbody>
           @for (row of rosterTable.data; track row.member.id) {
@@ -133,6 +139,66 @@
         </tbody>
       </nz-table>
     </nz-card>
+
+    @if (started()) {
+      <nz-card nzTitle="Vyúčtování" class="space-top">
+        @if (e.pricePerHour == null) {
+          <p class="hint">Akce nemá cenu – uzavřením se jen potvrdí účast (statistiky).</p>
+        } @else {
+          <p>
+            Cena {{ e.pricePerHour | number: '1.0-2' }} Kč/h × {{ e.durationMinutes }} min
+            @if (e.regularFee != null) {, stálí platí aspoň {{ e.regularFee | number: '1.0-2' }} Kč}. Podíl se zaokrouhlí nahoru
+            na 10 Kč, brankáři neplatí, přebytek jde do banku skupiny.
+          </p>
+        }
+        @if (!e.closedAt) {
+          <p class="hint">Odškrtni, kdo nepřišel. Kdo přišel bez přihlášení, přidej ho výš v „Přihláškách členů" jako „přijde".</p>
+          <nz-table #att [nzData]="attendees()" [nzShowPagination]="false" [nzFrontPagination]="false" nzSize="small">
+            <thead><tr><th>Přišel</th><th>Člen</th><th>Pozice</th></tr></thead>
+            <tbody>
+              @for (r of att.data; track r.id) {
+                <tr>
+                  <td><label nz-checkbox [ngModel]="r.attended !== false" (ngModelChange)="setAttendance(r.user.id, $event)"></label></td>
+                  <td>{{ r.user.publicName }}</td>
+                  <td>{{ position[r.position] }}</td>
+                </tr>
+              }
+            </tbody>
+          </nz-table>
+          <button nz-button nzType="primary" class="space-top" [nzLoading]="saving()"
+            nz-popconfirm nzPopconfirmTitle="Uzavřít vyúčtování? Účastníkům přijde e-mail s částkou." (nzOnConfirm)="closeAccounting()">
+            Uzavřít vyúčtování
+          </button>
+        } @else {
+          <p>
+            Vyúčtováno {{ e.closedAt | date: 'd. M. y H:mm' }} – vybírá se {{ chargesTotal() | number: '1.0-2' }} Kč,
+            zaplaceno {{ chargesPaid() | number: '1.0-2' }} Kč.
+          </p>
+          <nz-table #ch [nzData]="e.charges" [nzShowPagination]="false" [nzFrontPagination]="false" nzSize="small">
+            <thead><tr><th>Člen</th><th>Typ</th><th>Částka</th><th>VS</th><th>Zaplaceno</th></tr></thead>
+            <tbody>
+              @for (c of ch.data; track c.id) {
+                <tr>
+                  <td>{{ c.user.publicName }}</td>
+                  <td>{{ chargeKind[c.kind] }}</td>
+                  <td>{{ c.amount | number: '1.0-2' }} Kč</td>
+                  <td>{{ c.id }}</td>
+                  <td>
+                    <nz-select [ngModel]="c.paidAt ? c.paidMethod : 'NO'" style="width: 140px" (ngModelChange)="setPaid(c.id, $event)">
+                      <nz-option nzValue="NO" nzLabel="nezaplaceno"></nz-option>
+                      <nz-option nzValue="CASH" nzLabel="hotově"></nz-option>
+                      <nz-option nzValue="TRANSFER" nzLabel="převodem"></nz-option>
+                    </nz-select>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </nz-table>
+          <a class="space-top" nz-popconfirm nzPopconfirmTitle="Znovu otevřít? Platby a pohyb v banku se smažou."
+            (nzOnConfirm)="reopenAccounting()">Znovu otevřít vyúčtování</a>
+        }
+      </nz-card>
+    }
 
     <nz-modal [nzVisible]="editVisible()" nzTitle="Upravit akci" [nzFooter]="null" (nzOnCancel)="editVisible.set(false)">
       <ng-container *nzModalContent>

@@ -1,0 +1,54 @@
+@if (data(); as g) {
+  <nz-statistic nzTitle="Zůstatek banku" [nzValue]="(g.bankBalance | number: '1.0-2') + ' Kč'"></nz-statistic>
+  <p class="hint">
+    Bank tvoří přebytky (a schodky) z vyúčtování akcí a ruční pohyby – např. vánoční posezení jako výdaj
+    nebo doplatek brankáře jako příjem.
+  </p>
+
+  @if (g.amOrganizer) {
+    <nz-card nzSize="small" nzTitle="Ruční pohyb" class="space">
+      <nz-input-number [nzMin]="0" [nzStep]="100" nzPlaceHolder="Kč" [(ngModel)]="amount"></nz-input-number>
+      &nbsp;
+      <input nz-input placeholder="popis, např. Vánoční posezení" style="width: 320px" [(ngModel)]="description" />
+      &nbsp;
+      <button nz-button (click)="add(1)" [nzLoading]="saving()">+ příjem</button>
+      <button nz-button nzDanger (click)="add(-1)" [nzLoading]="saving()">− výdaj</button>
+    </nz-card>
+  }
+
+  <nz-table #entries [nzData]="g.bankEntries" [nzPageSize]="20" nzSize="small">
+    <thead><tr><th>Kdy</th><th>Popis</th><th>Částka</th><th>Zapsal</th>@if (g.amOrganizer) {<th></th>}</tr></thead>
+    <tbody>
+      @for (b of entries.data; track b.id) {
+        <tr>
+          <td>{{ (b.event?.startsAt ?? b.createdAt) | date: 'd. M. y' }}</td>
+          <td>
+            @if (b.event) {
+              <a [routerLink]="['/akce', b.event.id]">{{ b.description }}</a>
+            } @else {
+              {{ b.description }}
+            }
+          </td>
+          <td [style.color]="b.amount < 0 ? '#cf1322' : '#389e0d'">{{ b.amount | number: '1.0-2' }} Kč</td>
+          <td>{{ b.createdBy?.publicName ?? '' }}</td>
+          @if (g.amOrganizer) {
+            <td>
+              @if (b.kind === 'MANUAL') {
+                <a nz-popconfirm nzPopconfirmTitle="Smazat pohyb?" (nzOnConfirm)="remove(b.id)">smazat</a>
+              }
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+  </nz-table>
+
+  @if (g.amOrganizer) {
+    <nz-card nzSize="small" nzTitle="Účet skupiny pro QR platby" class="space-top">
+      <input nz-input placeholder="IBAN, např. CZ65 0800 0000 1920 0014 5399" style="width: 360px" [(ngModel)]="iban" />
+      &nbsp;
+      <button nz-button (click)="saveIban()" [nzLoading]="saving()">Uložit</button>
+      <p class="hint">Z čísla účtu udělá IBAN každá banka (v detailu účtu). Účastníci pak u platby uvidí QR kód.</p>
+    </nz-card>
+  }
+}

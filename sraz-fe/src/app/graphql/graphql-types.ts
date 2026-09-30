@@ -12,6 +12,41 @@ export type Scalars = {
   Time: { input: string; output: string; }
 };
 
+export type BankEntry = {
+  __typename?: 'BankEntry';
+  /** Kladně příjem, záporně výdaj (Kč). */
+  amount: Scalars['Float']['output'];
+  createdAt?: Maybe<Scalars['DateTime']['output']>;
+  createdBy?: Maybe<PublicUser>;
+  description: Scalars['String']['output'];
+  event?: Maybe<Event>;
+  id: Scalars['ID']['output'];
+  kind: BankEntryKind;
+};
+
+export type BankEntryKind =
+  | 'EVENT'
+  | 'MANUAL';
+
+/** Platba účastníka za termín; variabilní symbol = id. */
+export type Charge = {
+  __typename?: 'Charge';
+  amount: Scalars['Float']['output'];
+  event: Event;
+  /** IBAN skupiny pro QR platbu (null = platit organizátorovi). */
+  iban?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  kind: ChargeKind;
+  paidAt?: Maybe<Scalars['DateTime']['output']>;
+  paidMethod?: Maybe<PaymentMethod>;
+  user: PublicUser;
+};
+
+export type ChargeKind =
+  | 'GOALIE'
+  | 'REGULAR'
+  | 'SUBSTITUTE';
+
 export type DayOfWeek =
   | 'FRIDAY'
   | 'MONDAY'
@@ -23,6 +58,10 @@ export type DayOfWeek =
 
 export type Event = {
   __typename?: 'Event';
+  /** Platby: organizátor vidí všechny, člen jen svou. */
+  charges: Array<Charge>;
+  /** Kdy bylo vyúčtování uzavřeno (null = otevřené). */
+  closedAt?: Maybe<Scalars['DateTime']['output']>;
   /** Organizátor termín ručně upravil – přegenerování období ho nepřepíše. */
   detached: Scalars['Boolean']['output'];
   durationMinutes: Scalars['Int']['output'];
@@ -35,7 +74,11 @@ export type Event = {
   myRegistration?: Maybe<Registration>;
   name: Scalars['String']['output'];
   note?: Maybe<Scalars['String']['output']>;
+  /** Cena ledu/hřiště za hodinu v Kč (null = zdarma). */
+  pricePerHour?: Maybe<Scalars['Float']['output']>;
   registrations: Array<Registration>;
+  /** Poplatek stálého člena – platí max(poplatek, podíl). */
+  regularFee?: Maybe<Scalars['Float']['output']>;
   regularsInvitedAt?: Maybe<Scalars['DateTime']['output']>;
   /** Připomínka přihlášeným X hodin před začátkem (null = bez připomínky). */
   reminderHoursBefore?: Maybe<Scalars['Int']['output']>;
@@ -60,6 +103,8 @@ export type EventInput = {
   maxPlayersPerTeam?: InputMaybe<Scalars['Int']['input']>;
   name: Scalars['String']['input'];
   note?: InputMaybe<Scalars['String']['input']>;
+  pricePerHour?: InputMaybe<Scalars['Float']['input']>;
+  regularFee?: InputMaybe<Scalars['Float']['input']>;
   reminderHoursBefore?: InputMaybe<Scalars['Int']['input']>;
   signupDeadline?: InputMaybe<Scalars['DateTime']['input']>;
   startsAt: Scalars['DateTime']['input'];
@@ -91,6 +136,8 @@ export type EventSummary = {
 
 export type GroupInput = {
   description?: InputMaybe<Scalars['String']['input']>;
+  /** IBAN pro QR platby (prázdné = bez účtu). */
+  iban?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
 };
 
@@ -133,8 +180,18 @@ export type MembershipStatus =
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /** Potvrzení účasti po akci (jen u přihlášeného člena). */
+  attendanceSet: Registration;
+  /** Ruční pohyb v banku (kladně příjem, záporně výdaj). */
+  bankEntryAdd: BankEntry;
+  bankEntryDelete: Scalars['Boolean']['output'];
+  chargeSetPaid: Charge;
   eventCancel: Event;
+  /** Uzavře vyúčtování: vzniknou platby a pohyb v banku. */
+  eventClose: Array<Charge>;
   eventCreate: Event;
+  /** Znovu otevře vyúčtování – jen dokud nikdo nezaplatil. */
+  eventReopen: Event;
   /** Rozešle pozvánky hned (vrací počet odeslaných e-mailů). */
   eventSendInvitations: Scalars['Int']['output'];
   eventUpdate: Event;
@@ -167,15 +224,51 @@ export type Mutation = {
 };
 
 
+export type MutationAttendanceSetArgs = {
+  attended: Scalars['Boolean']['input'];
+  eventId: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+
+export type MutationBankEntryAddArgs = {
+  amount: Scalars['Float']['input'];
+  description: Scalars['String']['input'];
+  groupId: Scalars['ID']['input'];
+};
+
+
+export type MutationBankEntryDeleteArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationChargeSetPaidArgs = {
+  id: Scalars['ID']['input'];
+  method?: InputMaybe<PaymentMethod>;
+  paid: Scalars['Boolean']['input'];
+};
+
+
 export type MutationEventCancelArgs = {
   id: Scalars['ID']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
 };
 
 
+export type MutationEventCloseArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationEventCreateArgs = {
   groupId: Scalars['ID']['input'];
   input: EventInput;
+};
+
+
+export type MutationEventReopenArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -311,6 +404,10 @@ export type MutationVenueSaveArgs = {
   input: VenueInput;
 };
 
+export type PaymentMethod =
+  | 'CASH'
+  | 'TRANSFER';
+
 /** Nevyplněné hodnoty = výchozí nastavení jako u jednorázové akce; uzávěrka je v hodinách před začátkem. */
 export type PeriodInput = {
   daysOfWeek: Array<DayOfWeek>;
@@ -323,7 +420,9 @@ export type PeriodInput = {
   maxPlayersPerTeam?: InputMaybe<Scalars['Int']['input']>;
   monthWeeks?: InputMaybe<Array<Scalars['Int']['input']>>;
   note?: InputMaybe<Scalars['String']['input']>;
+  pricePerHour?: InputMaybe<Scalars['Float']['input']>;
   recurrence: Recurrence;
+  regularFee?: InputMaybe<Scalars['Float']['input']>;
   reminderHoursBefore?: InputMaybe<Scalars['Int']['input']>;
   /** HH:mm */
   startTime: Scalars['String']['input'];
@@ -347,6 +446,8 @@ export type Query = {
   __typename?: 'Query';
   event: Event;
   group: SportGroup;
+  /** Moje platby (nejnovější první). */
+  myCharges: Array<Charge>;
   /** Pozvánky do skupin, které čekají na moji odpověď. */
   myGroupInvites: Array<GroupMember>;
   myGroups: Array<SportGroup>;
@@ -379,6 +480,8 @@ export type Recurrence =
 
 export type Registration = {
   __typename?: 'Registration';
+  /** Potvrzení účasti organizátorem (null = nepotvrzeno). */
+  attended?: Maybe<Scalars['Boolean']['output']>;
   createdAt?: Maybe<Scalars['DateTime']['output']>;
   id: Scalars['ID']['output'];
   position: Position;
@@ -422,7 +525,9 @@ export type SeriesPeriod = {
   /** Jen MONTHLY: kolikátý výskyt dne v měsíci (1–5, -1 = poslední). */
   monthWeeks: Array<Scalars['Int']['output']>;
   note?: Maybe<Scalars['String']['output']>;
+  pricePerHour?: Maybe<Scalars['Float']['output']>;
   recurrence: Recurrence;
+  regularFee?: Maybe<Scalars['Float']['output']>;
   reminderHoursBefore?: Maybe<Scalars['Int']['output']>;
   /** Čas začátku HH:mm (Europe/Prague). */
   startTime: Scalars['String']['output'];
@@ -434,8 +539,13 @@ export type SeriesPeriod = {
 export type SportGroup = {
   __typename?: 'SportGroup';
   amOrganizer: Scalars['Boolean']['output'];
+  /** Zůstatek banku skupiny v Kč. */
+  bankBalance: Scalars['Float']['output'];
+  bankEntries: Array<BankEntry>;
   description?: Maybe<Scalars['String']['output']>;
   events: Array<Event>;
+  /** Účet pro QR platby (IBAN). */
+  iban?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   members: Array<GroupMember>;
   /** Členství přihlášeného uživatele (null u admina, který není členem). */

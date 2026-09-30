@@ -12,6 +12,7 @@
       <ul nz-menu nzTheme="dark" nzMode="horizontal" class="desktop-menu">
         <li nz-menu-item routerLink="/">Úvod</li>
         @if(auth.isLoggedIn()) {
+        <li nz-menu-item routerLink="/platby">Moje platby</li>
         <li nz-menu-item routerLink="/logout">Odhlásit se</li>
         } @else {
         <li nz-menu-item routerLink="/login">Přihlásit se</li>
@@ -31,6 +32,7 @@
       <ul nz-menu nzMode="inline">
         <li nz-menu-item routerLink="/" (click)="closeDrawer()">Úvod</li>
         @if(auth.isLoggedIn()) {
+        <li nz-menu-item routerLink="/platby" (click)="closeDrawer()">Moje platby</li>
         <li nz-menu-item routerLink="/logout" (click)="closeDrawer()">Odhlásit se</li>
         } @else {
         <li nz-menu-item routerLink="/login" (click)="closeDrawer()">Přihlásit se</li>

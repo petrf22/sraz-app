@@ -17,6 +17,8 @@ export type EventStatus =
 
 export type GroupInput = {
   description?: string | null | undefined;
+  /** IBAN pro QR platby (prázdné = bez účtu). */
+  iban?: string | null | undefined;
   name: string;
 };
 

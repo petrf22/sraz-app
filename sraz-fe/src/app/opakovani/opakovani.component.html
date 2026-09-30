@@ -28,9 +28,9 @@
       @if (s.periods.length === 0) {
         <p class="hint">Zatím žádné období – termíny se negenerují.</p>
       }
-      <nz-table #periods [nzData]="s.periods" [nzShowPagination]="false" nzSize="small">
+      <nz-table #periods [nzData]="s.periods" [nzShowPagination]="false" [nzFrontPagination]="false" nzSize="small">
         <thead>
-          <tr><th>Období</th><th>Opakování</th><th>Čas</th><th>Místo</th><th>Kapacita</th><th>Uzávěrka / pozvánky / připomínka</th>
+          <tr><th>Období</th><th>Opakování</th><th>Čas</th><th>Místo</th><th>Kapacita</th><th>Cena</th><th>Uzávěrka / pozvánky / připomínka</th>
             @if (organizer()) {<th></th>}</tr>
         </thead>
         <tbody>
@@ -41,6 +41,7 @@
               <td>{{ p.startTime }} ({{ p.durationMinutes }} min)</td>
               <td>{{ p.venue?.name ?? '—' }}</td>
               <td>{{ p.maxPlayersPerTeam }} na tým, {{ p.maxGoalies }} br.</td>
+              <td>{{ p.pricePerHour != null ? p.pricePerHour + ' Kč/h' : 'zdarma' }}{{ p.regularFee != null ? ', stálí ' + p.regularFee + ' Kč' : '' }}</td>
               <td>{{ p.deadlineHoursBefore }} h / {{ p.inviteRegularsHoursBefore }} h a {{ p.inviteSubstitutesHoursBefore }} h /
                 {{ p.reminderHoursBefore != null ? p.reminderHoursBefore + ' h' : 'ne' }}</td>
               @if (organizer()) {
@@ -148,6 +149,15 @@
               <nz-input-number name="invSub" [nzMin]="0" [(ngModel)]="f.inviteSubstitutesHoursBefore"></nz-input-number>
               &nbsp;
               <nz-input-number name="reminder" [nzMin]="0" [(ngModel)]="f.reminderHoursBefore"></nz-input-number>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>Cena ledu/hřiště za hodinu a poplatek stálého člena (Kč, prázdné = zdarma / jen podíl)</nz-form-label>
+            <nz-form-control>
+              <nz-input-number name="price" [nzMin]="0" [nzStep]="100" [(ngModel)]="f.pricePerHour"></nz-input-number>
+              &nbsp;
+              <nz-input-number name="fee" [nzMin]="0" [nzStep]="10" [(ngModel)]="f.regularFee"></nz-input-number>
             </nz-form-control>
           </nz-form-item>
 

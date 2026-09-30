@@ -10,7 +10,7 @@
       @if (organizer()) {
         <button nz-button nzType="primary" class="space" (click)="eventModalVisible.set(true)">Nová akce</button>
       }
-      <nz-table #events [nzData]="g.events" [nzShowPagination]="false" nzSize="small">
+      <nz-table #events [nzData]="g.events" [nzShowPagination]="false" [nzFrontPagination]="false" nzSize="small">
         <thead>
           <tr><th>Kdy</th><th>Akce</th><th>Obsazenost</th><th>Stav</th><th>Já</th></tr>
         </thead>
@@ -45,6 +45,12 @@
       </ng-template>
     </nz-tab>
 
+    <nz-tab nzTitle="Bank">
+      <ng-template nz-tab>
+        <app-bank [groupId]="g.id"></app-bank>
+      </ng-template>
+    </nz-tab>
+
     <nz-tab nzTitle="Členové ({{ g.members.length }})">
       @if (organizer()) {
         <form nz-form nzLayout="inline" class="space" (ngSubmit)="sendInvite()">
@@ -70,7 +76,7 @@
         <p class="hint">Pozvaný musí členství potvrdit odkazem z e-mailu – do té doby mu nic dalšího nechodí.</p>
       }
 
-      <nz-table #membersTable [nzData]="members()" [nzShowPagination]="false" nzSize="small">
+      <nz-table #membersTable [nzData]="members()" [nzShowPagination]="false" [nzFrontPagination]="false" nzSize="small">
         <thead>
           <tr><th>Jméno</th><th>E-mail</th><th>Typ</th><th>Pozice</th><th>Stav</th>@if (organizer()) {<th></th>}</tr>
         </thead>
@@ -141,7 +147,7 @@
     </nz-tab>
 
     <nz-tab nzTitle="Místa">
-      <nz-table #venues [nzData]="g.venues" [nzShowPagination]="false" nzSize="small">
+      <nz-table #venues [nzData]="g.venues" [nzShowPagination]="false" [nzFrontPagination]="false" nzSize="small">
         <thead><tr><th>Název</th><th>Adresa</th><th>Mapa</th>@if (organizer()) {<th></th>}</tr></thead>
         <tbody>
           @for (v of venues.data; track v.id) {

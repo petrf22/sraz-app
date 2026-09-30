@@ -1,0 +1,46 @@
+<h2>Moje platby</h2>
+
+@if (charges(); as all) {
+  @if (all.length === 0) {
+    <nz-empty nzNotFoundContent="Zatím žádné platby – vzniknou, až organizátor vyúčtuje akci, na které jsi byl(a)."></nz-empty>
+  }
+
+  @if (unpaid().length) {
+    <p>K zaplacení celkem <strong>{{ toPay() | number: '1.0-2' }} Kč</strong>.</p>
+    <div nz-row [nzGutter]="[16, 16]">
+      @for (c of unpaid(); track c.id) {
+        <div nz-col nzXs="24" nzMd="12" nzLg="8">
+          <nz-card [nzTitle]="c.event.name + ' – ' + (c.event.startsAt | date: 'd. M. y')">
+            <p class="amount">{{ c.amount | number: '1.0-2' }} Kč</p>
+            <p class="hint">{{ c.event.group.name }}</p>
+            @if (c.iban) {
+              @if (qr().get(c.id); as src) {
+                <img [src]="src" alt="QR platba" width="180" height="180" />
+              }
+              <p>
+                Účet: <strong>{{ c.iban }}</strong><br />
+                Variabilní symbol: <strong>{{ c.id }}</strong>
+              </p>
+              <p class="hint">Naskenuj QR kód v bankovní aplikaci, nebo zaplať hotově organizátorovi.</p>
+            } @else {
+              <p class="hint">Skupina nemá zadaný účet – zaplať organizátorovi.</p>
+            }
+            <a [routerLink]="['/akce', c.event.id]">Detail akce</a>
+          </nz-card>
+        </div>
+      }
+    </div>
+  }
+
+  @if (paid().length) {
+    <h3 class="space-top">Zaplaceno</h3>
+    <ul>
+      @for (c of paid(); track c.id) {
+        <li>
+          {{ c.event.startsAt | date: 'd. M. y' }} {{ c.event.name }} – {{ c.amount | number: '1.0-2' }} Kč
+          <nz-tag nzColor="success">{{ c.paidMethod === 'TRANSFER' ? 'převodem' : 'hotově' }} {{ c.paidAt | date: 'd. M.' }}</nz-tag>
+        </li>
+      }
+    </ul>
+  }
+}

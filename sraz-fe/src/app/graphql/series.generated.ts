@@ -35,7 +35,9 @@ export type PeriodInput = {
   maxPlayersPerTeam?: number | null | undefined;
   monthWeeks?: Array<number> | null | undefined;
   note?: string | null | undefined;
+  pricePerHour?: number | null | undefined;
   recurrence: Recurrence;
+  regularFee?: number | null | undefined;
   reminderHoursBefore?: number | null | undefined;
   /** HH:mm */
   startTime: string;
@@ -53,14 +55,14 @@ export type RegistrationStatus =
   | 'OUT'
   | 'WAITLIST';
 
-export type PeriodFieldsFragment = { id: string, validFrom: string, validTo: string, recurrence: Types.Recurrence, intervalCount: number, daysOfWeek: Array<Types.DayOfWeek>, monthWeeks: Array<number>, startTime: string, durationMinutes: number, maxPlayersPerTeam: number, maxGoalies: number, deadlineHoursBefore: number, inviteRegularsHoursBefore: number, inviteSubstitutesHoursBefore: number, reminderHoursBefore: number | null, note: string | null, venue: { id: string, name: string } | null };
+export type PeriodFieldsFragment = { id: string, validFrom: string, validTo: string, recurrence: Types.Recurrence, intervalCount: number, daysOfWeek: Array<Types.DayOfWeek>, monthWeeks: Array<number>, startTime: string, durationMinutes: number, maxPlayersPerTeam: number, maxGoalies: number, deadlineHoursBefore: number, inviteRegularsHoursBefore: number, inviteSubstitutesHoursBefore: number, reminderHoursBefore: number | null, pricePerHour: number | null, regularFee: number | null, note: string | null, venue: { id: string, name: string } | null };
 
 export type GroupSeriesQueryVariables = Exact<{
   id: string | number;
 }>;
 
 
-export type GroupSeriesQuery = { group: { id: string, amOrganizer: boolean, venues: Array<{ id: string, name: string }>, series: Array<{ id: string, name: string, periods: Array<{ id: string, validFrom: string, validTo: string, recurrence: Types.Recurrence, intervalCount: number, daysOfWeek: Array<Types.DayOfWeek>, monthWeeks: Array<number>, startTime: string, durationMinutes: number, maxPlayersPerTeam: number, maxGoalies: number, deadlineHoursBefore: number, inviteRegularsHoursBefore: number, inviteSubstitutesHoursBefore: number, reminderHoursBefore: number | null, note: string | null, venue: { id: string, name: string } | null }> }> } };
+export type GroupSeriesQuery = { group: { id: string, amOrganizer: boolean, venues: Array<{ id: string, name: string }>, series: Array<{ id: string, name: string, periods: Array<{ id: string, validFrom: string, validTo: string, recurrence: Types.Recurrence, intervalCount: number, daysOfWeek: Array<Types.DayOfWeek>, monthWeeks: Array<number>, startTime: string, durationMinutes: number, maxPlayersPerTeam: number, maxGoalies: number, deadlineHoursBefore: number, inviteRegularsHoursBefore: number, inviteSubstitutesHoursBefore: number, reminderHoursBefore: number | null, pricePerHour: number | null, regularFee: number | null, note: string | null, venue: { id: string, name: string } | null }> }> } };
 
 export type GroupCalendarQueryVariables = Exact<{
   id: string | number;
@@ -138,6 +140,8 @@ export const PeriodFieldsFragmentDoc = gql`
   inviteRegularsHoursBefore
   inviteSubstitutesHoursBefore
   reminderHoursBefore
+  pricePerHour
+  regularFee
   note
 }
     `;

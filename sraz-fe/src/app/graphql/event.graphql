@@ -16,6 +16,21 @@ query EventDetail($id: ID!) {
     signupOpen
     detached
     reminderHoursBefore
+    pricePerHour
+    regularFee
+    closedAt
+    charges {
+      id
+      amount
+      kind
+      paidAt
+      paidMethod
+      iban
+      user {
+        id
+        publicName
+      }
+    }
     series {
       id
       name
@@ -40,6 +55,7 @@ query EventDetail($id: ID!) {
       source
       queuedAt
       updatedAt
+      attended
       user {
         id
         publicName

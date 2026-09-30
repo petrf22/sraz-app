@@ -1,5 +1,5 @@
 import { CombinedGraphQLErrors } from '@apollo/client';
-import { EventStatus, MemberType, MembershipStatus, Position, RegistrationStatus } from '../graphql/graphql-types';
+import { ChargeKind, EventStatus, MemberType, MembershipStatus, Position, RegistrationStatus } from '../graphql/graphql-types';
 
 /** České popisky výčtových hodnot z API. */
 export const MEMBER_TYPE: Record<MemberType, string> = { REGULAR: 'stálý člen', SUBSTITUTE: 'náhradník' };
@@ -18,6 +18,7 @@ export const EVENT_STATUS: Record<EventStatus, string> = {
   CANCELLED: 'zrušeno',
 };
 export const REGISTRATION_STATUS: Record<RegistrationStatus, string> = { IN: 'přijde', OUT: 'nepřijde', WAITLIST: 've frontě' };
+export const CHARGE_KIND: Record<ChargeKind, string> = { REGULAR: 'stálý', SUBSTITUTE: 'náhradník', GOALIE: 'brankář' };
 export const REGISTRATION_COLOR: Record<RegistrationStatus, string> = { IN: 'success', OUT: 'default', WAITLIST: 'warning' };
 
 /** Zpráva z GraphQL chyby (backend posílá česky) nebo obecný text. */
