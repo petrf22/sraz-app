@@ -90,6 +90,10 @@ stálí max(poplatek, podíl), náhradníci podíl, brankáři nic (`PricingCalc
 (`Charge`, VS = id) a přebytek/schodek jde do banku skupiny (`BankEntry`, + ruční pohyby,
 `BankService`). Frontend ukazuje QR platbu (SPD, `shared/spd.ts`) z IBAN skupiny.
 
+Statistiky: `StatsService` počítá za období (výchozí sezóna září–srpen) z odehraných nezrušených
+termínů účast, neomluvené absence, omluvy, góly/asistence (`Registration.goals/assists`, zapisuje
+organizátor) a peníze; frontend je řadí a exportuje do CSV.
+
 ### GraphQL je kontrakt mezi FE a BE
 Schéma: `sraz-be/src/main/resources/graphql/*.graphqls`. Operace frontendu:
 `sraz-fe/src/app/graphql/*.graphql`; `npm run codegen` z nich generuje typy a Apollo služby
