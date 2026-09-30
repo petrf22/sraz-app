@@ -1,6 +1,6 @@
 # CLAUDE.md – frontend
 
-Konvence a příkazy pro `sraz-fe/` (Angular 21 + ng-zorro-antd + Apollo Angular). Společná pravidla,
+Konvence a příkazy pro `sraz-fe/` (Angular 22 + ng-zorro-antd + Apollo Angular). Společná pravidla,
 architektura a nasazení jsou v kořenovém [`CLAUDE.md`](../CLAUDE.md).
 
 ## Příkazy

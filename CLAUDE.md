@@ -11,7 +11,7 @@ Monorepo se dvěma samostatně sestavovanými projekty:
 
 - `sraz-be/` – Spring Boot 4 (Java 25, Gradle Groovy DSL), GraphQL API pro doménová data a REST pro
   přihlašování a veřejné stránky z e-mailů.
-- `sraz-fe/` – Angular 21 (standalone komponenty, signály, ng-zorro-antd, Apollo Angular).
+- `sraz-fe/` – Angular 22 (standalone komponenty, signály, ng-zorro-antd, Apollo Angular).
 
 Frontend volá relativní `/api/**` a `/graphql` – ve vývoji je přeposílá `sraz-fe/proxy.conf.json`
 na `localhost:8080`, v produkci Caddy (stejný origin, viz „Nasazení").

@@ -17,7 +17,7 @@ Open-source aplikace pro přihlašování na pravidelné sportovní akce (např.
 
 ## Technologie
 - `sraz-be/` – Java 25, Spring Boot 4, Spring GraphQL (DGS codegen), Liquibase, PostgreSQL
-- `sraz-fe/` – Angular 21, ng-zorro-antd, Apollo GraphQL
+- `sraz-fe/` – Angular 22, ng-zorro-antd, Apollo GraphQL
 
 ## Spuštění pro vývoj
 Potřeba: JDK 25, Node.js 24 (nvm), Docker.
