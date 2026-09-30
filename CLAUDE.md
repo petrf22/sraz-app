@@ -84,6 +84,12 @@ termíny bez aktivity – ručně upravené (`detached`), zrušené a termíny s
 zůstávají. `ReminderService` posílá připomínky přihlášeným a souhrn organizátorům po uzávěrce
 (spouští `InvitationScheduler`).
 
+Peníze: cena za hodinu a poplatek stálého člena u období/akce. Po akci organizátor potvrdí účast
+a uzavře vyúčtování (`AccountingService`): podíl = cena / platící (bez brankářů) nahoru na 10 Kč,
+stálí max(poplatek, podíl), náhradníci podíl, brankáři nic (`PricingCalculator`); vzniknou platby
+(`Charge`, VS = id) a přebytek/schodek jde do banku skupiny (`BankEntry`, + ruční pohyby,
+`BankService`). Frontend ukazuje QR platbu (SPD, `shared/spd.ts`) z IBAN skupiny.
+
 ### GraphQL je kontrakt mezi FE a BE
 Schéma: `sraz-be/src/main/resources/graphql/*.graphqls`. Operace frontendu:
 `sraz-fe/src/app/graphql/*.graphql`; `npm run codegen` z nich generuje typy a Apollo služby
