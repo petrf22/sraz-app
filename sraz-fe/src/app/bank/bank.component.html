@@ -45,7 +45,8 @@
 
   @if (g.amOrganizer) {
     <nz-card nzSize="small" nzTitle="Nastavení plateb" class="space-top">
-      <input nz-input placeholder="IBAN, např. CZ65 0800 0000 1920 0014 5399" style="width: 360px" [(ngModel)]="iban" />
+      <input nz-input name="iban" autocomplete="off" placeholder="IBAN, např. CZ65 0800 0000 1920 0014 5399" style="width: 360px"
+        [(ngModel)]="iban" />
       <p class="hint">Z čísla účtu udělá IBAN každá banka (v detailu účtu). Účastníci pak u platby uvidí QR kód.</p>
       <label nz-checkbox [(ngModel)]="finesEnabled">Pokuty za pozdní odhlášení a neúčast</label>
       <p class="hint">Kdo se odhlásí po uzávěrce nebo nepřijde, zaplatí při vyúčtování celý podíl (jako by hrál). Omluvit ho
@@ -69,7 +70,9 @@
           Odpojit
         </button>
       } @else {
-        <input nz-input type="password" autocomplete="off" placeholder="token Fio API" style="width: 360px" [(ngModel)]="fioToken" />
+        <!-- new-password: jinak Chrome vyplní uložené přihlašovací údaje (heslo sem, e-mail do IBAN) -->
+        <input nz-input type="password" name="fioToken" autocomplete="new-password" placeholder="token Fio API" style="width: 360px"
+          [(ngModel)]="fioToken" />
         &nbsp;
         <button nz-button (click)="connectFio()" [nzLoading]="saving()">Připojit</button>
         <p class="hint">
