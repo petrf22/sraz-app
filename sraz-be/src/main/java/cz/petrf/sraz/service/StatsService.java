@@ -38,12 +38,13 @@ public class StatsService {
 
   /**
    * @param attended  přišel (přihlášen a účast nezrušena)
-   * @param noShow    přihlášen, ale organizátor potvrdil, že nepřišel
-   * @param declined  odhlásil se (OUT)
+   * @param noShow    přihlášen, ale organizátor potvrdil, že nepřišel (neomluveně)
+   * @param lateCancels odhlášen po uzávěrce (neomluveně)
+   * @param declined  odhlásil se včas (OUT), nebo byl omluven
    * @param noAnswer  aktivní člen, který na termín nereagoval
    */
   public record PlayerStats(User user, MemberType memberType, Position position, int events, int attended,
-                            int noShow, int declined, int noAnswer, int goals, int assists,
+                            int noShow, int lateCancels, int declined, int noAnswer, int goals, int assists,
                             BigDecimal charged, BigDecimal paid) {
     public double attendanceRate() {
       return events==0 ? 0:(double) attended / events;
@@ -106,16 +107,22 @@ public class StatsService {
         continue;
       }
       List<Registration> regs = regsByUser.getOrDefault(m.getUser().getId(), List.of());
-      int attended = 0, noShow = 0, declined = 0, goals = 0, assists = 0;
+      int attended = 0, noShow = 0, lateCancels = 0, declined = 0, goals = 0, assists = 0;
       for (Registration r : regs) {
         if (r.getStatus()==RegistrationStatus.IN) {
-          if (Boolean.FALSE.equals(r.getAttended())) {
-            noShow++;
-          } else {
+          if (!Boolean.FALSE.equals(r.getAttended())) {
             attended++;
+          } else if (r.isExcused()) {
+            declined++;
+          } else {
+            noShow++;
           }
         } else if (r.getStatus()==RegistrationStatus.OUT) {
-          declined++;
+          if (r.isLateCancel() && !r.isExcused()) {
+            lateCancels++;
+          } else {
+            declined++;
+          }
         }
         goals += r.getGoals();
         assists += r.getAssists();
@@ -123,7 +130,7 @@ public class StatsService {
       int noAnswer = Math.max(0, played.size() - regs.size());
       BigDecimal[] money = moneyByUser.getOrDefault(m.getUser().getId(), new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO});
       result.add(new PlayerStats(m.getUser(), m.getMemberType(), m.getPosition(), played.size(), attended, noShow,
-          declined, noAnswer, goals, assists, money[0], money[1]));
+          lateCancels, declined, noAnswer, goals, assists, money[0], money[1]));
     }
     result.sort(Comparator.comparingInt(PlayerStats::attended).reversed()
         .thenComparing(s -> s.user().getPublicName(), Comparator.nullsLast(Comparator.naturalOrder())));

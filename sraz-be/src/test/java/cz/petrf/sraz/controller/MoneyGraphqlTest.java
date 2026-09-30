@@ -85,7 +85,7 @@ class MoneyGraphqlTest {
     memberRepo.save(GroupMember.builder().group(group).user(player).email(player.getEmail())
         .memberType(MemberType.SUBSTITUTE).position(Position.PLAYER).status(MembershipStatus.ACTIVE).build());
 
-    gql(org, "mutation($id: ID!) { groupUpdate(id: $id, input: {name: \"Hokej\", iban: \"CZ65 0800 0000 1920 0014 5399\"}) { id } }",
+    gql(org, "mutation($id: ID!) { groupUpdate(id: $id, input: {name: \"Hokej\", iban: \"CZ65 0800 0000 1920 0014 5399\", finesEnabled: true}) { id finesEnabled } }",
         Map.of("id", group.getId().toString()));
 
     Event event = eventService.create(group.getId(), EventService.EventData.builder().name("Hokej")
@@ -95,7 +95,7 @@ class MoneyGraphqlTest {
     event.setStartsAt(OffsetDateTime.now().minusHours(2));
     eventRepo.flush();
 
-    gql(org, "mutation($e: ID!) { eventClose(id: $e) { amount kind user { publicName } } }", Map.of("e", event.getId().toString()))
+    gql(org, "mutation($e: ID!) { eventClose(id: $e) { amount kind reason user { publicName } } }", Map.of("e", event.getId().toString()))
         .andExpect(jsonPath("$.data.eventClose", hasSize(2)))
         .andExpect(jsonPath("$.data.eventClose[0].amount").value(500.0));
 

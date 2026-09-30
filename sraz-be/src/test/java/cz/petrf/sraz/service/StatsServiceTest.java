@@ -67,6 +67,34 @@ class StatsServiceTest extends ServiceTestSupport {
   }
 
   @Test
+  void lateCancelCountsSeparatelyAndExcusedAbsenceAsDeclined() {
+    User org = user("Org");
+    SportGroup group = groupService.create("Hokej", null, org);
+    User a = user("Adam"), b = user("Bára");
+    for (User u : List.of(a, b)) {
+      member(group, u, MemberType.SUBSTITUTE, Position.PLAYER);
+    }
+    Event e = eventService.create(group.getId(), EventService.EventData.builder().name("Hokej")
+        .startsAt(OffsetDateTime.now().plusDays(2)).build(), org);
+    registrations.respond(e.getId(), a, RegistrationStatus.IN, null, RegistrationSource.WEB);
+    registrations.respond(e.getId(), b, RegistrationStatus.IN, null, RegistrationSource.WEB);
+    e.setSignupDeadline(OffsetDateTime.now().minusHours(3));
+    e.setStartsAt(OffsetDateTime.now().minusHours(2));
+    registrations.setByOrganizer(e.getId(), a.getId(), RegistrationStatus.OUT, null, null, org);
+    accounting.setAttendance(e.getId(), b.getId(), false, org);
+    accounting.setExcused(e.getId(), b.getId(), true, org);
+
+    List<StatsService.PlayerStats> result = stats.groupStats(group.getId(), null, null, org);
+
+    StatsService.PlayerStats adam = result.stream().filter(s -> s.user().getId().equals(a.getId())).findFirst().orElseThrow();
+    assertThat(adam.lateCancels()).isEqualTo(1);
+    assertThat(adam.declined()).isZero();
+    StatsService.PlayerStats bara = result.stream().filter(s -> s.user().getId().equals(b.getId())).findFirst().orElseThrow();
+    assertThat(bara.noShow()).isZero();
+    assertThat(bara.declined()).isEqualTo(1);
+  }
+
+  @Test
   void scoreOnlyForRegisteredPlayerAndByOrganizer() {
     User org = user("Org");
     SportGroup group = groupService.create("Hokej", null, org);

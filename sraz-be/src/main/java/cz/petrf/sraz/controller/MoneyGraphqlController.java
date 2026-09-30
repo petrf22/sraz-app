@@ -56,6 +56,11 @@ public class MoneyGraphqlController {
   }
 
   @MutationMapping
+  public Registration registrationSetExcused(@Argument Long eventId, @Argument Long userId, @Argument boolean excused) {
+    return accounting.setExcused(eventId, userId, excused, currentUser.requireUser());
+  }
+
+  @MutationMapping
   public List<Charge> eventClose(@Argument Long id) {
     return accounting.close(id, currentUser.requireUser());
   }

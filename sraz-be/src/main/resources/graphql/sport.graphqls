@@ -9,6 +9,8 @@ enum RegistrationStatus { IN OUT WAITLIST }
 enum RegistrationSource { EMAIL_LINK WEB ORGANIZER }
 enum Recurrence { WEEKLY MONTHLY }
 enum ChargeKind { REGULAR SUBSTITUTE GOALIE }
+"Za co se platí: odehraná akce, nebo pokuta (celý podíl) za pozdní odhlášení / neomluvenou neúčast."
+enum ChargeReason { PLAYED LATE_CANCEL NO_SHOW }
 enum PaymentMethod { CASH TRANSFER }
 enum BankEntryKind { EVENT MANUAL }
 enum DayOfWeek { MONDAY TUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY SUNDAY }
@@ -34,6 +36,8 @@ type SportGroup {
     series: [EventSeries!]!
     "Účet pro QR platby (IBAN)."
     iban: String
+    "Pozdní odhlášení a neomluvená neúčast platí celý podíl."
+    finesEnabled: Boolean!
     "Zůstatek banku skupiny v Kč."
     bankBalance: Float!
     bankEntries: [BankEntry!]!
@@ -118,6 +122,10 @@ type Registration {
     queuedAt: DateTime
     "Potvrzení účasti organizátorem (null = nepotvrzeno)."
     attended: Boolean
+    "Odhlášen po uzávěrce (organizátorem)."
+    lateCancel: Boolean!
+    "Pozdní odhlášení / neúčast omluvena – bez pokuty."
+    excused: Boolean!
     goals: Int!
     assists: Int!
     createdAt: DateTime
@@ -171,6 +179,7 @@ type Charge {
     event: Event!
     user: PublicUser!
     kind: ChargeKind!
+    reason: ChargeReason!
     amount: Float!
     paidAt: DateTime
     paidMethod: PaymentMethod
@@ -197,8 +206,10 @@ type PlayerStats {
     "Odehraných termínů v období."
     events: Int!
     attended: Int!
-    "Přihlášen, ale nepřišel."
+    "Přihlášen, ale neomluveně nepřišel."
     noShow: Int!
+    "Neomluveně odhlášen po uzávěrce."
+    lateCancels: Int!
     declined: Int!
     noAnswer: Int!
     attendanceRate: Float!
@@ -221,6 +232,8 @@ input GroupInput {
     description: String
     "IBAN pro QR platby (prázdné = bez účtu)."
     iban: String
+    "Pokuty za pozdní odhlášení a neúčast (celý podíl)."
+    finesEnabled: Boolean
 }
 
 input TeamInput {
@@ -337,6 +350,8 @@ extend type Mutation {
 
     "Potvrzení účasti po akci (jen u přihlášeného člena)."
     attendanceSet(eventId: ID!, userId: ID!, attended: Boolean!): Registration!
+    "Omluví pozdní odhlášení / neúčast – bez pokuty."
+    registrationSetExcused(eventId: ID!, userId: ID!, excused: Boolean!): Registration!
     "Góly a asistence hráče na termínu."
     scoreSet(eventId: ID!, userId: ID!, goals: Int!, assists: Int!): Registration!
     "Uzavře vyúčtování: vzniknou platby a pohyb v banku."

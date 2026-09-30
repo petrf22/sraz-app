@@ -19,4 +19,7 @@ public class SportGroup extends BaseEntity {
 
   /** Účet skupiny pro QR platby (IBAN). */
   private String iban;
+
+  /** Pozdní odhlášení a neomluvená neúčast platí celý podíl. */
+  private boolean finesEnabled;
 }

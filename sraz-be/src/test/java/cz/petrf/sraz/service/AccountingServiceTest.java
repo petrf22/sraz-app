@@ -107,6 +107,56 @@ class AccountingServiceTest extends ServiceTestSupport {
   }
 
   @Test
+  void withFinesLateCancelAndNoShowPayFullShareAndCountInDivisor() {
+    group.setFinesEnabled(true);
+    Event event = startedEvent(substitutes);
+    event.setSignupDeadline(OffsetDateTime.now().minusHours(3));
+    User late = substitutes.get(0), absent = substitutes.get(1), excused = substitutes.get(2);
+    registrations.setByOrganizer(event.getId(), late.getId(), RegistrationStatus.OUT, null, null, organizer);
+    registrations.setByOrganizer(event.getId(), excused.getId(), RegistrationStatus.OUT, null, null, organizer);
+    accounting.setExcused(event.getId(), excused.getId(), true, organizer);
+    accounting.setAttendance(event.getId(), absent.getId(), false, organizer);
+
+    List<Charge> charges = accounting.close(event.getId(), organizer);
+
+    assertThat(charges).hasSize(9);                                   // 7 hráli + 2 pokuty, omluvený nic
+    assertThat(amountFor(charges, late)).isEqualByComparingTo("320"); // 2800 / 9 → 320
+    assertThat(amountFor(charges, absent)).isEqualByComparingTo("320");
+    assertThat(amountFor(charges, excused)).isNull();
+    assertThat(amountFor(charges, substitutes.get(3))).isEqualByComparingTo("320");
+    assertThat(charges).filteredOn(c -> c.getUser().getId().equals(late.getId()))
+        .extracting(Charge::getReason).containsExactly(ChargeReason.LATE_CANCEL);
+    assertThat(charges).filteredOn(c -> c.getUser().getId().equals(absent.getId()))
+        .extracting(Charge::getReason).containsExactly(ChargeReason.NO_SHOW);
+    verify(emailService).sendHtmlEmail(anyString(), eq(late.getEmail()), org.mockito.ArgumentMatchers.startsWith("Pokuta"),
+        anyString());
+  }
+
+  @Test
+  void withoutFinesLateCancelDoesNotPay() {
+    Event event = startedEvent(substitutes);
+    event.setSignupDeadline(OffsetDateTime.now().minusHours(3));
+    registrations.setByOrganizer(event.getId(), substitutes.getFirst().getId(), RegistrationStatus.OUT, null, null, organizer);
+
+    List<Charge> charges = accounting.close(event.getId(), organizer);
+
+    assertThat(charges).hasSize(9);
+    assertThat(amountFor(charges, substitutes.getFirst())).isNull();
+    assertThat(charges).extracting(Charge::getReason).containsOnly(ChargeReason.PLAYED);
+  }
+
+  @Test
+  void goalieNeverGetsFine() {
+    group.setFinesEnabled(true);
+    List<User> players = new ArrayList<>(substitutes);
+    players.add(goalie);
+    Event event = startedEvent(players);
+    accounting.setAttendance(event.getId(), goalie.getId(), false, organizer);
+
+    assertThat(amountFor(accounting.close(event.getId(), organizer), goalie)).isNull();
+  }
+
+  @Test
   void cannotCloseBeforeTheEventStarts() {
     Event event = startedEvent(substitutes);
     event.setStartsAt(OffsetDateTime.now().plusHours(1));

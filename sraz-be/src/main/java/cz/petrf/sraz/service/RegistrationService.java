@@ -128,6 +128,15 @@ public class RegistrationService {
 
     boolean keepQueue = prevStatus==RegistrationStatus.WAITLIST && result==RegistrationStatus.WAITLIST && sameTeam(prevTeam, team);
     reg.setQueuedAt(result!=RegistrationStatus.WAITLIST ? null:keepQueue ? reg.getQueuedAt():now);
+    if (prevStatus==RegistrationStatus.IN && result==RegistrationStatus.OUT) {
+      // odhlášení po uzávěrce = pozdní odhlášení (při zapnutých pokutách platí celý podíl)
+      reg.setLateCancel(!event.isSignupOpen(now) && event.getStatus()!=EventStatus.CANCELLED);
+    } else if (result!=RegistrationStatus.OUT) {
+      reg.setLateCancel(false);
+    }
+    if (result==RegistrationStatus.IN && prevStatus!=RegistrationStatus.IN) {
+      reg.setExcused(false);
+    }
     reg.setStatus(result);
     reg.setPosition(position);
     reg.setTeam(team);
