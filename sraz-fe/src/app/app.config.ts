@@ -7,7 +7,7 @@ import { provideNzIcons } from 'ng-zorro-antd/icon';
 import { cs_CZ, NZ_DATE_CONFIG, provideNzI18n } from 'ng-zorro-antd/i18n';
 import { registerLocaleData } from '@angular/common';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { tokenInterceptor } from './func/token-func';
 import { authInitializer } from './func/auth-initializer';
 
@@ -23,6 +23,8 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { ErrorLink, onError } from '@apollo/client/link/error';
 
 import cs from '@angular/common/locales/cs';
+import { provideNzDateFnsAdapter } from 'ng-zorro-antd/core/time';
+import { cs as csDateFns } from 'date-fns/locale';
 
 // ng-zorro (cs_CZ) formátuje data pod locale 'cs', aplikace (LOCALE_ID) pod 'cs-CZ'
 registerLocaleData(cs);
@@ -79,7 +81,7 @@ export const appConfig: ApplicationConfig = {
     { provide: LOCALE_ID, useValue: 'cs-CZ' }, provideNzI18n(cs_CZ),
     // týden v kalendáři a výběru data začíná pondělím
     { provide: NZ_DATE_CONFIG, useValue: { firstDayOfWeek: 1 } },
-    provideHttpClient(withInterceptors([tokenInterceptor])),
+    provideHttpClient(withXhr(), withInterceptors([tokenInterceptor])),
     provideAppInitializer(authInitializer()),
     provideApollo(() => {
       const httpLink = inject(HttpLink);
@@ -88,6 +90,8 @@ export const appConfig: ApplicationConfig = {
 
       return apolloOptionsFactory(httpLink, router, msg);
     }),
+    // ng-zorro 22 formátuje data přes date-fns – bez locale by kalendář byl anglicky
+    provideNzDateFnsAdapter({ locale: csDateFns, firstDayOfWeek: 1 }),
 
   ]
 };

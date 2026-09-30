@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -55,6 +55,7 @@ interface VenueForm {
   imports: [DatePipe, FormsModule, RouterLink, AkceFormularComponent, KalendarComponent, OpakovaniComponent, BankComponent, StatistikyComponent, NzButtonModule, NzCardModule, NzCheckboxModule,
     NzFormModule, NzInputModule, NzInputNumberModule, NzModalModule, NzPopconfirmModule, NzSelectModule, NzTableModule,
     NzTabsModule, NzTagModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './skupina.component.html',
 })
 export class SkupinaComponent {

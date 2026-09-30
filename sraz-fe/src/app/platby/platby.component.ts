@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { NzCardModule } from 'ng-zorro-antd/card';
@@ -19,6 +19,7 @@ type Charge = MyChargesQuery['myCharges'][number];
 @Component({
   selector: 'app-platby',
   imports: [DatePipe, DecimalPipe, RouterLink, NzCardModule, NzEmptyModule, NzGridModule, NzTagModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './platby.component.html',
 })
 export class PlatbyComponent {

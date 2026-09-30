@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -115,6 +115,7 @@ export function describeSync(r: SyncResult): string {
   imports: [DatePipe, FormsModule, NzButtonModule, NzCardModule, NzCheckboxModule, NzDatePickerModule, NzFormModule,
     NzInputModule, NzInputNumberModule, NzModalModule, NzPopconfirmModule, NzRadioModule, NzSelectModule, NzTableModule,
     NzTagModule, NzTimePickerModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './opakovani.component.html',
 })
 export class OpakovaniComponent implements OnInit {

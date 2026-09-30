@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter, Router } from '@angular/router';
 import { LoginComponent } from './login.component';
@@ -13,7 +13,7 @@ describe('LoginComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [LoginComponent],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideRouter([]), provideHttpClient(withXhr()), provideHttpClientTesting()],
     });
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(LoginComponent);

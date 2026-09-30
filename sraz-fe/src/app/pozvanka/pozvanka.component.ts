@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -14,6 +14,7 @@ import { errorMessage, PublicApiService, PublicGroupInvite } from '../services/p
 @Component({
   selector: 'app-pozvanka',
   imports: [RouterLink, NzAlertModule, NzButtonModule, NzGridModule, NzResultModule, NzSpinModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pozvanka.component.html',
 })
 export class PozvankaComponent {
