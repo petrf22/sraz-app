@@ -59,7 +59,7 @@
 
     <nz-tab nzTitle="Členové ({{ g.members.length }})">
       @if (organizer()) {
-        <form nz-form nzLayout="inline" class="space" (ngSubmit)="sendInvite()">
+        <form nz-form ngNoForm novalidate nzLayout="inline" class="space" (submit)="$event.preventDefault(); sendInvite()">
           <nz-form-item>
             <nz-form-control>
               <input nz-input type="email" name="email" placeholder="e-mail" [(ngModel)]="invite.email" />
@@ -177,7 +177,7 @@
       @if (organizer()) {
         @if (venueForm; as f) {
           <nz-card nzSize="small" nzTitle="Místo" class="space-top">
-            <form nz-form nzLayout="vertical" (ngSubmit)="saveVenue()">
+            <form nz-form ngNoForm novalidate nzLayout="vertical" (submit)="$event.preventDefault(); saveVenue()">
               <nz-form-item><nz-form-label nzRequired>Název</nz-form-label>
                 <nz-form-control><input nz-input name="vname" required [(ngModel)]="f.name" /></nz-form-control></nz-form-item>
               <nz-form-item><nz-form-label>Adresa</nz-form-label>

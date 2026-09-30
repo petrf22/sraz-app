@@ -6,7 +6,7 @@
       }
 
       @if (step() === 'email') {
-        <form nz-form nzLayout="vertical" (ngSubmit)="requestCode()">
+        <form nz-form ngNoForm novalidate nzLayout="vertical" (submit)="$event.preventDefault(); requestCode()">
           <nz-form-item>
             <nz-form-label>E-mail</nz-form-label>
             <nz-form-control>
@@ -23,7 +23,7 @@
           </button>
         </form>
       } @else {
-        <form nz-form nzLayout="vertical" (ngSubmit)="verifyCode()">
+        <form nz-form ngNoForm novalidate nzLayout="vertical" (submit)="$event.preventDefault(); verifyCode()">
           <p class="hint">Kód jsme poslali na <strong>{{ email() }}</strong>. Odeslání může chvíli trvat.</p>
           <nz-form-item>
             <nz-form-label>Kód z e-mailu</nz-form-label>

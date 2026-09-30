@@ -1,4 +1,4 @@
-<form nz-form nzLayout="vertical" (ngSubmit)="submit()">
+<form nz-form ngNoForm novalidate nzLayout="vertical" (submit)="$event.preventDefault(); submit()">
   <nz-form-item>
     <nz-form-label nzRequired>Název</nz-form-label>
     <nz-form-control>

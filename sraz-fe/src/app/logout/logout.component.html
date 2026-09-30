@@ -1,4 +1,4 @@
-<form nz-form (ngSubmit)="submitForm()" #form="ngForm">
+<form nz-form ngNoForm novalidate (submit)="$event.preventDefault(); submitForm()">
   <div nz-row>
     <div nz-col nzXs="24" [nzMd]="{ span: 12, offset: 6 }">
       <h2>Odhlásit se z aplikace</h2>

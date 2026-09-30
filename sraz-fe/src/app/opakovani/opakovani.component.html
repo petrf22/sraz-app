@@ -69,7 +69,7 @@
     (nzOnCancel)="form = null">
     <ng-container *nzModalContent>
       @if (form; as f) {
-        <form nz-form nzLayout="vertical" (ngSubmit)="savePeriod()">
+        <form nz-form ngNoForm novalidate nzLayout="vertical" (submit)="$event.preventDefault(); savePeriod()">
           <nz-form-item>
             <nz-form-label nzRequired>Období (od – do)</nz-form-label>
             <nz-form-control>
