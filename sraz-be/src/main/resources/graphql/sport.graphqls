@@ -37,6 +37,8 @@ type SportGroup {
     "Zůstatek banku skupiny v Kč."
     bankBalance: Float!
     bankEntries: [BankEntry!]!
+    "Statistiky aktivních členů za období (bez zadání = aktuální sezóna září–srpen)."
+    stats(from: Date, to: Date): [PlayerStats!]!
 }
 
 type Team {
@@ -116,6 +118,8 @@ type Registration {
     queuedAt: DateTime
     "Potvrzení účasti organizátorem (null = nepotvrzeno)."
     attended: Boolean
+    goals: Int!
+    assists: Int!
     createdAt: DateTime
     updatedAt: DateTime
 }
@@ -183,6 +187,25 @@ type BankEntry {
     event: Event
     createdBy: PublicUser
     createdAt: DateTime
+}
+
+"Statistiky hráče za období (jen odehrané, nezrušené termíny)."
+type PlayerStats {
+    user: PublicUser!
+    memberType: MemberType!
+    position: Position!
+    "Odehraných termínů v období."
+    events: Int!
+    attended: Int!
+    "Přihlášen, ale nepřišel."
+    noShow: Int!
+    declined: Int!
+    noAnswer: Int!
+    attendanceRate: Float!
+    goals: Int!
+    assists: Int!
+    charged: Float!
+    paid: Float!
 }
 
 type EventSummary {
@@ -314,6 +337,8 @@ extend type Mutation {
 
     "Potvrzení účasti po akci (jen u přihlášeného člena)."
     attendanceSet(eventId: ID!, userId: ID!, attended: Boolean!): Registration!
+    "Góly a asistence hráče na termínu."
+    scoreSet(eventId: ID!, userId: ID!, goals: Int!, assists: Int!): Registration!
     "Uzavře vyúčtování: vzniknou platby a pohyb v banku."
     eventClose(id: ID!): [Charge!]!
     "Znovu otevře vyúčtování – jen dokud nikdo nezaplatil."

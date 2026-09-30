@@ -11,3 +11,4 @@ databaseChangeLog:
   - include: { file: 2026-09-29/03-auth-otp.yaml, relativeToChangelogFile: true }
   - include: { file: 2026-09-30/01-series.yaml, relativeToChangelogFile: true }
   - include: { file: 2026-09-30/02-money.yaml, relativeToChangelogFile: true }
+  - include: { file: 2026-09-30/03-stats.yaml, relativeToChangelogFile: true }

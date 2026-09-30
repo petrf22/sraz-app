@@ -45,4 +45,7 @@ public class Registration extends BaseEntity {
 
   /** Potvrzení účasti organizátorem po akci (null = zatím nepotvrzeno). */
   private Boolean attended;
+
+  private int goals;
+  private int assists;
 }
