@@ -56,6 +56,8 @@ query EventDetail($id: ID!) {
       queuedAt
       updatedAt
       attended
+      goals
+      assists
       user {
         id
         publicName

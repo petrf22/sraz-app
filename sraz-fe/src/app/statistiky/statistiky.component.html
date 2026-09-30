@@ -1,0 +1,42 @@
+<p>
+  Období:
+  <nz-range-picker nzFormat="d. M. yyyy" [(ngModel)]="range" (ngModelChange)="load()"></nz-range-picker>
+  &nbsp;
+  <button nz-button (click)="exportCsv()" [disabled]="rows().length === 0">Export CSV</button>
+</p>
+<p class="hint">Počítají se jen odehrané, nezrušené termíny. Účast = přihlášen a organizátor nepotvrdil, že nepřišel.</p>
+
+<nz-table #t [nzData]="rows()" [nzShowPagination]="false" [nzFrontPagination]="false" nzSize="small">
+  <thead>
+    <tr>
+      <th [nzSortFn]="sortName">Hráč</th>
+      <th>Typ</th>
+      <th [nzSortFn]="sortAttended">Účast</th>
+      <th [nzSortFn]="sortRate">%</th>
+      <th [nzSortFn]="sortNoShow">Nepřišel</th>
+      <th>Omluven</th>
+      <th>Bez odp.</th>
+      <th [nzSortFn]="sortGoals">Góly</th>
+      <th [nzSortFn]="sortAssists">Asist.</th>
+      <th>Vyúčtováno</th>
+      <th [nzSortFn]="sortDebt">Dluh</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (r of t.data; track r.user.id) {
+      <tr>
+        <td>{{ r.user.publicName }}</td>
+        <td>{{ memberType[r.memberType] }}{{ r.position === 'GOALIE' ? ', brankář' : '' }}</td>
+        <td>{{ r.attended }} / {{ r.events }}</td>
+        <td>{{ r.attendanceRate | percent: '1.0-0' }}</td>
+        <td>{{ r.noShow }}</td>
+        <td>{{ r.declined }}</td>
+        <td>{{ r.noAnswer }}</td>
+        <td>{{ r.goals }}</td>
+        <td>{{ r.assists }}</td>
+        <td>{{ r.charged | number: '1.0-0' }} Kč</td>
+        <td [style.color]="r.charged - r.paid > 0 ? '#cf1322' : null">{{ r.charged - r.paid | number: '1.0-0' }} Kč</td>
+      </tr>
+    }
+  </tbody>
+</nz-table>

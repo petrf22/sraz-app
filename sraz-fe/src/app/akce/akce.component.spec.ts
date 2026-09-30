@@ -15,6 +15,8 @@ const reg = (id: string, u: ReturnType<typeof user>, status: 'IN' | 'OUT' | 'WAI
   queuedAt,
   updatedAt: null,
   attended: null,
+  goals: 0,
+  assists: 0,
   user: u,
   team: teamId ? { __typename: 'Team' as const, id: teamId } : null,
 });

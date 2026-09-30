@@ -210,6 +210,8 @@ export type Mutation = {
   /** Organizátor nastaví přihlášku libovolnému členovi (i po uzávěrce). */
   registrationSet: Registration;
   roleSave?: Maybe<Role>;
+  /** Góly a asistence hráče na termínu. */
+  scoreSet: Registration;
   seriesCreate: EventSeries;
   /** Smaže sérii: budoucí termíny bez aktivity zmizí, ostatní zůstanou jako samostatné akce. */
   seriesDelete: SyncResult;
@@ -351,6 +353,14 @@ export type MutationRoleSaveArgs = {
 };
 
 
+export type MutationScoreSetArgs = {
+  assists: Scalars['Int']['input'];
+  eventId: Scalars['ID']['input'];
+  goals: Scalars['Int']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+
 export type MutationSeriesCreateArgs = {
   groupId: Scalars['ID']['input'];
   name: Scalars['String']['input'];
@@ -431,6 +441,26 @@ export type PeriodInput = {
   venueId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/** Statistiky hráče za období (jen odehrané, nezrušené termíny). */
+export type PlayerStats = {
+  __typename?: 'PlayerStats';
+  assists: Scalars['Int']['output'];
+  attendanceRate: Scalars['Float']['output'];
+  attended: Scalars['Int']['output'];
+  charged: Scalars['Float']['output'];
+  declined: Scalars['Int']['output'];
+  /** Odehraných termínů v období. */
+  events: Scalars['Int']['output'];
+  goals: Scalars['Int']['output'];
+  memberType: MemberType;
+  noAnswer: Scalars['Int']['output'];
+  /** Přihlášen, ale nepřišel. */
+  noShow: Scalars['Int']['output'];
+  paid: Scalars['Float']['output'];
+  position: Position;
+  user: PublicUser;
+};
+
 export type Position =
   | 'GOALIE'
   | 'PLAYER';
@@ -480,9 +510,11 @@ export type Recurrence =
 
 export type Registration = {
   __typename?: 'Registration';
+  assists: Scalars['Int']['output'];
   /** Potvrzení účasti organizátorem (null = nepotvrzeno). */
   attended?: Maybe<Scalars['Boolean']['output']>;
   createdAt?: Maybe<Scalars['DateTime']['output']>;
+  goals: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   position: Position;
   queuedAt?: Maybe<Scalars['DateTime']['output']>;
@@ -553,6 +585,8 @@ export type SportGroup = {
   name: Scalars['String']['output'];
   /** Opakované akce skupiny. */
   series: Array<EventSeries>;
+  /** Statistiky aktivních členů za období (bez zadání = aktuální sezóna září–srpen). */
+  stats: Array<PlayerStats>;
   teams: Array<Team>;
   venues: Array<Venue>;
 };
@@ -561,6 +595,12 @@ export type SportGroup = {
 export type SportGroupEventsArgs = {
   from?: InputMaybe<Scalars['DateTime']['input']>;
   to?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+
+export type SportGroupStatsArgs = {
+  from?: InputMaybe<Scalars['Date']['input']>;
+  to?: InputMaybe<Scalars['Date']['input']>;
 };
 
 /** Co se stalo s termíny po uložení/smazání období. */
