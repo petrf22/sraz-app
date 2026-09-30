@@ -6,7 +6,7 @@
 --   hrac01..hrac08@example.com – stálí hráči
 --   hrac09..hrac12@example.com – náhradníci
 --   brankar1, brankar2@example.com – stálí brankáři
--- Kapacita akcí je schválně malá (5 hráčů na tým), ať jde vyzkoušet fronta.
+-- Kapacita akcí je schválně malá (5 hráčů na tým), ať jde vyzkoušet fronta; cena 2800 Kč/h, stálí aspoň 200 Kč.
 
 BEGIN;
 
@@ -73,8 +73,10 @@ ON CONFLICT (group_id, email) DO NOTHING;
 
 -- --- akce: pátky ve 20:00 (Europe/Prague) v nejbližších 4 týdnech, jen budoucí ---
 INSERT INTO events (group_id, venue_id, name, starts_at, duration_minutes, max_players_per_team, max_goalies,
-                    signup_deadline, invite_regulars_hours_before, invite_substitutes_hours_before, status)
-SELECT g.id, v.id, 'Večerní hokej', s.starts_at, 60, 5, 2, s.starts_at - interval '24 hours', 96, 48, 'PLANNED'
+                    signup_deadline, invite_regulars_hours_before, invite_substitutes_hours_before, status,
+                    price_per_hour, regular_fee, reminder_hours_before)
+SELECT g.id, v.id, 'Večerní hokej', s.starts_at, 60, 5, 2, s.starts_at - interval '24 hours', 96, 48, 'PLANNED',
+       2800, 200, 3
 FROM sport_groups g
 JOIN venues v ON v.group_id = g.id AND v.name = 'Zimní stadion'
 CROSS JOIN LATERAL (
