@@ -17,7 +17,7 @@ public final class GraphqlInputs {
   private GraphqlInputs() {
   }
 
-  public record GroupInput(String name, String description) {
+  public record GroupInput(String name, String description, String iban) {
   }
 
   public record TeamInput(Long id, String name, String color, Integer sortOrder) {

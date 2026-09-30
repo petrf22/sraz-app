@@ -98,6 +98,19 @@ public class NotificationService {
     send(organizer.getEmail(), "Uzávěrka: " + event.getName() + " – " + formatStart(event), "email/deadline-summary-email", ctx);
   }
 
+  /** Po vyúčtování akce: kolik účastník platí a jak (IBAN + variabilní symbol, QR v aplikaci). */
+  public void sendCharge(Charge charge) {
+    Event event = charge.getEvent();
+    Context ctx = eventContext(event);
+    ctx.setVariable("playerName", charge.getUser().getPublicName());
+    ctx.setVariable("amount", charge.getAmount().stripTrailingZeros().toPlainString());
+    ctx.setVariable("iban", event.getGroup().getIban());
+    ctx.setVariable("variableSymbol", charge.getId());
+    ctx.setVariable("paymentsUrl", frontendUrl + "/platby");
+
+    send(charge.getUser().getEmail(), "Platba za " + event.getName() + " – " + formatStart(event), "email/charge-email", ctx);
+  }
+
   public void sendEventCancelled(Event event, User recipient, String reason) {
     Context ctx = eventContext(event);
     ctx.setVariable("playerName", recipient.getPublicName());

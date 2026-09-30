@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -45,7 +46,7 @@ public class EventService {
   public record EventData(String name, OffsetDateTime startsAt, Integer durationMinutes, Long venueId,
                           Integer maxPlayersPerTeam, Integer maxGoalies, OffsetDateTime signupDeadline,
                           Integer inviteRegularsHoursBefore, Integer inviteSubstitutesHoursBefore,
-                          Integer reminderHoursBefore, String note) {
+                          Integer reminderHoursBefore, BigDecimal pricePerHour, BigDecimal regularFee, String note) {
   }
 
   @Transactional(readOnly = true)
@@ -89,8 +90,8 @@ public class EventService {
   public Event update(Long eventId, EventData data, User user) {
     Event event = find(eventId);
     access.requireOrganizer(event.getGroup().getId(), user);
-    if (event.getStatus()==EventStatus.CANCELLED || event.getStatus()==EventStatus.DONE) {
-      throw new DomainException("Zrušenou nebo ukončenou akci nelze upravovat.");
+    if (event.getStatus()==EventStatus.CANCELLED || event.getClosedAt()!=null) {
+      throw new DomainException("Zrušenou nebo vyúčtovanou akci nelze upravovat.");
     }
     apply(event, data, false);
     // ručně upravený termín série už přegenerování období nepřepíše
@@ -150,6 +151,15 @@ public class EventService {
       throw new DomainException("Připomínka nesmí být záporná.");
     }
     event.setReminderHoursBefore(d.reminderHoursBefore());
+    event.setPricePerHour(money(d.pricePerHour(), "Cena za hodinu"));
+    event.setRegularFee(money(d.regularFee(), "Poplatek stálého člena"));
+  }
+
+  static BigDecimal money(BigDecimal value, String field) {
+    if (value!=null && value.signum() < 0) {
+      throw new DomainException(field + " nesmí být záporná.");
+    }
+    return value;
   }
 
   private static int positive(Integer value, int def, String field) {

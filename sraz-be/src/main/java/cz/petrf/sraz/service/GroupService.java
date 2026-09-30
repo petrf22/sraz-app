@@ -72,11 +72,12 @@ public class GroupService {
     return group;
   }
 
-  public SportGroup update(Long groupId, String name, String description, User user) {
+  public SportGroup update(Long groupId, String name, String description, String iban, User user) {
     access.requireOrganizer(groupId, user);
     SportGroup group = find(groupId);
     group.setName(requireText(name, "Název skupiny"));
     group.setDescription(StringUtils.trimToNull(description));
+    group.setIban(Iban.normalize(iban));
     return group;
   }
 

@@ -92,7 +92,7 @@ public class GroupGraphqlController {
 
   @MutationMapping
   public SportGroup groupUpdate(@Argument Long id, @Argument GroupInput input) {
-    return groupService.update(id, input.name(), input.description(), currentUser.requireUser());
+    return groupService.update(id, input.name(), input.description(), input.iban(), currentUser.requireUser());
   }
 
   @MutationMapping

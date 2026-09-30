@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -52,7 +53,8 @@ public class SeriesService {
                            List<DayOfWeek> daysOfWeek, List<Integer> monthWeeks, LocalTime startTime,
                            Integer durationMinutes, Long venueId, Integer maxPlayersPerTeam, Integer maxGoalies,
                            Integer deadlineHoursBefore, Integer inviteRegularsHoursBefore,
-                           Integer inviteSubstitutesHoursBefore, Integer reminderHoursBefore, String note) {
+                           Integer inviteSubstitutesHoursBefore, Integer reminderHoursBefore,
+                           BigDecimal pricePerHour, BigDecimal regularFee, String note) {
   }
 
   /** Výsledek synchronizace termínů s obdobím. */
@@ -247,6 +249,8 @@ public class SeriesService {
     event.setInviteRegularsHoursBefore(p.getInviteRegularsHoursBefore());
     event.setInviteSubstitutesHoursBefore(p.getInviteSubstitutesHoursBefore());
     event.setReminderHoursBefore(p.getReminderHoursBefore());
+    event.setPricePerHour(p.getPricePerHour());
+    event.setRegularFee(p.getRegularFee());
     event.setNote(p.getNote());
   }
 
@@ -267,6 +271,8 @@ public class SeriesService {
     p.setInviteRegularsHoursBefore(orDefault(d.inviteRegularsHoursBefore(), EventService.DEFAULT_INVITE_REGULARS_HOURS));
     p.setInviteSubstitutesHoursBefore(orDefault(d.inviteSubstitutesHoursBefore(), EventService.DEFAULT_INVITE_SUBSTITUTES_HOURS));
     p.setReminderHoursBefore(d.reminderHoursBefore());
+    p.setPricePerHour(EventService.money(d.pricePerHour(), "Cena za hodinu"));
+    p.setRegularFee(EventService.money(d.regularFee(), "Poplatek stálého člena"));
     p.setNote(StringUtils.trimToNull(d.note()));
   }
 
