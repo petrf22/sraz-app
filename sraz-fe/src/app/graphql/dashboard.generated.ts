@@ -5,7 +5,7 @@ export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' |
 import * as Types from './graphql-types';
 
 import { gql } from 'apollo-angular';
-import { EventListFieldsFragmentDoc } from './fragments.generated';
+import { SummaryFieldsFragmentDoc, EventListFieldsFragmentDoc } from './fragments.generated';
 import { Injectable } from '@angular/core';
 import * as Apollo from 'apollo-angular';
 export type EventStatus =
