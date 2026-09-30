@@ -1,0 +1,47 @@
+# Fio API: šifrovaný token skupiny a stažené pohyby na účtu (párování plateb podle VS).
+databaseChangeLog:
+  - changeSet:
+      id: 2026-09-30-100-fio
+      author: Petr F.
+      changes:
+        - addColumn:
+            tableName: sport_groups
+            columns:
+              - column: { name: fio_token_enc, type: TEXT }
+              - column: { name: fio_last_sync_at, type: TIMESTAMPTZ }
+              - column: { name: fio_last_error, type: TEXT }
+        - createTable:
+            tableName: bank_transactions
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: group_id, type: BIGINT, constraints: { nullable: false, foreignKeyName: fk_bank_tx_group, references: sport_groups(id), deleteCascade: true } }
+              - column: { name: fio_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: booked_on, type: DATE, constraints: { nullable: false } }
+              - column: { name: amount, type: "DECIMAL(10,2)", constraints: { nullable: false } }
+              - column: { name: currency, type: VARCHAR(3) }
+              - column: { name: variable_symbol, type: VARCHAR(10) }
+              - column: { name: counter_account, type: VARCHAR(100) }
+              - column: { name: counter_name, type: VARCHAR(255) }
+              - column: { name: message, type: VARCHAR(500) }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: note, type: VARCHAR(500) }
+              - column: { name: charge_id, type: BIGINT }
+              - column: { name: created_at, type: TIMESTAMPTZ }
+              - column: { name: updated_at, type: TIMESTAMPTZ }
+        - addUniqueConstraint:
+            tableName: bank_transactions
+            columnNames: group_id, fio_id
+            constraintName: uq_bank_tx_group_fio
+        # smazání platby (akce) pohyb zachová, jen ho odpojí
+        - addForeignKeyConstraint:
+            baseTableName: bank_transactions
+            baseColumnNames: charge_id
+            referencedTableName: charges
+            referencedColumnNames: id
+            constraintName: fk_bank_tx_charge
+            onDelete: SET NULL
+        - createIndex:
+            tableName: bank_transactions
+            indexName: ix_bank_tx_charge
+            columns:
+              - column: { name: charge_id }

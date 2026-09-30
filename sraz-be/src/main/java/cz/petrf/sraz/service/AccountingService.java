@@ -37,6 +37,7 @@ public class AccountingService {
   private final AccessService access;
   private final AuditService audit;
   private final NotificationService notifications;
+  private final PaymentMatchingService paymentMatching;
   private final Clock clock;
 
   /** Organizátor po akci potvrdí, kdo skutečně přišel (i nad rámec přihlášek přes registrationSet). */
@@ -165,6 +166,9 @@ public class AccountingService {
   public Charge setPaid(Long chargeId, boolean paid, PaymentMethod method, User organizer) {
     Charge charge = chargeRepo.findById(chargeId).orElseThrow(() -> new NotFoundException("Platba", chargeId));
     access.requireOrganizer(charge.getEvent().getGroup().getId(), organizer);
+    if (!paid) {
+      paymentMatching.unlinkCharge(chargeId);
+    }
     charge.setPaidAt(paid ? OffsetDateTime.now(clock):null);
     charge.setPaidMethod(paid ? (method!=null ? method:PaymentMethod.CASH):null);
     audit.log(organizer, "CHARGE_PAID", "charge", chargeId, "paid=%s method=%s".formatted(paid, charge.getPaidMethod()));

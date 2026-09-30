@@ -13,3 +13,4 @@ databaseChangeLog:
   - include: { file: 2026-09-30/02-money.yaml, relativeToChangelogFile: true }
   - include: { file: 2026-09-30/03-stats.yaml, relativeToChangelogFile: true }
   - include: { file: 2026-09-30/04-fines.yaml, relativeToChangelogFile: true }
+  - include: { file: 2026-09-30/05-fio.yaml, relativeToChangelogFile: true }
