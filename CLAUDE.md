@@ -90,6 +90,18 @@ stálí max(poplatek, podíl), náhradníci podíl, brankáři nic (`PricingCalc
 (`Charge`, VS = id) a přebytek/schodek jde do banku skupiny (`BankEntry`, + ruční pohyby,
 `BankService`). Frontend ukazuje QR platbu (SPD, `shared/spd.ts`) z IBAN skupiny.
 
+Pokuty (`SportGroup.finesEnabled`): odhlášení organizátorem po uzávěrce nastaví
+`Registration.lateCancel` (`RegistrationService.apply`); při vyúčtování platí pozdně odhlášení
+i nepřišlí (`attended=false`) celý podíl a počítají se do dělitele, pokud je organizátor neomluví
+(`excused`). `Charge.reason` = PLAYED / LATE_CANCEL / NO_SHOW.
+
+Párování plateb z Fio API (`PaymentMatchingService`): token skupiny (jen pro čtení) je v DB šifrovaný
+`TokenCipher` (AES-GCM, klíč `app.fio.token-key` = `FIO_TOKEN_KEY`) a nikdy se nevrací ani neloguje
+(je v URL – `FioClient` loguje jen stav). `FioSyncScheduler` (každou hodinu) a organizátor ručně stáhnou
+pohyby za posledních 35 dní do `BankTransaction` (unikátní Fio ID) a příchozí spárují na `Charge` podle
+VS; zbytek (nižší částka, neznámý VS) organizátor spáruje ručně nebo ignoruje. Fio povoluje 1 dotaz
+na token za 30 s.
+
 Statistiky: `StatsService` počítá za období (výchozí sezóna září–srpen) z odehraných nezrušených
 termínů účast, neomluvené absence, omluvy, góly/asistence (`Registration.goals/assists`, zapisuje
 organizátor) a peníze; frontend je řadí a exportuje do CSV.
