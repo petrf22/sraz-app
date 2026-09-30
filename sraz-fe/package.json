@@ -34,22 +34,22 @@
     "@angular/platform-browser": "^21.2.17",
     "@angular/router": "^21.2.17",
     "@ant-design/icons-angular": "^21.0.0",
-    "@apollo/client": "^4.2.3",
-    "apollo-angular": "^14.1.0",
+    "@apollo/client": "^4.3.1",
+    "apollo-angular": "^14.2.0",
     "date-fns": "^4.4.0",
     "graphql": "^16.14.2",
     "ng-zorro-antd": "^21.3.1",
     "qrcode": "^1.5.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
-    "zone.js": "~0.16.2"
+    "zone.js": "~0.16.3"
   },
   "devDependencies": {
     "@angular/build": "^21.2.15",
     "@angular/cli": "^21.2.15",
     "@angular/compiler-cli": "^21.2.17",
-    "@graphql-codegen/cli": "^7.1.2",
-    "@graphql-codegen/near-operation-file-preset": "^5.2.1",
+    "@graphql-codegen/cli": "^7.4.3",
+    "@graphql-codegen/near-operation-file-preset": "^5.2.2",
     "@graphql-codegen/typescript": "^6.0.2",
     "@graphql-codegen/typescript-apollo-angular": "^5.0.1",
     "@graphql-codegen/typescript-operations": "^6.0.3",
@@ -60,7 +60,7 @@
     "karma-chrome-launcher": "~3.2.0",
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
-    "karma-jasmine-html-reporter": "~2.2.0",
+    "karma-jasmine-html-reporter": "~2.3.0",
     "typescript": "~5.9.3"
   }
 }
