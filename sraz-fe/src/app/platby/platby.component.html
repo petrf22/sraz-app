@@ -12,6 +12,7 @@
         <div nz-col nzXs="24" nzMd="12" nzLg="8">
           <nz-card [nzTitle]="c.event.name + ' – ' + (c.event.startsAt | date: 'd. M. y')">
             <p class="amount">{{ c.amount | number: '1.0-2' }} Kč</p>
+            @if (chargeReason[c.reason]; as reason) { <nz-tag nzColor="orange">{{ reason }}</nz-tag> }
             <p class="hint">{{ c.event.group.name }}</p>
             @if (c.iban) {
               @if (qr().get(c.id); as src) {

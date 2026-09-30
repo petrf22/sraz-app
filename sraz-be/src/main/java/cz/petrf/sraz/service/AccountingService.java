@@ -13,7 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Vyúčtování akce: potvrzení účasti, výpočet plateb (PricingCalculator), přebytek/schodek do banku
@@ -33,6 +37,7 @@ public class AccountingService {
   private final AccessService access;
   private final AuditService audit;
   private final NotificationService notifications;
+  private final PaymentMatchingService paymentMatching;
   private final Clock clock;
 
   /** Organizátor po akci potvrdí, kdo skutečně přišel (i nad rámec přihlášek přes registrationSet). */
@@ -47,9 +52,22 @@ public class AccountingService {
     return reg;
   }
 
+  /** Omluví pozdní odhlášení / neúčast – člen pak nedostane pokutu. */
+  public Registration setExcused(Long eventId, Long userId, boolean excused, User organizer) {
+    Event event = findEvent(eventId);
+    access.requireOrganizer(event.getGroup().getId(), organizer);
+    requireOpen(event);
+    Registration reg = registrationRepo.findByEventIdAndUserId(eventId, userId)
+        .orElseThrow(() -> new NotFoundException("Přihláška", userId));
+    reg.setExcused(excused);
+    audit.log(organizer, "REGISTRATION_EXCUSED", "registration", reg.getId(), "excused=" + excused);
+    return reg;
+  }
+
   /**
    * Uzavře vyúčtování: účastníci = přihlášení (IN), kterým organizátor účast nezrušil. Vzniknou platby,
    * přebytek/schodek jde do banku a termín je DONE. Bez ceny se jen uzavře (akce zdarma).
+   * Při zapnutých pokutách platí celý podíl i neomluveně pozdně odhlášení a nepřišlí – počítají se do dělitele.
    */
   public List<Charge> close(Long eventId, User organizer) {
     Event event = findEvent(eventId);
@@ -64,7 +82,8 @@ public class AccountingService {
       throw new DomainException("Vyúčtovat jde až akci, která už začala.");
     }
 
-    List<Registration> attendees = registrationRepo.findByEventIdOrderByCreatedAt(eventId).stream()
+    List<Registration> registrations = registrationRepo.findByEventIdOrderByCreatedAt(eventId);
+    List<Registration> attendees = registrations.stream()
         .filter(r -> r.getStatus()==RegistrationStatus.IN && !Boolean.FALSE.equals(r.getAttended()))
         .toList();
     attendees.forEach(r -> r.setAttended(true));
@@ -76,8 +95,17 @@ public class AccountingService {
       return List.of();
     }
 
-    List<Participant> participants = attendees.stream()
-        .map(r -> new Participant(r.getUser().getId(), kindOf(r, groupId)))
+    Map<Long, ChargeReason> reasons = new LinkedHashMap<>();
+    attendees.forEach(r -> reasons.put(r.getUser().getId(), ChargeReason.PLAYED));
+    if (event.getGroup().isFinesEnabled()) {
+      registrations.stream()
+          .filter(r -> !r.isExcused())
+          .forEach(r -> fineReason(r).ifPresent(reason -> reasons.put(r.getUser().getId(), reason)));
+    }
+    Map<Long, Registration> byUser = registrations.stream()
+        .collect(Collectors.toMap(r -> r.getUser().getId(), r -> r));
+    List<Participant> participants = reasons.keySet().stream()
+        .map(userId -> new Participant(userId, kindOf(byUser.get(userId), groupId)))
         .toList();
     PricingCalculator.Result result = PricingCalculator.calculate(event.getPricePerHour(), event.getDurationMinutes(),
         event.getRegularFee(), participants);
@@ -88,6 +116,7 @@ public class AccountingService {
             .event(event)
             .user(userRepo.getReferenceById(p.userId()))
             .kind(p.kind())
+            .reason(reasons.get(p.userId()))
             .amount(result.amounts().get(p.userId()))
             .build()))
         .toList();
@@ -110,7 +139,8 @@ public class AccountingService {
       }
     }
     audit.log(organizer, "EVENT_CLOSE", "event", eventId,
-        "účastníků %d, podíl %s, přebytek %s".formatted(attendees.size(), result.share(), result.surplus()));
+        "účastníků %d, pokut %d, podíl %s, přebytek %s".formatted(attendees.size(),
+            participants.size() - attendees.size(), result.share(), result.surplus()));
     return charges;
   }
 
@@ -136,6 +166,9 @@ public class AccountingService {
   public Charge setPaid(Long chargeId, boolean paid, PaymentMethod method, User organizer) {
     Charge charge = chargeRepo.findById(chargeId).orElseThrow(() -> new NotFoundException("Platba", chargeId));
     access.requireOrganizer(charge.getEvent().getGroup().getId(), organizer);
+    if (!paid) {
+      paymentMatching.unlinkCharge(chargeId);
+    }
     charge.setPaidAt(paid ? OffsetDateTime.now(clock):null);
     charge.setPaidMethod(paid ? (method!=null ? method:PaymentMethod.CASH):null);
     audit.log(organizer, "CHARGE_PAID", "charge", chargeId, "paid=%s method=%s".formatted(paid, charge.getPaidMethod()));
@@ -154,6 +187,17 @@ public class AccountingService {
   @Transactional(readOnly = true)
   public List<Charge> myCharges(User user) {
     return chargeRepo.findByUserIdOrderByCreatedAtDesc(user.getId());
+  }
+
+  /** Pokuta: odhlášen po uzávěrce, nebo přihlášen a organizátor potvrdil, že nepřišel. */
+  private static Optional<ChargeReason> fineReason(Registration r) {
+    if (r.getStatus()==RegistrationStatus.OUT && r.isLateCancel()) {
+      return Optional.of(ChargeReason.LATE_CANCEL);
+    }
+    if (r.getStatus()==RegistrationStatus.IN && Boolean.FALSE.equals(r.getAttended())) {
+      return Optional.of(ChargeReason.NO_SHOW);
+    }
+    return Optional.empty();
   }
 
   private ChargeKind kindOf(Registration r, Long groupId) {

@@ -16,6 +16,12 @@ export type ChargeKind =
   | 'REGULAR'
   | 'SUBSTITUTE';
 
+/** Za co se platí: odehraná akce, nebo pokuta (celý podíl) za pozdní odhlášení / neomluvenou neúčast. */
+export type ChargeReason =
+  | 'LATE_CANCEL'
+  | 'NO_SHOW'
+  | 'PLAYED';
+
 export type PaymentMethod =
   | 'CASH'
   | 'TRANSFER';
@@ -23,14 +29,14 @@ export type PaymentMethod =
 export type MyChargesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MyChargesQuery = { myCharges: Array<{ id: string, amount: number, kind: Types.ChargeKind, paidAt: string | null, paidMethod: Types.PaymentMethod | null, iban: string | null, event: { id: string, name: string, startsAt: string, group: { id: string, name: string } } }> };
+export type MyChargesQuery = { myCharges: Array<{ id: string, amount: number, kind: Types.ChargeKind, reason: Types.ChargeReason, paidAt: string | null, paidMethod: Types.PaymentMethod | null, iban: string | null, event: { id: string, name: string, startsAt: string, group: { id: string, name: string } } }> };
 
 export type GroupBankQueryVariables = Exact<{
   id: string | number;
 }>;
 
 
-export type GroupBankQuery = { group: { id: string, name: string, description: string | null, iban: string | null, amOrganizer: boolean, bankBalance: number, bankEntries: Array<{ id: string, kind: Types.BankEntryKind, amount: number, description: string, createdAt: string | null, createdBy: { id: string, publicName: string } | null, event: { id: string, name: string, startsAt: string } | null }> } };
+export type GroupBankQuery = { group: { id: string, name: string, description: string | null, iban: string | null, finesEnabled: boolean, amOrganizer: boolean, bankBalance: number, bankEntries: Array<{ id: string, kind: Types.BankEntryKind, amount: number, description: string, createdAt: string | null, createdBy: { id: string, publicName: string } | null, event: { id: string, name: string, startsAt: string } | null }> } };
 
 export type AttendanceSetMutationVariables = Exact<{
   eventId: string | number;
@@ -40,6 +46,15 @@ export type AttendanceSetMutationVariables = Exact<{
 
 
 export type AttendanceSetMutation = { attendanceSet: { id: string, attended: boolean | null } };
+
+export type RegistrationSetExcusedMutationVariables = Exact<{
+  eventId: string | number;
+  userId: string | number;
+  excused: boolean;
+}>;
+
+
+export type RegistrationSetExcusedMutation = { registrationSetExcused: { id: string, excused: boolean } };
 
 export type EventCloseMutationVariables = Exact<{
   id: string | number;
@@ -86,6 +101,7 @@ export const MyChargesDocument = gql`
     id
     amount
     kind
+    reason
     paidAt
     paidMethod
     iban
@@ -119,6 +135,7 @@ export const GroupBankDocument = gql`
     name
     description
     iban
+    finesEnabled
     amOrganizer
     bankBalance
     bankEntries {
@@ -165,6 +182,25 @@ export const AttendanceSetDocument = gql`
   })
   export class AttendanceSetGQL extends Apollo.Mutation<AttendanceSetMutation, AttendanceSetMutationVariables> {
     document = AttendanceSetDocument;
+    
+    constructor(apollo: Apollo.Apollo) {
+      super(apollo);
+    }
+  }
+export const RegistrationSetExcusedDocument = gql`
+    mutation RegistrationSetExcused($eventId: ID!, $userId: ID!, $excused: Boolean!) {
+  registrationSetExcused(eventId: $eventId, userId: $userId, excused: $excused) {
+    id
+    excused
+  }
+}
+    `;
+
+  @Injectable({
+    providedIn: 'root'
+  })
+  export class RegistrationSetExcusedGQL extends Apollo.Mutation<RegistrationSetExcusedMutation, RegistrationSetExcusedMutationVariables> {
+    document = RegistrationSetExcusedDocument;
     
     constructor(apollo: Apollo.Apollo) {
       super(apollo);

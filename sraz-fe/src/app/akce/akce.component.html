@@ -150,21 +150,50 @@
             @if (e.regularFee != null) {, stálí platí aspoň {{ e.regularFee | number: '1.0-2' }} Kč}. Podíl se zaokrouhlí nahoru
             na 10 Kč, brankáři neplatí, přebytek jde do banku skupiny.
           </p>
+          @if (e.group.finesEnabled) {
+            <p class="hint">Skupina má zapnuté pokuty: kdo se odhlásil po uzávěrce nebo nepřišel, platí celý podíl, pokud ho neomluvíš.</p>
+          }
         }
         @if (!e.closedAt) {
           <p class="hint">Odškrtni, kdo nepřišel. Kdo přišel bez přihlášení, přidej ho výš v „Přihláškách členů" jako „přijde".</p>
           <nz-table #att [nzData]="attendees()" [nzShowPagination]="false" [nzFrontPagination]="false" nzSize="small">
-            <thead><tr><th>Přišel</th><th>Člen</th><th>Pozice</th></tr></thead>
+            <thead><tr><th>Přišel</th>@if (e.group.finesEnabled) {<th>Omluveno</th>}<th>Člen</th><th>Pozice</th><th>Góly / asistence</th></tr></thead>
             <tbody>
               @for (r of att.data; track r.id) {
                 <tr>
                   <td><label nz-checkbox [ngModel]="r.attended !== false" (ngModelChange)="setAttendance(r.user.id, $event)"></label></td>
+                  @if (e.group.finesEnabled) {
+                    <td>
+                      @if (r.attended === false) {
+                        <label nz-checkbox [ngModel]="r.excused" (ngModelChange)="setExcused(r.user.id, $event)"></label>
+                      }
+                    </td>
+                  }
                   <td>{{ r.user.publicName }}</td>
                   <td>{{ position[r.position] }}</td>
+                  <td>
+                    <nz-input-number [nzMin]="0" [ngModel]="r.goals" (ngModelChange)="setScore(r.user.id, $event, r.assists)"></nz-input-number>
+                    <nz-input-number [nzMin]="0" [ngModel]="r.assists" (ngModelChange)="setScore(r.user.id, r.goals, $event)"></nz-input-number>
+                  </td>
                 </tr>
               }
             </tbody>
           </nz-table>
+          @if (e.group.finesEnabled && lateCancels().length) {
+            <h4 class="space-top">Odhlášení po uzávěrce</h4>
+            <nz-table #late [nzData]="lateCancels()" [nzShowPagination]="false" [nzFrontPagination]="false" nzSize="small">
+              <thead><tr><th>Omluveno</th><th>Člen</th><th>Pozice</th></tr></thead>
+              <tbody>
+                @for (r of late.data; track r.id) {
+                  <tr>
+                    <td><label nz-checkbox [ngModel]="r.excused" (ngModelChange)="setExcused(r.user.id, $event)"></label></td>
+                    <td>{{ r.user.publicName }}</td>
+                    <td>{{ position[r.position] }}</td>
+                  </tr>
+                }
+              </tbody>
+            </nz-table>
+          }
           <button nz-button nzType="primary" class="space-top" [nzLoading]="saving()"
             nz-popconfirm nzPopconfirmTitle="Uzavřít vyúčtování? Účastníkům přijde e-mail s částkou." (nzOnConfirm)="closeAccounting()">
             Uzavřít vyúčtování
@@ -180,7 +209,10 @@
               @for (c of ch.data; track c.id) {
                 <tr>
                   <td>{{ c.user.publicName }}</td>
-                  <td>{{ chargeKind[c.kind] }}</td>
+                  <td>
+                    {{ chargeKind[c.kind] }}
+                    @if (chargeReason[c.reason]; as reason) { <nz-tag nzColor="orange">{{ reason }}</nz-tag> }
+                  </td>
                   <td>{{ c.amount | number: '1.0-2' }} Kč</td>
                   <td>{{ c.id }}</td>
                   <td>

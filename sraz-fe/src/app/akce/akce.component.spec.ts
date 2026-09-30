@@ -15,6 +15,10 @@ const reg = (id: string, u: ReturnType<typeof user>, status: 'IN' | 'OUT' | 'WAI
   queuedAt,
   updatedAt: null,
   attended: null,
+  lateCancel: false,
+  excused: false,
+  goals: 0,
+  assists: 0,
   user: u,
   team: teamId ? { __typename: 'Team' as const, id: teamId } : null,
 });
@@ -55,6 +59,7 @@ const event: EventDetailQuery['event'] = {
     id: '1',
     name: 'Večerní hokej',
     amOrganizer: false,
+    finesEnabled: false,
     teams: [team('t1', 'Modří', '#1677ff'), team('t2', 'Červení', '#f5222d')],
     venues: [],
     members: [],

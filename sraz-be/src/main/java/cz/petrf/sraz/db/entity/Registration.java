@@ -45,4 +45,13 @@ public class Registration extends BaseEntity {
 
   /** Potvrzení účasti organizátorem po akci (null = zatím nepotvrzeno). */
   private Boolean attended;
+
+  /** Odhlášen po uzávěrce – při zapnutých pokutách platí celý podíl, pokud není omluven. */
+  private boolean lateCancel;
+
+  /** Organizátor omluvil pozdní odhlášení / neúčast (bez pokuty). */
+  private boolean excused;
+
+  private int goals;
+  private int assists;
 }

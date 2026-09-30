@@ -1,0 +1,33 @@
+query GroupStats($id: ID!, $from: Date, $to: Date) {
+  group(id: $id) {
+    id
+    name
+    stats(from: $from, to: $to) {
+      user {
+        id
+        publicName
+      }
+      memberType
+      position
+      events
+      attended
+      noShow
+      lateCancels
+      declined
+      noAnswer
+      attendanceRate
+      goals
+      assists
+      charged
+      paid
+    }
+  }
+}
+
+mutation ScoreSet($eventId: ID!, $userId: ID!, $goals: Int!, $assists: Int!) {
+  scoreSet(eventId: $eventId, userId: $userId, goals: $goals, assists: $assists) {
+    id
+    goals
+    assists
+  }
+}

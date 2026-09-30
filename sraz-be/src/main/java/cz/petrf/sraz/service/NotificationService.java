@@ -107,8 +107,13 @@ public class NotificationService {
     ctx.setVariable("iban", event.getGroup().getIban());
     ctx.setVariable("variableSymbol", charge.getId());
     ctx.setVariable("paymentsUrl", frontendUrl + "/platby");
+    ctx.setVariable("fineReason", switch (charge.getReason()) {
+      case PLAYED -> null;
+      case LATE_CANCEL -> "odhlásil(a) ses po uzávěrce";
+      case NO_SHOW -> "na akci jsi nepřišel/nepřišla bez omluvy";
+    });
 
-    send(charge.getUser().getEmail(), "Platba za " + event.getName() + " – " + formatStart(event), "email/charge-email", ctx);
+    send(charge.getUser().getEmail(), (charge.getReason()==ChargeReason.PLAYED ? "Platba za ":"Pokuta za ") + event.getName() + " – " + formatStart(event), "email/charge-email", ctx);
   }
 
   public void sendEventCancelled(Event event, User recipient, String reason) {

@@ -1,0 +1,19 @@
+# Pokuty: pozdní odhlášení a neomluvená neúčast platí celý podíl (zapíná skupina).
+databaseChangeLog:
+  - changeSet:
+      id: 2026-09-30-90-fines
+      author: Petr F.
+      changes:
+        - addColumn:
+            tableName: sport_groups
+            columns:
+              - column: { name: fines_enabled, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+        - addColumn:
+            tableName: registrations
+            columns:
+              - column: { name: late_cancel, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: excused, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+        - addColumn:
+            tableName: charges
+            columns:
+              - column: { name: reason, type: VARCHAR(20), defaultValue: PLAYED, constraints: { nullable: false } }

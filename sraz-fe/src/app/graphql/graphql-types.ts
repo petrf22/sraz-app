@@ -28,6 +28,29 @@ export type BankEntryKind =
   | 'EVENT'
   | 'MANUAL';
 
+/** Pohyb na účtu skupiny stažený z Fio API. */
+export type BankTransaction = {
+  __typename?: 'BankTransaction';
+  /** Kladně příchozí, záporně odchozí (v měně účtu). */
+  amount: Scalars['Float']['output'];
+  bookedOn: Scalars['Date']['output'];
+  charge?: Maybe<Charge>;
+  counterAccount?: Maybe<Scalars['String']['output']>;
+  counterName?: Maybe<Scalars['String']['output']>;
+  currency?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  message?: Maybe<Scalars['String']['output']>;
+  /** Proč pohyb nešel spárovat (nebo přeplatek). */
+  note?: Maybe<Scalars['String']['output']>;
+  status: BankTransactionStatus;
+  variableSymbol?: Maybe<Scalars['String']['output']>;
+};
+
+export type BankTransactionStatus =
+  | 'IGNORED'
+  | 'MATCHED'
+  | 'UNMATCHED';
+
 /** Platba účastníka za termín; variabilní symbol = id. */
 export type Charge = {
   __typename?: 'Charge';
@@ -39,6 +62,7 @@ export type Charge = {
   kind: ChargeKind;
   paidAt?: Maybe<Scalars['DateTime']['output']>;
   paidMethod?: Maybe<PaymentMethod>;
+  reason: ChargeReason;
   user: PublicUser;
 };
 
@@ -46,6 +70,12 @@ export type ChargeKind =
   | 'GOALIE'
   | 'REGULAR'
   | 'SUBSTITUTE';
+
+/** Za co se platí: odehraná akce, nebo pokuta (celý podíl) za pozdní odhlášení / neomluvenou neúčast. */
+export type ChargeReason =
+  | 'LATE_CANCEL'
+  | 'NO_SHOW'
+  | 'PLAYED';
 
 export type DayOfWeek =
   | 'FRIDAY'
@@ -134,8 +164,21 @@ export type EventSummary = {
   waitlist: Scalars['Int']['output'];
 };
 
+/** Výsledek stažení pohybů. */
+export type FioSyncResult = {
+  __typename?: 'FioSyncResult';
+  /** Nově uložených. */
+  created: Scalars['Int']['output'];
+  /** Pohybů ve staženém období. */
+  fetched: Scalars['Int']['output'];
+  matched: Scalars['Int']['output'];
+  unmatched: Scalars['Int']['output'];
+};
+
 export type GroupInput = {
   description?: InputMaybe<Scalars['String']['input']>;
+  /** Pokuty za pozdní odhlášení a neúčast (celý podíl). */
+  finesEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   /** IBAN pro QR platby (prázdné = bez účtu). */
   iban?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
@@ -185,6 +228,10 @@ export type Mutation = {
   /** Ruční pohyb v banku (kladně příjem, záporně výdaj). */
   bankEntryAdd: BankEntry;
   bankEntryDelete: Scalars['Boolean']['output'];
+  /** Ruční spárování pohybu s platbou. */
+  bankTransactionAssign: BankTransaction;
+  /** Pohyb nesouvisí s platbami – odložit. */
+  bankTransactionIgnore: BankTransaction;
   chargeSetPaid: Charge;
   eventCancel: Event;
   /** Uzavře vyúčtování: vzniknou platby a pohyb v banku. */
@@ -195,8 +242,12 @@ export type Mutation = {
   /** Rozešle pozvánky hned (vrací počet odeslaných e-mailů). */
   eventSendInvitations: Scalars['Int']['output'];
   eventUpdate: Event;
+  /** Stáhne nové pohyby a spáruje platby. */
+  fioSync: FioSyncResult;
   groupCreate: SportGroup;
   groupInviteRespond: GroupMember;
+  /** Uloží token Fio API (jen pro čtení) a hned stáhne pohyby; null/prázdný token = odpojit (vrací null). */
+  groupSetFioToken?: Maybe<FioSyncResult>;
   groupUpdate: SportGroup;
   memberInvite: GroupMember;
   /** Odebrání člena organizátorem nebo odchod ze skupiny. */
@@ -209,7 +260,11 @@ export type Mutation = {
   registrationRespond: Registration;
   /** Organizátor nastaví přihlášku libovolnému členovi (i po uzávěrce). */
   registrationSet: Registration;
+  /** Omluví pozdní odhlášení / neúčast – bez pokuty. */
+  registrationSetExcused: Registration;
   roleSave?: Maybe<Role>;
+  /** Góly a asistence hráče na termínu. */
+  scoreSet: Registration;
   seriesCreate: EventSeries;
   /** Smaže sérii: budoucí termíny bez aktivity zmizí, ostatní zůstanou jako samostatné akce. */
   seriesDelete: SyncResult;
@@ -239,6 +294,17 @@ export type MutationBankEntryAddArgs = {
 
 
 export type MutationBankEntryDeleteArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationBankTransactionAssignArgs = {
+  chargeId: Scalars['ID']['input'];
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationBankTransactionIgnoreArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -284,6 +350,11 @@ export type MutationEventUpdateArgs = {
 };
 
 
+export type MutationFioSyncArgs = {
+  groupId: Scalars['ID']['input'];
+};
+
+
 export type MutationGroupCreateArgs = {
   input: GroupInput;
 };
@@ -292,6 +363,12 @@ export type MutationGroupCreateArgs = {
 export type MutationGroupInviteRespondArgs = {
   accept: Scalars['Boolean']['input'];
   memberId: Scalars['ID']['input'];
+};
+
+
+export type MutationGroupSetFioTokenArgs = {
+  groupId: Scalars['ID']['input'];
+  token?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -346,8 +423,23 @@ export type MutationRegistrationSetArgs = {
 };
 
 
+export type MutationRegistrationSetExcusedArgs = {
+  eventId: Scalars['ID']['input'];
+  excused: Scalars['Boolean']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+
 export type MutationRoleSaveArgs = {
   name: Scalars['String']['input'];
+};
+
+
+export type MutationScoreSetArgs = {
+  assists: Scalars['Int']['input'];
+  eventId: Scalars['ID']['input'];
+  goals: Scalars['Int']['input'];
+  userId: Scalars['ID']['input'];
 };
 
 
@@ -431,6 +523,28 @@ export type PeriodInput = {
   venueId?: InputMaybe<Scalars['ID']['input']>;
 };
 
+/** Statistiky hráče za období (jen odehrané, nezrušené termíny). */
+export type PlayerStats = {
+  __typename?: 'PlayerStats';
+  assists: Scalars['Int']['output'];
+  attendanceRate: Scalars['Float']['output'];
+  attended: Scalars['Int']['output'];
+  charged: Scalars['Float']['output'];
+  declined: Scalars['Int']['output'];
+  /** Odehraných termínů v období. */
+  events: Scalars['Int']['output'];
+  goals: Scalars['Int']['output'];
+  /** Neomluveně odhlášen po uzávěrce. */
+  lateCancels: Scalars['Int']['output'];
+  memberType: MemberType;
+  noAnswer: Scalars['Int']['output'];
+  /** Přihlášen, ale neomluveně nepřišel. */
+  noShow: Scalars['Int']['output'];
+  paid: Scalars['Float']['output'];
+  position: Position;
+  user: PublicUser;
+};
+
 export type Position =
   | 'GOALIE'
   | 'PLAYER';
@@ -480,10 +594,16 @@ export type Recurrence =
 
 export type Registration = {
   __typename?: 'Registration';
+  assists: Scalars['Int']['output'];
   /** Potvrzení účasti organizátorem (null = nepotvrzeno). */
   attended?: Maybe<Scalars['Boolean']['output']>;
   createdAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Pozdní odhlášení / neúčast omluvena – bez pokuty. */
+  excused: Scalars['Boolean']['output'];
+  goals: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
+  /** Odhlášen po uzávěrce (organizátorem). */
+  lateCancel: Scalars['Boolean']['output'];
   position: Position;
   queuedAt?: Maybe<Scalars['DateTime']['output']>;
   source: RegistrationSource;
@@ -542,8 +662,16 @@ export type SportGroup = {
   /** Zůstatek banku skupiny v Kč. */
   bankBalance: Scalars['Float']['output'];
   bankEntries: Array<BankEntry>;
+  bankTransactions: Array<BankTransaction>;
   description?: Maybe<Scalars['String']['output']>;
   events: Array<Event>;
+  /** Pozdní odhlášení a neomluvená neúčast platí celý podíl. */
+  finesEnabled: Scalars['Boolean']['output'];
+  /** Skupina má nastavený token Fio API. */
+  fioConnected: Scalars['Boolean']['output'];
+  /** Chyba posledního stažení (null = v pořádku). */
+  fioLastError?: Maybe<Scalars['String']['output']>;
+  fioLastSyncAt?: Maybe<Scalars['DateTime']['output']>;
   /** Účet pro QR platby (IBAN). */
   iban?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
@@ -553,14 +681,29 @@ export type SportGroup = {
   name: Scalars['String']['output'];
   /** Opakované akce skupiny. */
   series: Array<EventSeries>;
+  /** Statistiky aktivních členů za období (bez zadání = aktuální sezóna září–srpen). */
+  stats: Array<PlayerStats>;
   teams: Array<Team>;
+  /** Nezaplacené platby skupiny (pro ruční spárování). */
+  unpaidCharges: Array<Charge>;
   venues: Array<Venue>;
+};
+
+
+export type SportGroupBankTransactionsArgs = {
+  status?: InputMaybe<BankTransactionStatus>;
 };
 
 
 export type SportGroupEventsArgs = {
   from?: InputMaybe<Scalars['DateTime']['input']>;
   to?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+
+export type SportGroupStatsArgs = {
+  from?: InputMaybe<Scalars['Date']['input']>;
+  to?: InputMaybe<Scalars['Date']['input']>;
 };
 
 /** Co se stalo s termíny po uložení/smazání období. */

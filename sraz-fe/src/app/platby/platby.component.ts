@@ -8,7 +8,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { toDataURL } from 'qrcode';
 import { MyChargesGQL, MyChargesQuery } from '../graphql/money.generated';
-import { gqlErrorMessage } from '../shared/labels';
+import { CHARGE_REASON, gqlErrorMessage } from '../shared/labels';
 import { spdPayment } from '../shared/spd';
 
 type Charge = MyChargesQuery['myCharges'][number];
@@ -24,6 +24,7 @@ type Charge = MyChargesQuery['myCharges'][number];
 export class PlatbyComponent {
   private chargesGQL = inject(MyChargesGQL);
   private message = inject(NzMessageService);
+  readonly chargeReason = CHARGE_REASON;
 
   charges = signal<Charge[] | null>(null);
   qr = signal(new Map<string, string>());

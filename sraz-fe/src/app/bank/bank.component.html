@@ -44,11 +44,71 @@
   </nz-table>
 
   @if (g.amOrganizer) {
-    <nz-card nzSize="small" nzTitle="Účet skupiny pro QR platby" class="space-top">
+    <nz-card nzSize="small" nzTitle="Nastavení plateb" class="space-top">
       <input nz-input placeholder="IBAN, např. CZ65 0800 0000 1920 0014 5399" style="width: 360px" [(ngModel)]="iban" />
-      &nbsp;
-      <button nz-button (click)="saveIban()" [nzLoading]="saving()">Uložit</button>
       <p class="hint">Z čísla účtu udělá IBAN každá banka (v detailu účtu). Účastníci pak u platby uvidí QR kód.</p>
+      <label nz-checkbox [(ngModel)]="finesEnabled">Pokuty za pozdní odhlášení a neúčast</label>
+      <p class="hint">Kdo se odhlásí po uzávěrce nebo nepřijde, zaplatí při vyúčtování celý podíl (jako by hrál). Omluvit ho
+        můžeš ve vyúčtování akce.</p>
+      <button nz-button (click)="saveSettings()" [nzLoading]="saving()">Uložit</button>
+    </nz-card>
+  }
+
+  @if (g.amOrganizer && fio(); as f) {
+    <nz-card nzSize="small" nzTitle="Párování plateb z Fio" class="space-top">
+      @if (f.fioConnected) {
+        <p>
+          Účet je připojený, pohyby se stahují každou hodinu.
+          @if (f.fioLastSyncAt) { Naposledy {{ f.fioLastSyncAt | date: 'd. M. y H:mm' }}. }
+        </p>
+        @if (f.fioLastError) {
+          <nz-alert nzType="warning" [nzMessage]="'Poslední stažení selhalo: ' + f.fioLastError" class="space"></nz-alert>
+        }
+        <button nz-button (click)="syncFio()" [nzLoading]="saving()">Synchronizovat</button>
+        <button nz-button nzDanger nz-popconfirm nzPopconfirmTitle="Odpojit Fio? Stažené pohyby zůstanou." (nzOnConfirm)="disconnectFio()">
+          Odpojit
+        </button>
+      } @else {
+        <input nz-input type="password" autocomplete="off" placeholder="token Fio API" style="width: 360px" [(ngModel)]="fioToken" />
+        &nbsp;
+        <button nz-button (click)="connectFio()" [nzLoading]="saving()">Připojit</button>
+        <p class="hint">
+          Token vytvoříš v internetbankingu Fio (Nastavení → API → Přidat nový token) s oprávněním
+          <strong>jen pro čtení</strong>. Příchozí platby se pak samy spárují podle variabilního symbolu.
+        </p>
+      }
+
+      @if (f.bankTransactions.length) {
+        <h4 class="space-top">Nespárované příchozí platby</h4>
+        <nz-table #txs [nzData]="f.bankTransactions" [nzShowPagination]="false" [nzFrontPagination]="false" nzSize="small">
+          <thead><tr><th>Datum</th><th>Částka</th><th>VS</th><th>Plátce</th><th>Proč</th><th>Spárovat s platbou</th><th></th></tr></thead>
+          <tbody>
+            @for (t of txs.data; track t.id) {
+              <tr>
+                <td>{{ t.bookedOn | date: 'd. M. y' }}</td>
+                <td>{{ t.amount | number: '1.0-2' }} {{ t.currency ?? 'Kč' }}</td>
+                <td>{{ t.variableSymbol ?? '—' }}</td>
+                <td>
+                  {{ t.counterName ?? t.counterAccount ?? '' }}
+                  @if (t.message) { <div class="hint">{{ t.message }}</div> }
+                </td>
+                <td>{{ t.note }}</td>
+                <td>
+                  <nz-select nzShowSearch nzAllowClear nzPlaceHolder="vyber platbu" style="width: 280px" [(ngModel)]="assignTo[t.id]">
+                    @for (c of f.unpaidCharges; track c.id) {
+                      <nz-option [nzValue]="c.id"
+                        [nzLabel]="'VS ' + c.id + ' · ' + c.user.publicName + ' · ' + c.event.name + ' ' + (c.event.startsAt | date: 'd. M.') + ' · ' + (c.amount | number: '1.0-2') + ' Kč'">
+                      </nz-option>
+                    }
+                  </nz-select>
+                  <button nz-button nzType="link" (click)="assign(t.id)">Spárovat</button>
+                </td>
+                <td><a nz-popconfirm nzPopconfirmTitle="Pohyb nesouvisí s platbami – odložit?" (nzOnConfirm)="ignore(t.id)">ignorovat</a></td>
+              </tr>
+            }
+          </tbody>
+        </nz-table>
+      }
     </nz-card>
   }
 }

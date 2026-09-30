@@ -1,0 +1,53 @@
+# Párování plateb z Fio API: pohyby na účtu skupiny a jejich spárování s platbami (VS = id platby).
+# Vše kromě fioConnected jen pro organizátora.
+
+enum BankTransactionStatus { MATCHED UNMATCHED IGNORED }
+
+"Pohyb na účtu skupiny stažený z Fio API."
+type BankTransaction {
+    id: ID!
+    bookedOn: Date!
+    "Kladně příchozí, záporně odchozí (v měně účtu)."
+    amount: Float!
+    currency: String
+    variableSymbol: String
+    counterAccount: String
+    counterName: String
+    message: String
+    status: BankTransactionStatus!
+    "Proč pohyb nešel spárovat (nebo přeplatek)."
+    note: String
+    charge: Charge
+}
+
+"Výsledek stažení pohybů."
+type FioSyncResult {
+    "Pohybů ve staženém období."
+    fetched: Int!
+    "Nově uložených."
+    created: Int!
+    matched: Int!
+    unmatched: Int!
+}
+
+extend type SportGroup {
+    "Skupina má nastavený token Fio API."
+    fioConnected: Boolean!
+    fioLastSyncAt: DateTime
+    "Chyba posledního stažení (null = v pořádku)."
+    fioLastError: String
+    bankTransactions(status: BankTransactionStatus): [BankTransaction!]!
+    "Nezaplacené platby skupiny (pro ruční spárování)."
+    unpaidCharges: [Charge!]!
+}
+
+extend type Mutation {
+    "Uloží token Fio API (jen pro čtení) a hned stáhne pohyby; null/prázdný token = odpojit (vrací null)."
+    groupSetFioToken(groupId: ID!, token: String): FioSyncResult
+    "Stáhne nové pohyby a spáruje platby."
+    fioSync(groupId: ID!): FioSyncResult!
+    "Ruční spárování pohybu s platbou."
+    bankTransactionAssign(id: ID!, chargeId: ID!): BankTransaction!
+    "Pohyb nesouvisí s platbami – odložit."
+    bankTransactionIgnore(id: ID!): BankTransaction!
+}

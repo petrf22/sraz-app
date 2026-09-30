@@ -23,6 +23,7 @@ query EventDetail($id: ID!) {
       id
       amount
       kind
+      reason
       paidAt
       paidMethod
       iban
@@ -56,6 +57,10 @@ query EventDetail($id: ID!) {
       queuedAt
       updatedAt
       attended
+      lateCancel
+      excused
+      goals
+      assists
       user {
         id
         publicName
@@ -68,6 +73,7 @@ query EventDetail($id: ID!) {
       id
       name
       amOrganizer
+      finesEnabled
       teams {
         ...TeamFields
       }

@@ -131,6 +131,24 @@ class RegistrationServiceTest extends ServiceTestSupport {
   }
 
   @Test
+  void onlyUnregistrationAfterDeadlineIsLateCancelAndReturnResetsIt() {
+    Event event = event(group, organizer, 5, 2);
+    User a = player("A"), b = player("B");
+    registrations.respond(event.getId(), a, IN, blue.getId(), RegistrationSource.WEB);
+    registrations.respond(event.getId(), b, IN, blue.getId(), RegistrationSource.WEB);
+    registrations.respond(event.getId(), b, OUT, null, RegistrationSource.WEB);
+    event.setSignupDeadline(OffsetDateTime.now().minusMinutes(1));
+
+    Registration late = registrations.setByOrganizer(event.getId(), a.getId(), OUT, null, null, organizer);
+    assertThat(late.isLateCancel()).isTrue();
+    assertThat(registrations.roster(event.getId(), organizer).stream()
+        .filter(r -> r.getUser().getId().equals(b.getId())).findFirst().orElseThrow().isLateCancel()).isFalse();
+
+    Registration back = registrations.setByOrganizer(event.getId(), a.getId(), IN, blue.getId(), null, organizer);
+    assertThat(back.isLateCancel()).isFalse();
+  }
+
+  @Test
   void nonMemberCannotRegister() {
     Event event = event(group, organizer, 5, 2);
 

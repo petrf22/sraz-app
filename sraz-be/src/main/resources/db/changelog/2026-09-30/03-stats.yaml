@@ -1,0 +1,11 @@
+# Statistiky: góly a asistence hráče na termínu (zapisuje organizátor po akci).
+databaseChangeLog:
+  - changeSet:
+      id: 2026-09-30-80-registration-goals
+      author: Petr F.
+      changes:
+        - addColumn:
+            tableName: registrations
+            columns:
+              - column: { name: goals, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: assists, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }

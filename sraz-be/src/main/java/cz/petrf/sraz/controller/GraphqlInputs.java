@@ -22,7 +22,7 @@ public final class GraphqlInputs {
     return value!=null ? java.math.BigDecimal.valueOf(value):null;
   }
 
-  public record GroupInput(String name, String description, String iban) {
+  public record GroupInput(String name, String description, String iban, Boolean finesEnabled) {
   }
 
   public record TeamInput(Long id, String name, String color, Integer sortOrder) {

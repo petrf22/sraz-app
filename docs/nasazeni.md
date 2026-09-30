@@ -40,6 +40,9 @@ Odškrtávej rovnou v tomhle souboru a commituj (k datu dopiš, kdy bylo ověře
   - `POSTGRES_PASSWORD` — `openssl rand -hex 32` (**ne base64**: jde přes `${}` interpolaci
     v compose, kde by se znak `$` expandoval)
   - `JWT_SECRET` — `openssl rand -base64 64 | tr -d '\n'` (jde přes `env_file` doslova)
+  - `FIO_TOKEN_KEY` — `openssl rand -base64 32` (šifruje tokeny Fio API v DB; při ztrátě klíče
+    musí organizátoři tokeny zadat znovu). **Na už běžícím serveru ho doplnit do `.env` před
+    nasazením verze s párováním plateb**, jinak backend nenastartuje.
 
 ## 2. Server
 

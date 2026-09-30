@@ -10,4 +10,6 @@ public interface ChargeRepository extends JpaRepository<Charge, Long> {
   List<Charge> findByEventIdOrderById(Long eventId);
 
   List<Charge> findByUserIdOrderByCreatedAtDesc(Long userId);
+
+  List<Charge> findByEventGroupIdAndPaidAtIsNullOrderByIdDesc(Long groupId);
 }

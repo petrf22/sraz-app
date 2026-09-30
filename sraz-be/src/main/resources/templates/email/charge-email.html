@@ -17,7 +17,9 @@
         <p th:text="${startsAt}">datum</p>
     </hgroup>
 
-    <p>Ahoj <strong th:text="${playerName}">hráči</strong>, díky za účast. Za tuto akci platíš:</p>
+    <p th:if="${fineReason == null}">Ahoj <strong th:text="${playerName}">hráči</strong>, díky za účast. Za tuto akci platíš:</p>
+    <p th:if="${fineReason != null}">Ahoj <strong th:text="${playerName}">hráči</strong>,
+        <span th:text="${fineReason}">odhlásil ses po uzávěrce</span>, a podle pravidel skupiny proto platíš celý podíl:</p>
 
     <p class="amount" th:text="${amount} + ' Kč'">200 Kč</p>
 

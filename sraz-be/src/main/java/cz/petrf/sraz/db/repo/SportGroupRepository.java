@@ -14,4 +14,6 @@ public interface SportGroupRepository extends JpaRepository<SportGroup, Long> {
       order by g.name
       """)
   List<SportGroup> findActiveForUser(Long userId);
+
+  List<SportGroup> findByFioTokenEncIsNotNull();
 }

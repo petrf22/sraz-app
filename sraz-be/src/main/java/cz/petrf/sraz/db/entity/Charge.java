@@ -30,6 +30,11 @@ public class Charge extends BaseEntity {
   @Column(nullable = false)
   private ChargeKind kind;
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  @Builder.Default
+  private ChargeReason reason = ChargeReason.PLAYED;
+
   @Column(nullable = false)
   private BigDecimal amount;
 
