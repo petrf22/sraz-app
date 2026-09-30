@@ -28,6 +28,29 @@ export type BankEntryKind =
   | 'EVENT'
   | 'MANUAL';
 
+/** Pohyb na účtu skupiny stažený z Fio API. */
+export type BankTransaction = {
+  __typename?: 'BankTransaction';
+  /** Kladně příchozí, záporně odchozí (v měně účtu). */
+  amount: Scalars['Float']['output'];
+  bookedOn: Scalars['Date']['output'];
+  charge?: Maybe<Charge>;
+  counterAccount?: Maybe<Scalars['String']['output']>;
+  counterName?: Maybe<Scalars['String']['output']>;
+  currency?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  message?: Maybe<Scalars['String']['output']>;
+  /** Proč pohyb nešel spárovat (nebo přeplatek). */
+  note?: Maybe<Scalars['String']['output']>;
+  status: BankTransactionStatus;
+  variableSymbol?: Maybe<Scalars['String']['output']>;
+};
+
+export type BankTransactionStatus =
+  | 'IGNORED'
+  | 'MATCHED'
+  | 'UNMATCHED';
+
 /** Platba účastníka za termín; variabilní symbol = id. */
 export type Charge = {
   __typename?: 'Charge';
@@ -141,6 +164,17 @@ export type EventSummary = {
   waitlist: Scalars['Int']['output'];
 };
 
+/** Výsledek stažení pohybů. */
+export type FioSyncResult = {
+  __typename?: 'FioSyncResult';
+  /** Nově uložených. */
+  created: Scalars['Int']['output'];
+  /** Pohybů ve staženém období. */
+  fetched: Scalars['Int']['output'];
+  matched: Scalars['Int']['output'];
+  unmatched: Scalars['Int']['output'];
+};
+
 export type GroupInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   /** Pokuty za pozdní odhlášení a neúčast (celý podíl). */
@@ -194,6 +228,10 @@ export type Mutation = {
   /** Ruční pohyb v banku (kladně příjem, záporně výdaj). */
   bankEntryAdd: BankEntry;
   bankEntryDelete: Scalars['Boolean']['output'];
+  /** Ruční spárování pohybu s platbou. */
+  bankTransactionAssign: BankTransaction;
+  /** Pohyb nesouvisí s platbami – odložit. */
+  bankTransactionIgnore: BankTransaction;
   chargeSetPaid: Charge;
   eventCancel: Event;
   /** Uzavře vyúčtování: vzniknou platby a pohyb v banku. */
@@ -204,8 +242,12 @@ export type Mutation = {
   /** Rozešle pozvánky hned (vrací počet odeslaných e-mailů). */
   eventSendInvitations: Scalars['Int']['output'];
   eventUpdate: Event;
+  /** Stáhne nové pohyby a spáruje platby. */
+  fioSync: FioSyncResult;
   groupCreate: SportGroup;
   groupInviteRespond: GroupMember;
+  /** Uloží token Fio API (jen pro čtení) a hned stáhne pohyby; null/prázdný token = odpojit (vrací null). */
+  groupSetFioToken?: Maybe<FioSyncResult>;
   groupUpdate: SportGroup;
   memberInvite: GroupMember;
   /** Odebrání člena organizátorem nebo odchod ze skupiny. */
@@ -256,6 +298,17 @@ export type MutationBankEntryDeleteArgs = {
 };
 
 
+export type MutationBankTransactionAssignArgs = {
+  chargeId: Scalars['ID']['input'];
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationBankTransactionIgnoreArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationChargeSetPaidArgs = {
   id: Scalars['ID']['input'];
   method?: InputMaybe<PaymentMethod>;
@@ -297,6 +350,11 @@ export type MutationEventUpdateArgs = {
 };
 
 
+export type MutationFioSyncArgs = {
+  groupId: Scalars['ID']['input'];
+};
+
+
 export type MutationGroupCreateArgs = {
   input: GroupInput;
 };
@@ -305,6 +363,12 @@ export type MutationGroupCreateArgs = {
 export type MutationGroupInviteRespondArgs = {
   accept: Scalars['Boolean']['input'];
   memberId: Scalars['ID']['input'];
+};
+
+
+export type MutationGroupSetFioTokenArgs = {
+  groupId: Scalars['ID']['input'];
+  token?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -598,10 +662,16 @@ export type SportGroup = {
   /** Zůstatek banku skupiny v Kč. */
   bankBalance: Scalars['Float']['output'];
   bankEntries: Array<BankEntry>;
+  bankTransactions: Array<BankTransaction>;
   description?: Maybe<Scalars['String']['output']>;
   events: Array<Event>;
   /** Pozdní odhlášení a neomluvená neúčast platí celý podíl. */
   finesEnabled: Scalars['Boolean']['output'];
+  /** Skupina má nastavený token Fio API. */
+  fioConnected: Scalars['Boolean']['output'];
+  /** Chyba posledního stažení (null = v pořádku). */
+  fioLastError?: Maybe<Scalars['String']['output']>;
+  fioLastSyncAt?: Maybe<Scalars['DateTime']['output']>;
   /** Účet pro QR platby (IBAN). */
   iban?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
@@ -614,7 +684,14 @@ export type SportGroup = {
   /** Statistiky aktivních členů za období (bez zadání = aktuální sezóna září–srpen). */
   stats: Array<PlayerStats>;
   teams: Array<Team>;
+  /** Nezaplacené platby skupiny (pro ruční spárování). */
+  unpaidCharges: Array<Charge>;
   venues: Array<Venue>;
+};
+
+
+export type SportGroupBankTransactionsArgs = {
+  status?: InputMaybe<BankTransactionStatus>;
 };
 
 

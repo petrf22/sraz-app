@@ -1,0 +1,64 @@
+query GroupFio($id: ID!) {
+  group(id: $id) {
+    id
+    fioConnected
+    fioLastSyncAt
+    fioLastError
+    bankTransactions(status: UNMATCHED) {
+      id
+      bookedOn
+      amount
+      currency
+      variableSymbol
+      counterAccount
+      counterName
+      message
+      note
+    }
+    unpaidCharges {
+      id
+      amount
+      user {
+        id
+        publicName
+      }
+      event {
+        id
+        name
+        startsAt
+      }
+    }
+  }
+}
+
+mutation GroupSetFioToken($groupId: ID!, $token: String) {
+  groupSetFioToken(groupId: $groupId, token: $token) {
+    fetched
+    created
+    matched
+    unmatched
+  }
+}
+
+mutation FioSync($groupId: ID!) {
+  fioSync(groupId: $groupId) {
+    fetched
+    created
+    matched
+    unmatched
+  }
+}
+
+mutation BankTransactionAssign($id: ID!, $chargeId: ID!) {
+  bankTransactionAssign(id: $id, chargeId: $chargeId) {
+    id
+    status
+  }
+}
+
+mutation BankTransactionIgnore($id: ID!) {
+  bankTransactionIgnore(id: $id) {
+    id
+    status
+  }
+}
