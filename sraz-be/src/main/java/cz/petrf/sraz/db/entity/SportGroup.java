@@ -16,4 +16,7 @@ public class SportGroup extends BaseEntity {
   private String name;
 
   private String description;
+
+  /** Účet skupiny pro QR platby (IBAN). */
+  private String iban;
 }

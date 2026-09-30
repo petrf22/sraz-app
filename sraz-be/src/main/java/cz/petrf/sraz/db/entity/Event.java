@@ -3,6 +3,7 @@ package cz.petrf.sraz.db.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 /**
@@ -74,6 +75,16 @@ public class Event extends BaseEntity {
 
   @Column(columnDefinition = "TIMESTAMPTZ")
   private OffsetDateTime deadlineSummarySentAt;
+
+  /** Cena ledu/hřiště za hodinu (null = akce zdarma). */
+  private BigDecimal pricePerHour;
+
+  /** Poplatek stálého člena – platí max(poplatek, podíl). */
+  private BigDecimal regularFee;
+
+  /** Vyúčtování uzavřeno (vznikly platby a pohyb v banku). */
+  @Column(columnDefinition = "TIMESTAMPTZ")
+  private OffsetDateTime closedAt;
 
   public boolean isSignupOpen(OffsetDateTime now) {
     return (status==EventStatus.PLANNED || status==EventStatus.OPEN) && now.isBefore(signupDeadline);

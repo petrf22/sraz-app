@@ -42,4 +42,7 @@ public class Registration extends BaseEntity {
   /** Pořadí ve frontě – kdy se hráč zařadil do WAITLIST. */
   @Column(columnDefinition = "TIMESTAMPTZ")
   private OffsetDateTime queuedAt;
+
+  /** Potvrzení účasti organizátorem po akci (null = zatím nepotvrzeno). */
+  private Boolean attended;
 }

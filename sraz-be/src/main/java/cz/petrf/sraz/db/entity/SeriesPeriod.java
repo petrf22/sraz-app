@@ -3,6 +3,7 @@ package cz.petrf.sraz.db.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -60,6 +61,10 @@ public class SeriesPeriod extends BaseEntity {
   private int inviteRegularsHoursBefore;
   private int inviteSubstitutesHoursBefore;
   private Integer reminderHoursBefore;
+  /** Cena ledu/hřiště za hodinu (null = akce zdarma). */
+  private BigDecimal pricePerHour;
+  /** Poplatek stálého člena – platí max(poplatek, podíl). */
+  private BigDecimal regularFee;
   private String note;
 
   public List<DayOfWeek> days() {
