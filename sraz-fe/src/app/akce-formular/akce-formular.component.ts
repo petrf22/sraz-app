@@ -1,4 +1,4 @@
-import { Component, effect, input, output } from '@angular/core';
+import { Component, effect, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
@@ -51,6 +51,7 @@ export function emptyEventForm(): EventFormValue {
 @Component({
   selector: 'app-akce-formular',
   imports: [FormsModule, NzButtonModule, NzDatePickerModule, NzFormModule, NzInputModule, NzInputNumberModule, NzSelectModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './akce-formular.component.html',
 })
 export class AkceFormularComponent {

@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { NzAlertModule } from 'ng-zorro-antd/alert';
@@ -30,6 +30,7 @@ interface PendingChoice {
   selector: 'app-prihlaska',
   imports: [DatePipe, NzAlertModule, NzButtonModule, NzCardModule, NzGridModule, NzIconModule, NzSpinModule, NzTagModule],
   templateUrl: './prihlaska.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './prihlaska.component.scss',
 })
 export class PrihlaskaComponent {

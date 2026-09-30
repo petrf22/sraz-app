@@ -1,4 +1,4 @@
-import { Component, inject, input, OnInit, signal } from '@angular/core';
+import { Component, inject, input, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -22,6 +22,7 @@ function dayKey(d: Date): string {
   selector: 'app-kalendar',
   imports: [DatePipe, FormsModule, RouterLink, NzBadgeModule, NzCalendarModule],
   templateUrl: './kalendar.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './kalendar.component.scss',
 })
 export class KalendarComponent implements OnInit {

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -21,6 +21,7 @@ import { gqlErrorMessage, MEMBER_TYPE, REGISTRATION_COLOR, REGISTRATION_STATUS }
   selector: 'app-prehled',
   imports: [DatePipe, FormsModule, RouterLink, NzButtonModule, NzCardModule, NzEmptyModule, NzGridModule, NzInputModule,
     NzListModule, NzModalModule, NzTagModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './prehled.component.html',
 })
 export class PrehledComponent {

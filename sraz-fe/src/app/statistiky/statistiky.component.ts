@@ -1,4 +1,4 @@
-import { Component, inject, input, OnInit, signal } from '@angular/core';
+import { Component, inject, input, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DecimalPipe, PercentPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -23,6 +23,7 @@ export function toCsv(header: string[], rows: (string | number)[][]): string {
 @Component({
   selector: 'app-statistiky',
   imports: [DecimalPipe, PercentPipe, FormsModule, NzButtonModule, NzDatePickerModule, NzTableModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './statistiky.component.html',
 })
 export class StatistikyComponent implements OnInit {

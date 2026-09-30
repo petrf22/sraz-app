@@ -1,4 +1,4 @@
-import { Component, inject, input, OnInit, signal } from '@angular/core';
+import { Component, inject, input, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -35,6 +35,7 @@ import { gqlErrorMessage } from '../shared/labels';
   selector: 'app-bank',
   imports: [DatePipe, DecimalPipe, FormsModule, RouterLink, NzAlertModule, NzButtonModule, NzCardModule, NzCheckboxModule, NzInputModule,
     NzInputNumberModule, NzPopconfirmModule, NzSelectModule, NzStatisticModule, NzTableModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './bank.component.html',
 })
 export class BankComponent implements OnInit {

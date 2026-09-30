@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -44,6 +44,7 @@ type Team = EventDetail['group']['teams'][number];
   imports: [DatePipe, DecimalPipe, FormsModule, NzCheckboxModule, NzInputNumberModule, NzPopconfirmModule, RouterLink, AkceFormularComponent, NzAlertModule, NzButtonModule, NzCardModule, NzGridModule,
     NzInputModule, NzModalModule, NzSelectModule, NzTableModule, NzTagModule],
   templateUrl: './akce.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './akce.component.scss',
 })
 export class AkceComponent {
