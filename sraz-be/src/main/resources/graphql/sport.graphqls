@@ -8,6 +8,9 @@ enum EventStatus { PLANNED OPEN LOCKED DONE CANCELLED }
 enum RegistrationStatus { IN OUT WAITLIST }
 enum RegistrationSource { EMAIL_LINK WEB ORGANIZER }
 enum Recurrence { WEEKLY MONTHLY }
+enum ChargeKind { REGULAR SUBSTITUTE GOALIE }
+enum PaymentMethod { CASH TRANSFER }
+enum BankEntryKind { EVENT MANUAL }
 enum DayOfWeek { MONDAY TUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY SUNDAY }
 
 "Veřejně viditelné údaje o uživateli (bez e-mailu)."
@@ -29,6 +32,11 @@ type SportGroup {
     events(from: DateTime, to: DateTime): [Event!]!
     "Opakované akce skupiny."
     series: [EventSeries!]!
+    "Účet pro QR platby (IBAN)."
+    iban: String
+    "Zůstatek banku skupiny v Kč."
+    bankBalance: Float!
+    bankEntries: [BankEntry!]!
 }
 
 type Team {
@@ -83,6 +91,14 @@ type Event {
     detached: Boolean!
     "Připomínka přihlášeným X hodin před začátkem (null = bez připomínky)."
     reminderHoursBefore: Int
+    "Cena ledu/hřiště za hodinu v Kč (null = zdarma)."
+    pricePerHour: Float
+    "Poplatek stálého člena – platí max(poplatek, podíl)."
+    regularFee: Float
+    "Kdy bylo vyúčtování uzavřeno (null = otevřené)."
+    closedAt: DateTime
+    "Platby: organizátor vidí všechny, člen jen svou."
+    charges: [Charge!]!
     "Lze se ještě sám přihlásit/odhlásit (před uzávěrkou, akce není zrušená)."
     signupOpen: Boolean!
     registrations: [Registration!]!
@@ -98,6 +114,8 @@ type Registration {
     team: Team
     source: RegistrationSource!
     queuedAt: DateTime
+    "Potvrzení účasti organizátorem (null = nepotvrzeno)."
+    attended: Boolean
     createdAt: DateTime
     updatedAt: DateTime
 }
@@ -129,6 +147,8 @@ type SeriesPeriod {
     inviteRegularsHoursBefore: Int!
     inviteSubstitutesHoursBefore: Int!
     reminderHoursBefore: Int
+    pricePerHour: Float
+    regularFee: Float
     note: String
 }
 
@@ -139,6 +159,30 @@ type SyncResult {
     removed: Int!
     "Termíny s přihláškami/pozvánkami, zrušené nebo ručně upravené – zůstaly beze změny."
     kept: Int!
+}
+
+"Platba účastníka za termín; variabilní symbol = id."
+type Charge {
+    id: ID!
+    event: Event!
+    user: PublicUser!
+    kind: ChargeKind!
+    amount: Float!
+    paidAt: DateTime
+    paidMethod: PaymentMethod
+    "IBAN skupiny pro QR platbu (null = platit organizátorovi)."
+    iban: String
+}
+
+type BankEntry {
+    id: ID!
+    kind: BankEntryKind!
+    "Kladně příjem, záporně výdaj (Kč)."
+    amount: Float!
+    description: String!
+    event: Event
+    createdBy: PublicUser
+    createdAt: DateTime
 }
 
 type EventSummary {
@@ -152,6 +196,8 @@ type EventSummary {
 input GroupInput {
     name: String!
     description: String
+    "IBAN pro QR platby (prázdné = bez účtu)."
+    iban: String
 }
 
 input TeamInput {
@@ -194,6 +240,8 @@ input EventInput {
     inviteRegularsHoursBefore: Int
     inviteSubstitutesHoursBefore: Int
     reminderHoursBefore: Int
+    pricePerHour: Float
+    regularFee: Float
     note: String
 }
 
@@ -215,6 +263,8 @@ input PeriodInput {
     inviteRegularsHoursBefore: Int
     inviteSubstitutesHoursBefore: Int
     reminderHoursBefore: Int
+    pricePerHour: Float
+    regularFee: Float
     note: String
 }
 
@@ -228,6 +278,8 @@ extend type Query {
     myGroupInvites: [GroupMember!]!
     "Náhled termínů období před uložením."
     periodPreview(input: PeriodInput!): [DateTime!]!
+    "Moje platby (nejnovější první)."
+    myCharges: [Charge!]!
 }
 
 extend type Mutation {
@@ -259,6 +311,17 @@ extend type Mutation {
     "Uloží období (id = null → nové) a srovná s ním budoucí termíny."
     periodSave(seriesId: ID!, id: ID, input: PeriodInput!): SyncResult!
     periodDelete(id: ID!): SyncResult!
+
+    "Potvrzení účasti po akci (jen u přihlášeného člena)."
+    attendanceSet(eventId: ID!, userId: ID!, attended: Boolean!): Registration!
+    "Uzavře vyúčtování: vzniknou platby a pohyb v banku."
+    eventClose(id: ID!): [Charge!]!
+    "Znovu otevře vyúčtování – jen dokud nikdo nezaplatil."
+    eventReopen(id: ID!): Event!
+    chargeSetPaid(id: ID!, paid: Boolean!, method: PaymentMethod): Charge!
+    "Ruční pohyb v banku (kladně příjem, záporně výdaj)."
+    bankEntryAdd(groupId: ID!, amount: Float!, description: String!): BankEntry!
+    bankEntryDelete(id: ID!): Boolean!
 
     "Organizátor nastaví přihlášku libovolnému členovi (i po uzávěrce)."
     registrationSet(eventId: ID!, userId: ID!, status: RegistrationStatus!, teamId: ID, position: Position): Registration!

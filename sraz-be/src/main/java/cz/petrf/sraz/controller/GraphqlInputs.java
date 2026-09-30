@@ -17,6 +17,11 @@ public final class GraphqlInputs {
   private GraphqlInputs() {
   }
 
+  /** Částka z GraphQL Float (Kč). */
+  public static java.math.BigDecimal money(Double value) {
+    return value!=null ? java.math.BigDecimal.valueOf(value):null;
+  }
+
   public record GroupInput(String name, String description, String iban) {
   }
 
@@ -35,13 +40,14 @@ public final class GraphqlInputs {
   public record EventInput(String name, OffsetDateTime startsAt, Integer durationMinutes, Long venueId,
                            Integer maxPlayersPerTeam, Integer maxGoalies, OffsetDateTime signupDeadline,
                            Integer inviteRegularsHoursBefore, Integer inviteSubstitutesHoursBefore,
-                           Integer reminderHoursBefore, String note) {
+                           Integer reminderHoursBefore, Double pricePerHour, Double regularFee, String note) {
   }
 
   public record PeriodInput(LocalDate validFrom, LocalDate validTo, Recurrence recurrence, Integer intervalCount,
                             List<DayOfWeek> daysOfWeek, List<Integer> monthWeeks, String startTime,
                             Integer durationMinutes, Long venueId, Integer maxPlayersPerTeam, Integer maxGoalies,
                             Integer deadlineHoursBefore, Integer inviteRegularsHoursBefore,
-                            Integer inviteSubstitutesHoursBefore, Integer reminderHoursBefore, String note) {
+                            Integer inviteSubstitutesHoursBefore, Integer reminderHoursBefore,
+                            Double pricePerHour, Double regularFee, String note) {
   }
 }

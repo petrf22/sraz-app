@@ -108,6 +108,8 @@ public class EventGraphqlController {
         .inviteRegularsHoursBefore(in.inviteRegularsHoursBefore())
         .inviteSubstitutesHoursBefore(in.inviteSubstitutesHoursBefore())
         .reminderHoursBefore(in.reminderHoursBefore())
+        .pricePerHour(GraphqlInputs.money(in.pricePerHour()))
+        .regularFee(GraphqlInputs.money(in.regularFee()))
         .note(in.note())
         .build();
   }
