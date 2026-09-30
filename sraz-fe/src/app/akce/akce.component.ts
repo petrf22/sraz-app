@@ -24,13 +24,13 @@ import {
 } from '../graphql/event.generated';
 import { EventInput, MemberType, RegistrationStatus } from '../graphql/graphql-types';
 import { AkceFormularComponent, EventFormValue } from '../akce-formular/akce-formular.component';
-import { AttendanceSetGQL, ChargeSetPaidGQL, EventCloseGQL, EventReopenGQL } from '../graphql/money.generated';
+import { AttendanceSetGQL, ChargeSetPaidGQL, EventCloseGQL, EventReopenGQL, RegistrationSetExcusedGQL } from '../graphql/money.generated';
 import { ScoreSetGQL } from '../graphql/stats.generated';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { DecimalPipe } from '@angular/common';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
-import { CHARGE_KIND, EVENT_STATUS, gqlErrorMessage, MEMBER_TYPE, POSITION, REGISTRATION_COLOR, REGISTRATION_STATUS } from '../shared/labels';
+import { CHARGE_KIND, CHARGE_REASON, EVENT_STATUS, gqlErrorMessage, MEMBER_TYPE, POSITION, REGISTRATION_COLOR, REGISTRATION_STATUS } from '../shared/labels';
 
 type EventDetail = EventDetailQuery['event'];
 type Team = EventDetail['group']['teams'][number];
@@ -60,7 +60,9 @@ export class AkceComponent {
   private reopenGQL = inject(EventReopenGQL);
   private paidGQL = inject(ChargeSetPaidGQL);
   private scoreGQL = inject(ScoreSetGQL);
+  private excusedGQL = inject(RegistrationSetExcusedGQL);
   readonly chargeKind = CHARGE_KIND;
+  readonly chargeReason = CHARGE_REASON;
 
   readonly eventStatus = EVENT_STATUS;
   readonly regStatus = REGISTRATION_STATUS;
@@ -86,6 +88,12 @@ export class AkceComponent {
   attendees = computed(() =>
     (this.event()?.registrations ?? [])
       .filter((r) => r.status === 'IN')
+      .sort((a, b) => a.user.publicName.localeCompare(b.user.publicName, 'cs')),
+  );
+  /** Odhlášení po uzávěrce – při zapnutých pokutách platí celý podíl, pokud je organizátor neomluví. */
+  lateCancels = computed(() =>
+    (this.event()?.registrations ?? [])
+      .filter((r) => r.status === 'OUT' && r.lateCancel)
       .sort((a, b) => a.user.publicName.localeCompare(b.user.publicName, 'cs')),
   );
   chargesTotal = computed(() => (this.event()?.charges ?? []).reduce((s, c) => s + c.amount, 0));
@@ -211,6 +219,10 @@ export class AkceComponent {
 
   setAttendance(userId: string, attended: boolean): void {
     this.run(this.attendanceGQL.mutate({ variables: { eventId: this.eventId, userId, attended } }), attended ? 'Přišel.' : 'Nepřišel.');
+  }
+
+  setExcused(userId: string, excused: boolean): void {
+    this.run(this.excusedGQL.mutate({ variables: { eventId: this.eventId, userId, excused } }), excused ? 'Omluveno.' : 'Omluva zrušena.');
   }
 
   setScore(userId: string, goals: number | null, assists: number | null): void {

@@ -39,6 +39,7 @@ export type Charge = {
   kind: ChargeKind;
   paidAt?: Maybe<Scalars['DateTime']['output']>;
   paidMethod?: Maybe<PaymentMethod>;
+  reason: ChargeReason;
   user: PublicUser;
 };
 
@@ -46,6 +47,12 @@ export type ChargeKind =
   | 'GOALIE'
   | 'REGULAR'
   | 'SUBSTITUTE';
+
+/** Za co se platí: odehraná akce, nebo pokuta (celý podíl) za pozdní odhlášení / neomluvenou neúčast. */
+export type ChargeReason =
+  | 'LATE_CANCEL'
+  | 'NO_SHOW'
+  | 'PLAYED';
 
 export type DayOfWeek =
   | 'FRIDAY'
@@ -136,6 +143,8 @@ export type EventSummary = {
 
 export type GroupInput = {
   description?: InputMaybe<Scalars['String']['input']>;
+  /** Pokuty za pozdní odhlášení a neúčast (celý podíl). */
+  finesEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   /** IBAN pro QR platby (prázdné = bez účtu). */
   iban?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
@@ -209,6 +218,8 @@ export type Mutation = {
   registrationRespond: Registration;
   /** Organizátor nastaví přihlášku libovolnému členovi (i po uzávěrce). */
   registrationSet: Registration;
+  /** Omluví pozdní odhlášení / neúčast – bez pokuty. */
+  registrationSetExcused: Registration;
   roleSave?: Maybe<Role>;
   /** Góly a asistence hráče na termínu. */
   scoreSet: Registration;
@@ -348,6 +359,13 @@ export type MutationRegistrationSetArgs = {
 };
 
 
+export type MutationRegistrationSetExcusedArgs = {
+  eventId: Scalars['ID']['input'];
+  excused: Scalars['Boolean']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+
 export type MutationRoleSaveArgs = {
   name: Scalars['String']['input'];
 };
@@ -452,9 +470,11 @@ export type PlayerStats = {
   /** Odehraných termínů v období. */
   events: Scalars['Int']['output'];
   goals: Scalars['Int']['output'];
+  /** Neomluveně odhlášen po uzávěrce. */
+  lateCancels: Scalars['Int']['output'];
   memberType: MemberType;
   noAnswer: Scalars['Int']['output'];
-  /** Přihlášen, ale nepřišel. */
+  /** Přihlášen, ale neomluveně nepřišel. */
   noShow: Scalars['Int']['output'];
   paid: Scalars['Float']['output'];
   position: Position;
@@ -514,8 +534,12 @@ export type Registration = {
   /** Potvrzení účasti organizátorem (null = nepotvrzeno). */
   attended?: Maybe<Scalars['Boolean']['output']>;
   createdAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Pozdní odhlášení / neúčast omluvena – bez pokuty. */
+  excused: Scalars['Boolean']['output'];
   goals: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
+  /** Odhlášen po uzávěrce (organizátorem). */
+  lateCancel: Scalars['Boolean']['output'];
   position: Position;
   queuedAt?: Maybe<Scalars['DateTime']['output']>;
   source: RegistrationSource;
@@ -576,6 +600,8 @@ export type SportGroup = {
   bankEntries: Array<BankEntry>;
   description?: Maybe<Scalars['String']['output']>;
   events: Array<Event>;
+  /** Pozdní odhlášení a neomluvená neúčast platí celý podíl. */
+  finesEnabled: Scalars['Boolean']['output'];
   /** Účet pro QR platby (IBAN). */
   iban?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];

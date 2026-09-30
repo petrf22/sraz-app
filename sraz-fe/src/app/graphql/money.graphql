@@ -3,6 +3,7 @@ query MyCharges {
     id
     amount
     kind
+    reason
     paidAt
     paidMethod
     iban
@@ -24,6 +25,7 @@ query GroupBank($id: ID!) {
     name
     description
     iban
+    finesEnabled
     amOrganizer
     bankBalance
     bankEntries {
@@ -49,6 +51,13 @@ mutation AttendanceSet($eventId: ID!, $userId: ID!, $attended: Boolean!) {
   attendanceSet(eventId: $eventId, userId: $userId, attended: $attended) {
     id
     attended
+  }
+}
+
+mutation RegistrationSetExcused($eventId: ID!, $userId: ID!, $excused: Boolean!) {
+  registrationSetExcused(eventId: $eventId, userId: $userId, excused: $excused) {
+    id
+    excused
   }
 }
 

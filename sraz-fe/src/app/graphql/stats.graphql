@@ -12,6 +12,7 @@ query GroupStats($id: ID!, $from: Date, $to: Date) {
       events
       attended
       noShow
+      lateCancels
       declined
       noAnswer
       attendanceRate

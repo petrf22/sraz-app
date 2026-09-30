@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCardModule } from 'ng-zorro-antd/card';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -16,12 +17,12 @@ import { GroupUpdateGQL } from '../graphql/group.generated';
 import { gqlErrorMessage } from '../shared/labels';
 
 /**
- * Bank skupiny: zůstatek, pohyby z vyúčtování akcí a ruční pohyby; organizátor zadává i účet
- * skupiny (IBAN) pro QR platby.
+ * Bank skupiny: zůstatek, pohyby z vyúčtování akcí a ruční pohyby; organizátor nastavuje i účet
+ * skupiny (IBAN) pro QR platby a pokuty za pozdní odhlášení / neúčast.
  */
 @Component({
   selector: 'app-bank',
-  imports: [DatePipe, DecimalPipe, FormsModule, RouterLink, NzButtonModule, NzCardModule, NzInputModule, NzInputNumberModule,
+  imports: [DatePipe, DecimalPipe, FormsModule, RouterLink, NzButtonModule, NzCardModule, NzCheckboxModule, NzInputModule, NzInputNumberModule,
     NzPopconfirmModule, NzStatisticModule, NzTableModule],
   templateUrl: './bank.component.html',
 })
@@ -39,6 +40,7 @@ export class BankComponent implements OnInit {
   amount: number | null = null;
   description = '';
   iban = '';
+  finesEnabled = false;
 
   ngOnInit(): void {
     this.load();
@@ -49,6 +51,7 @@ export class BankComponent implements OnInit {
       next: (r) => {
         this.data.set(r.data?.group ?? null);
         this.iban = r.data?.group.iban ?? '';
+        this.finesEnabled = r.data?.group.finesEnabled ?? false;
       },
       error: (e) => this.message.error(gqlErrorMessage(e)),
     });
@@ -89,12 +92,14 @@ export class BankComponent implements OnInit {
     this.run(this.deleteGQL.mutate({ variables: { id } }), 'Pohyb smazán.');
   }
 
-  saveIban(): void {
+  saveSettings(): void {
     const g = this.data();
     if (g) {
       this.run(
-        this.groupUpdateGQL.mutate({ variables: { id: g.id, input: { name: g.name, description: g.description, iban: this.iban } } }),
-        this.iban.trim() ? 'Účet uložen – platby půjdou zaplatit QR kódem.' : 'Účet odebrán.',
+        this.groupUpdateGQL.mutate({
+          variables: { id: g.id, input: { name: g.name, description: g.description, iban: this.iban, finesEnabled: this.finesEnabled } },
+        }),
+        'Nastavení plateb uloženo.',
       );
     }
   }

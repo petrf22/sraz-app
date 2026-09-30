@@ -13,6 +13,12 @@ export type ChargeKind =
   | 'REGULAR'
   | 'SUBSTITUTE';
 
+/** Za co se platí: odehraná akce, nebo pokuta (celý podíl) za pozdní odhlášení / neomluvenou neúčast. */
+export type ChargeReason =
+  | 'LATE_CANCEL'
+  | 'NO_SHOW'
+  | 'PLAYED';
+
 /** Nevyplněné hodnoty = výchozí nastavení (60 min, 10 hráčů na tým, 2 brankáři, pozvánky 96/48 h předem, uzávěrka 24 h předem). */
 export type EventInput = {
   durationMinutes?: number | null | undefined;
@@ -70,7 +76,7 @@ export type EventDetailQueryVariables = Exact<{
 }>;
 
 
-export type EventDetailQuery = { event: { id: string, name: string, startsAt: string, durationMinutes: number, maxPlayersPerTeam: number, maxGoalies: number, signupDeadline: string, inviteRegularsHoursBefore: number, inviteSubstitutesHoursBefore: number, regularsInvitedAt: string | null, substitutesInvitedAt: string | null, status: Types.EventStatus, note: string | null, signupOpen: boolean, detached: boolean, reminderHoursBefore: number | null, pricePerHour: number | null, regularFee: number | null, closedAt: string | null, charges: Array<{ id: string, amount: number, kind: Types.ChargeKind, paidAt: string | null, paidMethod: Types.PaymentMethod | null, iban: string | null, user: { id: string, publicName: string } }>, series: { id: string, name: string } | null, venue: { id: string, name: string, address: string | null, mapUrl: string | null, latitude: number | null, longitude: number | null } | null, summary: { players: number, maxPlayers: number, goalies: number, maxGoalies: number, waitlist: number }, myRegistration: { id: string, status: Types.RegistrationStatus, team: { id: string } | null } | null, registrations: Array<{ id: string, status: Types.RegistrationStatus, position: Types.Position, source: Types.RegistrationSource, queuedAt: string | null, updatedAt: string | null, attended: boolean | null, goals: number, assists: number, user: { id: string, publicName: string }, team: { id: string } | null }>, group: { id: string, name: string, amOrganizer: boolean, teams: Array<{ id: string, name: string, color: string | null, sortOrder: number }>, venues: Array<{ id: string, name: string, address: string | null, mapUrl: string | null, latitude: number | null, longitude: number | null }>, members: Array<{ id: string, status: Types.MembershipStatus, position: Types.Position, memberType: Types.MemberType, user: { id: string, publicName: string } | null }> } } };
+export type EventDetailQuery = { event: { id: string, name: string, startsAt: string, durationMinutes: number, maxPlayersPerTeam: number, maxGoalies: number, signupDeadline: string, inviteRegularsHoursBefore: number, inviteSubstitutesHoursBefore: number, regularsInvitedAt: string | null, substitutesInvitedAt: string | null, status: Types.EventStatus, note: string | null, signupOpen: boolean, detached: boolean, reminderHoursBefore: number | null, pricePerHour: number | null, regularFee: number | null, closedAt: string | null, charges: Array<{ id: string, amount: number, kind: Types.ChargeKind, reason: Types.ChargeReason, paidAt: string | null, paidMethod: Types.PaymentMethod | null, iban: string | null, user: { id: string, publicName: string } }>, series: { id: string, name: string } | null, venue: { id: string, name: string, address: string | null, mapUrl: string | null, latitude: number | null, longitude: number | null } | null, summary: { players: number, maxPlayers: number, goalies: number, maxGoalies: number, waitlist: number }, myRegistration: { id: string, status: Types.RegistrationStatus, team: { id: string } | null } | null, registrations: Array<{ id: string, status: Types.RegistrationStatus, position: Types.Position, source: Types.RegistrationSource, queuedAt: string | null, updatedAt: string | null, attended: boolean | null, lateCancel: boolean, excused: boolean, goals: number, assists: number, user: { id: string, publicName: string }, team: { id: string } | null }>, group: { id: string, name: string, amOrganizer: boolean, finesEnabled: boolean, teams: Array<{ id: string, name: string, color: string | null, sortOrder: number }>, venues: Array<{ id: string, name: string, address: string | null, mapUrl: string | null, latitude: number | null, longitude: number | null }>, members: Array<{ id: string, status: Types.MembershipStatus, position: Types.Position, memberType: Types.MemberType, user: { id: string, publicName: string } | null }> } } };
 
 export type EventCreateMutationVariables = Exact<{
   groupId: string | number;
@@ -150,6 +156,7 @@ export const EventDetailDocument = gql`
       id
       amount
       kind
+      reason
       paidAt
       paidMethod
       iban
@@ -183,6 +190,8 @@ export const EventDetailDocument = gql`
       queuedAt
       updatedAt
       attended
+      lateCancel
+      excused
       goals
       assists
       user {
@@ -197,6 +206,7 @@ export const EventDetailDocument = gql`
       id
       name
       amOrganizer
+      finesEnabled
       teams {
         ...TeamFields
       }

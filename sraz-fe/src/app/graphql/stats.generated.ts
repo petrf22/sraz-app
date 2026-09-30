@@ -22,7 +22,7 @@ export type GroupStatsQueryVariables = Exact<{
 }>;
 
 
-export type GroupStatsQuery = { group: { id: string, name: string, stats: Array<{ memberType: Types.MemberType, position: Types.Position, events: number, attended: number, noShow: number, declined: number, noAnswer: number, attendanceRate: number, goals: number, assists: number, charged: number, paid: number, user: { id: string, publicName: string } }> } };
+export type GroupStatsQuery = { group: { id: string, name: string, stats: Array<{ memberType: Types.MemberType, position: Types.Position, events: number, attended: number, noShow: number, lateCancels: number, declined: number, noAnswer: number, attendanceRate: number, goals: number, assists: number, charged: number, paid: number, user: { id: string, publicName: string } }> } };
 
 export type ScoreSetMutationVariables = Exact<{
   eventId: string | number;
@@ -49,6 +49,7 @@ export const GroupStatsDocument = gql`
       events
       attended
       noShow
+      lateCancels
       declined
       noAnswer
       attendanceRate

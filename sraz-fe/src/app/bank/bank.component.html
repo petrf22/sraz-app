@@ -44,11 +44,13 @@
   </nz-table>
 
   @if (g.amOrganizer) {
-    <nz-card nzSize="small" nzTitle="Účet skupiny pro QR platby" class="space-top">
+    <nz-card nzSize="small" nzTitle="Nastavení plateb" class="space-top">
       <input nz-input placeholder="IBAN, např. CZ65 0800 0000 1920 0014 5399" style="width: 360px" [(ngModel)]="iban" />
-      &nbsp;
-      <button nz-button (click)="saveIban()" [nzLoading]="saving()">Uložit</button>
       <p class="hint">Z čísla účtu udělá IBAN každá banka (v detailu účtu). Účastníci pak u platby uvidí QR kód.</p>
+      <label nz-checkbox [(ngModel)]="finesEnabled">Pokuty za pozdní odhlášení a neúčast</label>
+      <p class="hint">Kdo se odhlásí po uzávěrce nebo nepřijde, zaplatí při vyúčtování celý podíl (jako by hrál). Omluvit ho
+        můžeš ve vyúčtování akce.</p>
+      <button nz-button (click)="saveSettings()" [nzLoading]="saving()">Uložit</button>
     </nz-card>
   }
 }

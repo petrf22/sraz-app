@@ -42,6 +42,7 @@ export class StatistikyComponent implements OnInit {
   readonly sortGoals = (a: Row, b: Row) => a.goals - b.goals;
   readonly sortAssists = (a: Row, b: Row) => a.assists - b.assists;
   readonly sortNoShow = (a: Row, b: Row) => a.noShow - b.noShow;
+  readonly sortLateCancels = (a: Row, b: Row) => a.lateCancels - b.lateCancels;
   readonly sortDebt = (a: Row, b: Row) => a.charged - a.paid - (b.charged - b.paid);
   readonly sortName = (a: Row, b: Row) => a.user.publicName.localeCompare(b.user.publicName, 'cs');
 
@@ -69,10 +70,10 @@ export class StatistikyComponent implements OnInit {
   }
 
   exportCsv(): void {
-    const header = ['Hráč', 'Typ', 'Pozice', 'Termínů', 'Účast', 'Účast %', 'Nepřišel', 'Omluven', 'Bez odpovědi',
+    const header = ['Hráč', 'Typ', 'Pozice', 'Termínů', 'Účast', 'Účast %', 'Nepřišel', 'Pozdě odhlášen', 'Omluven', 'Bez odpovědi',
       'Góly', 'Asistence', 'Vyúčtováno Kč', 'Zaplaceno Kč'];
     const data = this.rows().map((r) => [r.user.publicName, this.memberType[r.memberType], this.position[r.position],
-      r.events, r.attended, Math.round(r.attendanceRate * 100), r.noShow, r.declined, r.noAnswer, r.goals, r.assists,
+      r.events, r.attended, Math.round(r.attendanceRate * 100), r.noShow, r.lateCancels, r.declined, r.noAnswer, r.goals, r.assists,
       r.charged, r.paid]);
     // BOM, ať Excel pozná UTF-8 (diakritika)
     const blob = new Blob(['﻿' + toCsv(header, data)], { type: 'text/csv;charset=utf-8' });
